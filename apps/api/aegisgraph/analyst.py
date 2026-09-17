@@ -86,6 +86,85 @@ class AnalysisInputError(ValueError):
 class ProviderError(RuntimeError):
     """A safe, fixed error code; never raw provider content or exception text."""
 
+    def __init__(
+        self,
+        code: str,
+        *,
+        http_status: int | None = None,
+        provider_code: str | None = None,
+        diagnostics: dict[str, int | bool | None] | None = None,
+    ):
+        self.code = code if code in SAFE_PROVIDER_ERRORS else "provider_execution_failed"
+        self.http_status = (
+            http_status if isinstance(http_status, int) and 100 <= http_status <= 599 else None
+        )
+        self.provider_code = provider_code if provider_code in PROVIDER_ERROR_CODES else None
+        self.diagnostics = diagnostics or {}
+        super().__init__(self.code)
+
+
+PROVIDER_ERROR_CODES = {
+    "insufficient_quota": "provider_quota_exhausted",
+    "rate_limit_exceeded": "provider_rate_limited",
+    "invalid_api_key": "provider_authentication_failed",
+    "model_not_found": "provider_model_unavailable",
+    "invalid_json_schema": "provider_schema_rejected",
+    "unsupported_parameter": "provider_parameter_rejected",
+    "invalid_value": "provider_parameter_rejected",
+}
+SAFE_PROVIDER_ERRORS = {
+    "provider_configuration_missing",
+    "unknown_provider",
+    "provider_request_failed",
+    "provider_response_too_large",
+    "provider_response_incomplete",
+    "provider_response_invalid",
+    "provider_unexpected_output",
+    "provider_refusal_or_invalid_output",
+    "provider_execution_failed",
+    "provider_permission_denied",
+    "provider_server_error",
+    "provider_timeout",
+    "provider_request_limited",
+    *PROVIDER_ERROR_CODES.values(),
+}
+
+
+def _http_provider_error(
+    status: int, data: bytes | bytearray, retry_after: str | None = None
+) -> ProviderError:
+    """Classify only an allowlisted code. Never retain messages, params, or headers."""
+    provider_code = None
+    diagnostics = {
+        "response_bytes": len(data),
+        "json_parseable": False,
+        "error_object_present": False,
+        "error_code_present": False,
+        "retry_after_seconds": int(retry_after)
+        if retry_after and re.fullmatch(r"[0-9]{1,6}", retry_after)
+        else None,
+    }
+    try:
+        body = json.loads(data)
+        diagnostics["json_parseable"] = True
+        error = body.get("error") if isinstance(body, dict) else None
+        diagnostics["error_object_present"] = isinstance(error, dict)
+        candidate = error.get("code") if isinstance(error, dict) else None
+        diagnostics["error_code_present"] = isinstance(candidate, str) and bool(candidate)
+        if isinstance(candidate, str) and candidate in PROVIDER_ERROR_CODES:
+            provider_code = candidate
+    except (ValueError, UnicodeDecodeError):
+        pass
+    fallback = {403: "provider_permission_denied", 429: "provider_request_limited"}.get(
+        status, "provider_server_error" if status >= 500 else "provider_request_failed"
+    )
+    return ProviderError(
+        PROVIDER_ERROR_CODES.get(provider_code, fallback),
+        http_status=status,
+        provider_code=provider_code,
+        diagnostics=diagnostics,
+    )
+
 
 @dataclass(frozen=True)
 class AnalystContext:
@@ -502,6 +581,7 @@ class OpenAIProvider:
         self._api_key = api_key
         self.model = model
         self._transport = transport
+        self.last_http_status: int | None = None
 
     def generate(self, context: AnalystContext) -> str:
         payload = {
@@ -537,15 +617,21 @@ class OpenAIProvider:
                     headers={"Authorization": f"Bearer {self._api_key}"},
                     json=payload,
                 ) as response:
-                    response.raise_for_status()
+                    self.last_http_status = response.status_code
                     data = bytearray()
                     for chunk in response.iter_bytes():
                         data.extend(chunk)
                         if len(data) > MAX_HTTP_RESPONSE_BYTES:
                             raise ProviderError("provider_response_too_large")
+                    if not 200 <= response.status_code < 300:
+                        raise _http_provider_error(
+                            response.status_code, data, response.headers.get("retry-after")
+                        )
             body = json.loads(data)
-        except (httpx.HTTPError, json.JSONDecodeError, UnicodeDecodeError) as exc:
-            raise ProviderError("provider_request_failed") from exc
+        except httpx.TimeoutException:
+            raise ProviderError("provider_timeout") from None
+        except (httpx.HTTPError, json.JSONDecodeError, UnicodeDecodeError):
+            raise ProviderError("provider_request_failed") from None
         if not isinstance(body, dict) or body.get("status") != "completed":
             raise ProviderError("provider_response_incomplete")
         outputs = body.get("output")
@@ -701,8 +787,19 @@ def analyze(
         )
         result.update(
             status="unavailable",
-            summary="The evidence provider is unavailable. No answer was accepted.",
+            summary={
+                "provider_quota_exhausted": "OpenAI could not run this analysis because the API quota is unavailable. Review the project's billing or usage limits. No answer was accepted.",
+                "provider_rate_limited": "OpenAI temporarily rate-limited this request. Try again later. No answer was accepted.",
+                "provider_request_limited": "OpenAI rejected this request with HTTP 429. Check the project's quota and rate limits before retrying. No answer was accepted.",
+                "provider_authentication_failed": "The provider could not authenticate the request. Review the local provider configuration. No answer was accepted.",
+                "provider_model_unavailable": "The configured model is unavailable to this API project. No answer was accepted.",
+            }.get(exc.code, "The evidence provider is unavailable. No answer was accepted."),
             validation_errors=[str(exc)],
+            provider_error={
+                "code": exc.code,
+                "http_status": exc.http_status,
+                "provider_code": exc.provider_code,
+            },
         )
     except Exception:
         # Custom provider failures must not leak raw text, credentials, or drafts.

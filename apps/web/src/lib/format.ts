@@ -16,6 +16,32 @@ export function count(value: number): string {
   return new Intl.NumberFormat("en-US").format(value);
 }
 export function eventLabel(event: SecurityEvent): string {
+  const attributes = event.attributes || {};
+  if (event.action === "login") {
+    if (event.outcome !== "success") return "Unsuccessful sign-in";
+    if (
+      attributes.device_previously_seen === false ||
+      event.device?.trusted === false
+    )
+      return "Sign-in from an unrecognized device";
+    if (event.device?.trusted === true)
+      return "Sign-in from a recognized device";
+    return "Successful sign-in";
+  }
+  if (event.action === "mfa_accept") return "MFA challenge accepted";
+  if (event.action === "role_assign")
+    return attributes.new_role === "platform_admin"
+      ? "Privileged role assigned"
+      : "Role assigned";
+  if (event.action === "role_revert") return "Previous role restored";
+  if (event.action === "read_sensitive")
+    return "Sensitive account resource accessed";
+  if (
+    event.action === "query" &&
+    typeof attributes.records_accessed === "number"
+  )
+    return `Account query accessed ${count(attributes.records_accessed)} records`;
+  if (event.action === "request") return "Internal API request";
   return humanize(event.action || event.event_type);
 }
 export function eventContext(event: SecurityEvent): string {

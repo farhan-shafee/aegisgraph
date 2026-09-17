@@ -1,6 +1,8 @@
 # Evidence Analyst evaluation
 
-The evaluation suite executes synthetic, isolated fixtures through the same projection, structured-output parser, citation validator, support predicates, and renderer used by Evidence Analyst. It never reads or changes incidents in the application database. Results include an execution ID, timestamps, the fixture version, each case's outcome, and totals calculated from those outcomes.
+Evaluation has two separate tracks: the credential-free deterministic boundary suite and an explicitly invoked live OpenAI runner. Their results are displayed separately. [Live validation](LIVE_VALIDATION.md) records the executed live scenarios, earlier HTTP 429 failures, and separately local scope/citation checks.
+
+The deterministic suite executes synthetic, isolated fixtures through the same projection, structured-output parser, citation validator, support predicates, and renderer used by Evidence Analyst. It never reads or changes incidents in the application database. Results include an execution ID, timestamps, the fixture version, each case's outcome, and totals calculated from those outcomes.
 
 ```bash
 # From the repository, after installing the API dependencies
@@ -32,7 +34,7 @@ No fixed pass rate is a product capability or performance claim. A passing run c
 
 A model can cite a real login event while claiming it proves malware execution. Checking only that an ID exists would accept that unsupported claim. AegisGraph uses a small typed claim language instead:
 
-1. The API authorizes the incident before retrieving evidence.
+1. The API resolves the current incident before retrieving case-scoped evidence. The local demo analyst can access every case; this is not production user or tenant authorization.
 2. Evidence must explicitly belong to that incident and fit the context limit.
 3. Allowlisted fields are projected into typed observations. Free-form raw data, annotations, user agents, endpoint strings, and metadata text are omitted.
    Analyst-marked benign rows are excluded from the provider context and claim candidates; the answer discloses the exclusion count. Their original immutable telemetry remains in the investigation timeline.
@@ -59,7 +61,24 @@ Use a model available to your account that supports Responses structured output.
 
 The OpenAI adapter uses a single REST `POST /v1/responses` request. Its `text.format` is `json_schema` with `strict: true`, `store: false`, disabled context truncation, and a 2,000-token output limit. There are no tools, conversation IDs, or previous response IDs. Only the authorized projected context is sent. These request and response conventions were checked against the [official structured-output guide](https://developers.openai.com/api/docs/guides/structured-outputs) during implementation. The adapter handles refusals, incomplete output, HTTP errors, malformed envelopes, unexpected tool output, and excessive response size before application validation.
 
-The HTTP adapter's integration tests use `httpx.MockTransport` and do not contact a model. A live credentialed call is an additional deployment verification step. This repository does not claim that a live model call or a live adversarial evaluation was performed.
+The HTTP adapter's integration tests use `httpx.MockTransport` and do not contact a model. Actual credentialed validation was also executed on 2026-09-17 UTC: three named live scenarios ultimately passed over six harness requests, with three earlier HTTP 429 failures preserved in the attempt history. Five local application-boundary checks passed separately. Two additional grounded/false-premise calls succeeded through the production-built browser application. See [the detailed record](LIVE_VALIDATION.md) for exact outcomes and limitations.
+
+The ignored root `.env` loads without overriding explicit process values. Its values are not copied into evaluation records. Workstation `.env` loading is disabled in tests, and the deterministic suite explicitly chooses fixture providers even when live configuration exists.
+
+## Opt-in live runner
+
+With dependencies installed, the database migrated/seeded, and provider variables configured locally:
+
+```sh
+# External calls require explicit opt-in and may incur charges.
+python -m aegisgraph.live_evaluations --run-live --incident-id INC-fe8fa4b9508c --persist
+```
+
+The default scenario ID is shown above; use the current case ID if the dataset changes. The runner sends at most three bounded scenario requests, has no automatic retry, and stops further live calls when a provider request is unavailable. It separately runs local scope/citation checks with test doubles. `--persist` stores only the sanitized result for display; it does not mutate incident state or evidence. A later explicit run replaces the checked-in result/attempt files, so preserve an earlier run if its history matters.
+
+Recorded output allowlists fields and values: fixed case labels, enumerated safe statuses/errors, counts, booleans and timestamps. It excludes keys, headers, configured model values, raw provider prose and exception text. The configured model was checked against official provider documentation before execution and intentionally omitted from records.
+
+`GET /api/evaluations` reads deterministic results; `GET /api/evaluations/live` reads recorded live results without calling the provider. The evaluation page's run action remains deterministic. Case totals describe the latest recorded outcome for each scenario; request totals retain earlier failed attempts. Neither is a general model-accuracy or injection-resistance rate.
 
 ## Bounds and error behavior
 
@@ -78,4 +97,4 @@ The restricted claim vocabulary intentionally gives up open-ended model-written 
 
 Adding arbitrary prose later would reintroduce natural-language entailment risk; valid citations and schema validation would not be enough. Such a change requires separately reviewed claim support mechanisms and live-model evaluation.
 
-A future opt-in live suite should record provider/model/version, fixture revision, raw versus accepted output outcomes, multiple trials, omissions, false refusals, and confidence intervals where justified. Keep its results separate from deterministic boundary tests, and do not extrapolate a small test set into a universal prompt-injection-resistance percentage.
+The implemented live runner is a small deployment check, not a statistically designed benchmark. Future measurement should add approved provenance for model/version and fixture revision, repeated trials, omissions, false refusals and confidence intervals where justified, without retaining secrets or unnecessary raw responses. Keep those results separate from deterministic boundary tests, and do not extrapolate a small test set into a universal prompt-injection-resistance percentage.

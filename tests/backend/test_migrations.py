@@ -49,4 +49,7 @@ def test_clean_sqlite_migrations_seed_and_database_immutability(tmp_path):
         capture_output=True,
         text=True,
     )
-    assert reset.returncode == 0, reset.stderr
+    assert reset.returncode != 0
+    assert "Reset refused" in reset.stderr
+    with make_engine(url).connect() as connection:
+        assert connection.scalar(text("SELECT COUNT(*) FROM events")) == 4026

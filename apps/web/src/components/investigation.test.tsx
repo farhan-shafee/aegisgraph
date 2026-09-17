@@ -171,7 +171,7 @@ describe("grounded analyst", () => {
       />,
     );
     await userEvent.click(
-      screen.getByRole("button", { name: "What malware was used?" }),
+      screen.getByRole("button", { name: "What malware family was used?" }),
     );
     await userEvent.click(screen.getByRole("button", { name: "Ask analyst" }));
     expect(await screen.findByText("Insufficient evidence")).toBeVisible();

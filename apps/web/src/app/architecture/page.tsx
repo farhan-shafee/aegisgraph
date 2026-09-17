@@ -19,18 +19,55 @@ const stages = [
   ],
   [
     "03",
-    "Detect",
+    "Detection rules",
     "Versioned rules identify individual signals and temporal sequences.",
   ],
   [
     "04",
-    "Correlate",
-    "Principal, time, and rule diversity form a case. Device and session links provide context.",
+    "Alerts",
+    "Individual signals with rule IDs and source-event references.",
   ],
   [
     "05",
-    "Investigate",
+    "Correlation",
+    "Principal, time, and rule diversity form a case. Device and session links provide context.",
+  ],
+  [
+    "06",
+    "Incident & evidence",
     "Scoped evidence, entity relationships, and analyst decisions.",
+  ],
+];
+const analysisStages = [
+  [
+    "01",
+    "Bounded retrieval",
+    "Explicit incident scope selects the allowed evidence set.",
+  ],
+  [
+    "02",
+    "Evidence projection",
+    "Typed observations only. Telemetry text is untrusted data.",
+  ],
+  [
+    "03",
+    "AI provider",
+    "Replaceable, read-only provider. No database session or tools.",
+  ],
+  [
+    "04",
+    "Schema validation",
+    "Reject malformed output, unknown fields, and unsupported claims.",
+  ],
+  [
+    "05",
+    "Citation validation",
+    "Every reference must belong to the case and the supplied context.",
+  ],
+  [
+    "06",
+    "Analyst review",
+    "Inspect sources. Save drafts. Approve findings and reports explicitly.",
   ],
 ];
 export default function ArchitecturePage() {
@@ -41,20 +78,55 @@ export default function ArchitecturePage() {
         title="Evidence is the system of record"
         description="A small, inspectable architecture with explicit trust boundaries."
       />
-      <Panel
-        title="From telemetry to investigation"
-        subtitle="One API, one relational database, and a replaceable model provider"
-      >
-        <div className="architecture-flow">
-          {stages.map(([number, title, description]) => (
-            <div className="architecture-step" key={number}>
-              <span>{number}</span>
-              <strong>{title}</strong>
-              <p>{description}</p>
-            </div>
-          ))}
-        </div>
-      </Panel>
+      <div className="architecture-pipelines">
+        <Panel
+          title="From telemetry to investigation"
+          subtitle="One API, one relational database, and a replaceable model provider"
+        >
+          <div className="architecture-flow">
+            {stages.map(([number, title, description]) => (
+              <div className="architecture-step" key={number}>
+                <span>{number}</span>
+                <strong>{title}</strong>
+                <p>{description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="architecture-boundary-label">
+            <Database size={15} />
+            <span>
+              <strong>System of record:</strong> PostgreSQL owns events, alerts,
+              incidents, and analyst decisions. Correlation does not depend on
+              AI.
+            </span>
+          </div>
+        </Panel>
+        <Panel
+          title="From scoped evidence to a reviewable answer"
+          subtitle="Model output crosses a validation boundary before an analyst sees it"
+        >
+          <div className="architecture-flow">
+            {analysisStages.map(([number, title, description]) => (
+              <div
+                className={`architecture-step ${number === "04" || number === "05" ? "validation" : ""}`}
+                key={number}
+              >
+                <span>{number}</span>
+                <strong>{title}</strong>
+                <p>{description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="architecture-boundary-label">
+            <LockKeyhole size={15} />
+            <span>
+              <strong>Human mutation boundary:</strong> AI cannot change
+              incident state or evidence. Analyst write actions use separate API
+              routes and create audit records.
+            </span>
+          </div>
+        </Panel>
+      </div>
       <div className="architecture-grid">
         <Panel
           title="Grounded analysis boundary"

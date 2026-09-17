@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { Analysis } from "@/lib/types";
 import { api, errorMessage } from "@/lib/api";
+import { humanize } from "@/lib/format";
 import { Badge, ErrorNotice, Panel } from "./ui";
 export interface FindingDraft {
   title: string;
@@ -105,7 +106,7 @@ export function EvidenceAnalyst({
         source.
       </div>
       <div className="suggested-questions">
-        {["What most likely happened?", "What malware was used?"].map(
+        {["What most likely happened?", "What malware family was used?"].map(
           (text) => (
             <button key={text} type="button" onClick={() => setQuestion(text)}>
               {text}
@@ -145,12 +146,27 @@ export function EvidenceAnalyst({
         </div>
       )}
       {answer && (
-        <div className="analysis-answer" aria-live="polite">
+        <section
+          className={`analysis-answer answer-${answer.status}`}
+          aria-live="polite"
+          aria-label="Analyst response"
+        >
           <div className="inline-meta">
             <Badge value={answer.status} />
             <span className="source-chip">{answer.confidence} confidence</span>
           </div>
-          <h3>{asked}</h3>
+          <p className="answer-question">{asked}</p>
+          <div className="answer-context">
+            <span>Provider: {answer.provider}</span>
+            <span>
+              {answer.context_evidence_count} evidence items retrieved
+            </span>
+          </div>
+          <h3>
+            {answer.status === "insufficient_evidence"
+              ? "What the evidence cannot establish"
+              : "Summary"}
+          </h3>
           <p>
             <CitedText
               text={answer.summary}
@@ -164,44 +180,55 @@ export function EvidenceAnalyst({
             </div>
           )}
           {answer.findings.length > 0 && (
-            <ul className="analysis-findings">
-              {answer.findings.map((finding, index) => (
-                <li key={index}>
-                  <p>{finding.statement}</p>
-                  <div className="citation-group">
-                    {finding.evidence_ids.map((id) => (
-                      <button
-                        className="evidence-citation"
-                        key={id}
-                        onClick={() => onEvidence(id)}
-                        aria-label={`Inspect evidence ${id}`}
-                      >
-                        {id}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    className="button ghost small"
-                    style={{ marginTop: 11 }}
-                    onClick={() =>
-                      onDraft({
-                        title: finding.statement.slice(0, 150),
-                        narrative: finding.statement,
-                        evidence_ids: finding.evidence_ids,
-                        ai_assisted: true,
-                      })
-                    }
-                  >
-                    <FilePenLine size={12} />
-                    Review as finding
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <>
+              <h3 className="answer-section-title">
+                Findings <span>{answer.findings.length}</span>
+              </h3>
+              <ul className="analysis-findings">
+                {answer.findings.map((finding, index) => (
+                  <li key={index}>
+                    <div className="finding-number">
+                      Finding {String(index + 1).padStart(2, "0")}
+                      {finding.claim_type && (
+                        <span>{humanize(finding.claim_type)}</span>
+                      )}
+                    </div>
+                    <p>{finding.statement}</p>
+                    <div className="citation-group">
+                      {finding.evidence_ids.map((id) => (
+                        <button
+                          className="evidence-citation"
+                          key={id}
+                          onClick={() => onEvidence(id)}
+                          aria-label={`Inspect evidence ${id}`}
+                        >
+                          {id}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      className="button ghost small"
+                      style={{ marginTop: 11 }}
+                      onClick={() =>
+                        onDraft({
+                          title: finding.statement.slice(0, 150),
+                          narrative: finding.statement,
+                          evidence_ids: finding.evidence_ids,
+                          ai_assisted: true,
+                        })
+                      }
+                    >
+                      <FilePenLine size={12} />
+                      Review as finding
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
           {answer.missing_evidence.length > 0 && (
             <>
-              <h3>Evidence gaps</h3>
+              <h3>Missing evidence</h3>
               <ul className="compact-list">
                 {answer.missing_evidence.map((item, i) => (
                   <li key={i}>{item}</li>
@@ -211,7 +238,7 @@ export function EvidenceAnalyst({
           )}
           {answer.recommended_next_steps.length > 0 && (
             <>
-              <h3>Recommended follow-up</h3>
+              <h3>Recommended next steps</h3>
               <ul className="compact-list">
                 {answer.recommended_next_steps.map((item, i) => (
                   <li key={i}>{item}</li>
@@ -228,7 +255,7 @@ export function EvidenceAnalyst({
             <br />
             Analyst review required. Confidence is a qualitative assessment.
           </div>
-        </div>
+        </section>
       )}
       <div className="analyst-boundary">
         <LockKeyhole size={12} />

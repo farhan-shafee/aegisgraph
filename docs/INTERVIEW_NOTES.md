@@ -1,5 +1,9 @@
 # Technical interview notes
 
+Use these answers to explain implemented decisions and their limits. Separate
+possible production designs from measured behavior. See [validation](VALIDATION.md)
+and [provider evaluations](evaluations/README.md) for executed results.
+
 ## Why PostgreSQL? Why no Elasticsearch?
 
 V1 needs transactional relationships among events, evidence, incidents and
@@ -60,12 +64,24 @@ a measured universal live-model resistance rate.
 
 ## How would this scale?
 
+One billion events per day averages roughly 11,574 events per second before burst
+headroom, replication, indexes, replay, or late arrivals. At an illustrative one
+kilobyte per event, that is roughly one terabyte of raw data per day. These are
+sizing calculations, not measured AegisGraph throughput.
+
 First measure event ingestion, retention, query selectivity and incident size.
 Likely steps are batched ingestion, partitioned event storage, appropriate
 indexes, retention policies, a durable worker for rules/correlation, and cursor
 pagination. Separate immutable evidence from derived materializations. Introduce
 a queue or search engine only when measured throughput and query requirements
 justify it. V1 has synchronous ingestion and no distributed scheduler.
+
+At that scale I would separate durable ingestion, independently retained source
+observations, partitioned canonical storage, bounded-state rule workers, derived
+query indexes, and a transactional case-management store. PostgreSQL could remain
+the case store without holding every raw event indefinitely. Establish peak rates,
+tenant skew, latency targets, retention, and recovery requirements before choosing
+infrastructure. Load tests and failure exercises would determine the actual design.
 
 ## What changes for production?
 
@@ -157,3 +173,92 @@ CLI reset intentionally drops and recreates the demo tables. Production requires
 restricted roles, independent retained copies, and verified backups. This is
 enforced append-only behavior for ordinary operations, not cryptographic integrity
 or proof that the original telemetry is true.
+
+## Why not Kafka?
+
+V1 processes a finite synthetic dataset synchronously. There is no measured delivery
+or throughput requirement that needs a broker. Durable buffering, backpressure,
+replay, and independent consumers would be reasons to consider Kafka or another
+log service later. Adding a broker alone does not define correct idempotency,
+ordering, late-event handling, or alert generation. Those semantics come first.
+
+## Why are detections and correlation separate?
+
+Detection says that an observation or sequence satisfies a rule and emits an alert
+with evidence. Correlation decides whether several alerts deserve one investigation.
+An unfamiliar login can remain a weak signal while related privilege and access
+activity creates a case. Rule changes and grouping changes can be tested separately.
+The default case has ten alerts from nine distinct rules across five families over
+22 minutes. The catalog has ten rules; repeated authentication failure does not fire
+in that case. Alert count and distinct-rule count are different quantities.
+
+## How is cross-case leakage prevented today?
+
+Retrieval selects evidence for the current incident before invoking the provider.
+The analyst boundary independently verifies incident membership, allowed incident
+IDs, unique evidence IDs, and context limits. The provider gets no retrieval tool
+or database connection. Output citations must be members of the exact request
+context, not merely records that exist somewhere in the database. This enforces
+case membership; it does not supply missing authenticated subject-to-case access.
+
+## What happens if the model cites nonexistent evidence?
+
+The entire proposed answer is rejected and no findings render. The same applies to
+a real ID from another case, or a current-case ID omitted from bounded context.
+A valid citation also needs an exact evidence set supporting the proposed claim.
+Safe error codes identify the failure without logging raw drafts or credentials.
+An upstream HTTP failure yields provider-unavailable, not a grounded answer and
+not an insufficient-evidence conclusion.
+
+## What does the malicious-telemetry evaluation prove?
+
+The fixture puts instruction-like content in untrusted raw/metadata/annotation
+fields. Projection removes these fields before provider execution. Verifying that
+removal and unchanged case state tests application enforcement. It does not prove
+a live model resisted text it never received. A live request that returns an HTTP
+error is not a passed injection test. Consult the separate recorded live results;
+never present deterministic fixtures as external-model performance.
+
+## How would the audit trail become append-only in production?
+
+Migrated V1 tables already reject ordinary audit UPDATE/DELETE statements. The
+database owner can remove those triggers, and disposable-demo reset intentionally
+recreates the tables. Stronger production guarantees need separate application
+and audit-admin roles, independent append-only/WORM retention, delivery-gap
+monitoring, and tested backup/restore. Signed or chained records need independently
+protected checkpoints and keys to detect the intended class of changes. A database
+trigger alone is not cryptographic tamper-proof storage.
+
+## How would events be reprocessed?
+
+Keep immutable source observations with explicit adapter/schema versions. Run a
+named replay against chosen normalization and rule revisions, using stable
+idempotency keys and separate derived outputs. Compare results before replacing
+active materializations. Preserve historical case associations and human review;
+reprocessing must not silently rewrite evidence cited by an approved report. V1
+offers deterministic reseeding of disposable data, not a production replay system.
+
+## How would detection rules be versioned?
+
+The JSON rules are versioned in Git and checked with fixtures today. Production
+alerts should also retain the exact rule revision/hash, effective configuration,
+schema version, and evidence references. Review changes with positive/negative
+fixtures, temporal boundary cases, shadow runs, and rollout/rollback policies.
+Git history alone does not make an alert retain its historical rule semantics.
+
+## How would false positives be tuned?
+
+Collect analyst labels with reasons and confirmed outcomes. Measure alert volume,
+review burden, cohort behavior, and precision/recall only where labels support it.
+Tune thresholds and windows using held-out data, then test correlation effects so
+suppressing one signal does not hide a meaningful sequence. Time-bound exceptions
+and monitor drift. One synthetic incident cannot establish detection quality.
+
+## What are the current V1 limitations?
+
+Fixed local identity, no tenant isolation, synchronous finite ingestion, synthetic
+thresholds, bounded case and model context, a narrow claim vocabulary, no autonomous
+response, no production replay or streaming, no retained report versions, and
+privileged-owner bypass of event/audit triggers. Source observations can be false,
+supported claims can be incomplete, and provider availability is independent of
+deterministic test success. These boundaries are explicit in the UI and documents.

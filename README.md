@@ -1,9 +1,12 @@
 # AegisGraph
 
-An evidence-grounded security investigation system for the fictional **Atlas
-Trading Platform**. A deterministic synthetic dataset moves through normalization,
-detection, incident correlation, evidence review, bounded AI analysis, and a
-human-approved report.
+**Evidence-grounded security investigation for a simulated fintech environment.**
+
+Investigate a suspicious Atlas engineer-account sequence from source telemetry
+through detection, deterministic correlation, evidence review, bounded AI analysis,
+and explicit human decisions.
+
+![Primary incident: correlation rationale, chronology, and evidence analyst](docs/screenshots/02-incident.png)
 
 This is a local engineering demonstration. All telemetry, identities, devices,
 IPs and financial resources are synthetic. It has no real banking integration,
@@ -70,9 +73,9 @@ exercise explicit insufficient-evidence behavior.
 
 ## Local setup
 
-Requirements: Python 3.12+, Node.js 24+, and Docker Compose for PostgreSQL (or an
-existing PostgreSQL 17 instance). Run commands from the repository root. The
-application runs without external AI credentials.
+Requirements: Python 3.12+ and Node.js 24+. Run from the repository root.
+The quickest demo uses a reserved SQLite database and needs no external credentials.
+PostgreSQL 17 is the intended primary database and is validated separately.
 
 ```sh
 python -m venv .venv
@@ -84,63 +87,83 @@ python -m pip install -r requirements.lock
 python -m pip install -e . --no-deps
 npm ci --prefix apps/web
 
-docker compose up -d --wait postgres
-alembic upgrade head
-python -m aegisgraph.cli seed
-python -m aegisgraph.cli evaluate
+python -m aegisgraph.cli demo-reset
+python -m aegisgraph.cli demo-api
 ```
 
-Start the API in one terminal and web application in another:
+Start the web application in another terminal:
 
 ```sh
-uvicorn aegisgraph.main:app --host 127.0.0.1 --port 8000
 npm run dev --prefix apps/web
+```
+
+With the API running, verify the demo from an activated API terminal:
+
+```sh
+python -m aegisgraph.cli demo-health
 ```
 
 Open [the application](http://127.0.0.1:3000) and
 [FastAPI OpenAPI](http://127.0.0.1:8000/docs). The web server proxies `/api` to the
-loopback API. Keep all three services local; this release is not safe to expose
-as a shared public service.
+loopback API. Keep services local; this release has no production authentication.
 
-### Without Docker
+### Reproducible reset
 
-Set the database URL **in every API/CLI terminal** before migrating and seeding.
-On PowerShell:
+```sh
+python -m aegisgraph.cli demo-reset
+```
 
-```powershell
-$env:DATABASE_URL = 'sqlite:///./aegisgraph.db'
+Stop the demo API first. This command **deletes disposable demo data**, including
+annotations, findings and approvals, then migrates, seeds, detects, correlates,
+and runs deterministic evaluations. It targets only the reserved
+`.runtime/aegisgraph-demo.db` file and ignores an arbitrary `DATABASE_URL`.
+The matching `demo-api` command uses that target and explicitly selects the
+deterministic provider by default, even if `.env` selects OpenAI.
+
+### PostgreSQL
+
+```sh
+docker compose up -d --wait postgres
 alembic upgrade head
 python -m aegisgraph.cli seed
+python -m aegisgraph.cli evaluate
 uvicorn aegisgraph.main:app --host 127.0.0.1 --port 8000
 ```
 
-On macOS/Linux use `export DATABASE_URL=sqlite:///./aegisgraph.db`. SQLite is a
-convenience, not a claim of concurrency or type parity with PostgreSQL. For a
-separate existing PostgreSQL instance, provide its SQLAlchemy `postgresql+psycopg`
-URL instead. Database files and local runtime artifacts are ignored by Git.
+These ordinary commands honor `DATABASE_URL`, defaulting to the Compose database.
+They do not silently reset an existing database. For guarded reset on PostgreSQL,
+pre-create a **separate** local `aegisgraph_demo` database with the demo role, then
+run both `demo-reset --postgres-port 5432` and `demo-api --postgres-port 5432`.
+Change the port to match an existing local instance. The guarded commands do not
+target arbitrary database names or hosts. There is no HTTP reset endpoint.
+SQLite is a convenience, not a claim of PostgreSQL type/concurrency parity.
 
-### Reset the disposable demonstration
+### Optional live provider
+
+Place server configuration in the ignored repository `.env` or process environment.
+Process values take precedence. To use it with the reserved demo:
 
 ```sh
-python -m aegisgraph.cli seed --reset
-python -m aegisgraph.cli evaluate
+python -m aegisgraph.cli demo-api --provider openai
 ```
 
-Reset downgrades migrations to the base and reapplies them, dropping and recreating
-application tables, including annotations, findings and review history. Use it only
-against a disposable demo database. This maintenance path intentionally removes
-and reinstalls the immutability triggers.
-There is no remotely callable HTTP reset endpoint.
+This requires the configured key and compatible model and may incur API charges.
+No key is required for deterministic demos, tests, or the ordinary evaluation UI.
+See [live-provider results and commands](docs/evaluations/README.md). Provider
+failures are reported explicitly; there is no silent fallback pretending to be live.
 
 ## Environment variables
 
-The [example file](.env.example) is a reference; the API reads process environment
-variables, not an automatically loaded `.env` file. Never commit live credentials.
+The API loads the repository `.env` without overriding process environment values
+or interpolating its contents. The [example file](.env.example) contains safe
+placeholders. Never display or commit credentials; no key is exposed to the browser.
+Set `AEGISGRAPH_LOAD_ENV=false` to disable file loading; tests do so by default.
 
 | Variable | Default / purpose |
 |---|---|
 | `DATABASE_URL` | Local PostgreSQL URL from Compose; `postgresql+psycopg://aegisgraph:demo-local-only@127.0.0.1:5432/aegisgraph` |
 | `AI_PROVIDER` | `deterministic`; use `openai` to opt into external model calls |
+| `AEGISGRAPH_LOAD_ENV` | `true`; set `false` to disable repository `.env` loading (tests do this) |
 | `OPENAI_API_KEY` | Required only in OpenAI mode; server environment only |
 | `OPENAI_MODEL` | Required only in OpenAI mode; choose an account-available model supporting Responses structured output |
 | `API_INTERNAL_URL` | `http://127.0.0.1:8000`; Next.js server proxy target, set before build/start |
@@ -276,6 +299,13 @@ Only actual executed results appear in the evaluation UI. Deterministic provider
 tests are labeled accordingly; they are not live-model performance scores. See
 [validation record](docs/VALIDATION.md) for locally executed checks and limitations.
 
+The 2026-09-17 hardening pass passed **146 backend tests, 23 frontend tests,
+13 browser tests, and 28 deterministic evaluation cases**. Three named live
+OpenAI scenarios ultimately passed over six requests; three earlier HTTP 429
+failures remain recorded. Five additional local boundary checks and two separate
+live browser confirmations passed. See [live results](docs/evaluations/LIVE_VALIDATION.md)
+for the exact scope, failures, and injection-test limits.
+
 ## Repository structure
 
 ```text
@@ -299,6 +329,11 @@ Follow [the 5–7 minute demo](docs/DEMO.md), then use
 operations, open the correlated incident, inspect the timeline and entity links,
 ask “What most likely happened?”, click citations, ask “What malware family was
 used?”, run evaluations, and finish with analyst approval and architecture.
+
+See the [portfolio summary and screenshots](docs/PORTFOLIO_SUMMARY.md) for concise
+descriptions, and the [baseline UX audit](docs/UX_AUDIT.md) for the observed workflow
+issues that motivated the hardening pass. Both light and dark themes support the
+same investigation workflow.
 
 ## Limits and future work
 

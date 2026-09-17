@@ -423,8 +423,16 @@ def test_openai_fail_closed_response_shapes(context, body, error):
         provider.generate(context)
 
 
-@pytest.mark.parametrize("status", [401, 429, 500, 302])
-def test_openai_http_errors_never_expose_body(context, status):
+@pytest.mark.parametrize(
+    "status,code",
+    [
+        (401, "provider_request_failed"),
+        (429, "provider_request_limited"),
+        (500, "provider_server_error"),
+        (302, "provider_request_failed"),
+    ],
+)
+def test_openai_http_errors_never_expose_body(context, status, code):
     provider = OpenAIProvider(
         "fixture-key",
         "test-model",
@@ -434,7 +442,7 @@ def test_openai_http_errors_never_expose_body(context, status):
             )
         ),
     )
-    with pytest.raises(ProviderError, match="provider_request_failed") as error:
+    with pytest.raises(ProviderError, match=code) as error:
         provider.generate(context)
     assert "secret upstream" not in str(error.value)
 

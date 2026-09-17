@@ -16,6 +16,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { useState } from "react";
+import { ThemeToggle } from "./theme-toggle";
 const navigation = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/incidents", label: "Incidents", icon: FileSearch },
@@ -105,9 +106,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <ChevronRight size={13} />
             <strong>{active?.label || "Investigation"}</strong>
           </div>
-          <div className="environment-badge">
-            <span className="status-dot" />
-            SIMULATED TELEMETRY
+          <div className="topbar-actions">
+            <ThemeToggle />
+            <div className="environment-badge">
+              <span className="status-dot" />
+              SIMULATED TELEMETRY
+            </div>
           </div>
         </header>
         <main id="main-content" tabIndex={-1}>

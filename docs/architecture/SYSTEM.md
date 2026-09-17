@@ -60,6 +60,14 @@ context or older baseline evidence. Generic rule mixes receive a generic summary
 the flagship account-compromise hypothesis is conditional on its auth, privilege,
 and sensitive-access rule mix.
 
+The incident API exposes these facts under `correlation`: observed principal IDs,
+linked alert count, distinct rule IDs and families, first/last alert timestamps,
+measured span, and the shared configured window/minimum thresholds. The primary
+fixture has ten alerts from nine distinct rules across five families, spanning
+22 minutes. `grouping_keys` identifies principal and event time, while
+`context_only` names device/session/IP. The workspace renders these derived facts
+rather than inventing an explanation from a model or graph appearance.
+
 Incident severity is an explicit V1 policy: high when the cluster contains both
 IAM and APP families, otherwise medium. It is not a learned risk score or a
 calibrated estimate of impact.
@@ -163,6 +171,35 @@ The optional model provider is a separate data boundary. Only synthetic bounded
 case context is sent; provider retention, data residency, and organizational
 approval must be resolved before any future real-data use.
 
+Configuration loads the repository-root `.env` once without overriding explicit
+process variables. Variable interpolation is disabled. Set
+`AEGISGRAPH_LOAD_ENV=false` to disable file loading. Provider keys remain in the
+server environment, never in serialized settings or health responses. Tests
+disable workstation `.env` loading and use deterministic mode. These are local
+configuration conveniences, not managed secrets or production identity controls.
+
+## Reproducible disposable demo
+
+`python -m aegisgraph.cli demo-reset` ignores the configured `DATABASE_URL` and
+rebuilds only `.runtime/aegisgraph-demo.db`. The sequence drops/reapplies migrations,
+seeds canonical events, evaluates detections, creates the correlated incident,
+then executes and records deterministic evaluations. `demo-api` selects the same
+reserved database and binds to loopback; its provider defaults to deterministic,
+with OpenAI available only through explicit `--provider openai`.
+
+Both commands accept `--postgres-port PORT` for a pre-created loopback PostgreSQL
+database named exactly `aegisgraph_demo`, owned by the local `aegisgraph` demo role.
+The database name, host and role are fixed; arbitrary database URLs are not accepted.
+Legacy `seed --reset` is likewise limited to that PostgreSQL target or the two
+reserved `.runtime` SQLite files used for demo and browser tests. SQLite symlinks,
+directory redirection and hard-linked database files are rejected. Direct
+database-owner tools can still bypass these accidental-reset protections.
+
+`demo-health` performs read-only HTTP checks of the loopback API/database and
+expected scenario counts, verifies fixture availability, and invokes an explicit
+deterministic provider in process. It never calls an external provider. It checks
+demo readiness, not production availability or source authenticity.
+
 ## Operational limits
 
 Ingestion and correlation are synchronous for a bounded demonstration dataset.
@@ -173,3 +210,8 @@ answers, and API keys. No HTTP ingestion, reset, arbitrary command, or file-uplo
 endpoint is exposed; the seed pipeline runs through the local CLI.
 Evaluation records identify the provider and actual cases executed; deterministic
 boundary tests do not establish live-model prompt-injection resistance.
+`GET /api/evaluations` selects deterministic records, and
+`GET /api/evaluations/live` separately returns the latest recorded OpenAI run or
+an explicit not-run state. Neither read endpoint performs evaluation calls. Live
+results label external calls separately from application-boundary checks; only
+the opt-in live evaluation runner can initiate those measured calls.

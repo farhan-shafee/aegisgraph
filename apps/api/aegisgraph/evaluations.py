@@ -254,6 +254,10 @@ def run_evaluations() -> dict[str, Any]:
                 "id": case["id"],
                 "category": case["category"],
                 "name": case["name"],
+                "execution": "deterministic_boundary",
+                "expected": case["name"],
+                "actual": detail,
+                "status": "passed" if passed else "failed",
                 "passed": passed,
                 "detail": detail,
             }
@@ -275,6 +279,7 @@ def run_evaluations() -> dict[str, Any]:
     return {
         "id": f"EVAL-{uuid4().hex[:12]}",
         "provider": "deterministic",
+        "run_kind": "deterministic",
         "started_at": started,
         "completed_at": datetime.now(UTC).isoformat(),
         "total": len(results),

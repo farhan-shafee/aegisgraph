@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Check, FileJson, X } from "lucide-react";
-import type { Evidence } from "@/lib/types";
+import type { Alert, Evidence } from "@/lib/types";
 import { dateTime, eventLabel, humanize } from "@/lib/format";
 import { errorMessage } from "@/lib/api";
 import { Badge, ErrorNotice } from "./ui";
@@ -9,10 +9,12 @@ export function EvidenceDrawer({
   evidence,
   onClose,
   onSave,
+  alerts = [],
 }: {
   evidence: Evidence;
   onClose: () => void;
   onSave: (id: string, relevance: string, note: string) => Promise<void>;
+  alerts?: Alert[];
 }) {
   const [relevance, setRelevance] = useState(evidence.relevance),
     [note, setNote] = useState(evidence.note || ""),
@@ -130,6 +132,47 @@ export function EvidenceDrawer({
             </div>
           ))}
         </dl>
+        {Object.keys(event.attributes).length > 0 && (
+          <section className="evidence-observations">
+            <h3>Recorded observations</h3>
+            <dl className="detail-grid">
+              {Object.entries(event.attributes)
+                .filter(
+                  ([, value]) =>
+                    typeof value === "string" ||
+                    typeof value === "number" ||
+                    typeof value === "boolean",
+                )
+                .map(([key, value]) => (
+                  <div key={key}>
+                    <dt>{humanize(key)}</dt>
+                    <dd>
+                      {typeof value === "boolean"
+                        ? value
+                          ? "Yes"
+                          : "No"
+                        : String(value)}
+                    </dd>
+                  </div>
+                ))}
+            </dl>
+          </section>
+        )}
+        {alerts.length > 0 && (
+          <section className="evidence-detections">
+            <h3>Linked detections</h3>
+            <ul>
+              {alerts.map((alert) => (
+                <li key={alert.id}>
+                  <Badge value={alert.severity} />
+                  <span>
+                    {alert.rule_id} · {alert.rule_name}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <form className="evidence-editor" onSubmit={submit}>
           <h3>Analyst assessment</h3>
           <p className="page-note" style={{ margin: 0 }}>

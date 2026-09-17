@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from . import models as m
 from .config import settings
-from .correlation import correlate
+from .correlation import correlate, explain_correlation
 from .detection import evaluate, load_rules
 from .generator import generate_events
 
@@ -210,6 +210,7 @@ def detail(db: Session, incident_id: str) -> dict:
             .order_by(m.Alert.timestamp)
         )
     ]
+    result["correlation"] = explain_correlation(result["alerts"])
     result["findings"] = [
         finding_json(db, finding)
         for finding in db.scalars(

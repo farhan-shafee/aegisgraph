@@ -78,9 +78,11 @@ export function Findings({
           <article className="finding-card" key={finding.id}>
             <div className="inline-meta">
               <Badge value={finding.approved ? "approved" : "draft"} />
-              {finding.ai_assisted && (
-                <span className="source-chip">AI assisted</span>
-              )}
+              <span className="source-chip">
+                {finding.ai_assisted
+                  ? "AI-assisted · analyst saved"
+                  : "Analyst authored"}
+              </span>
             </div>
             <h3 style={{ marginTop: 12 }}>{finding.title}</h3>
             <p>{finding.narrative}</p>
@@ -281,6 +283,15 @@ export function NotesAndAudit({
             <li key={entry.id}>
               <div>
                 <strong>{humanize(entry.action)}</strong> · {entry.actor}
+                <span className="audit-actor-type">
+                  {entry.actor === "system" ||
+                  entry.actor === "correlation-engine"
+                    ? "System"
+                    : entry.actor.startsWith("model:") ||
+                        entry.actor.startsWith("ai:")
+                      ? "Model-related"
+                      : "Analyst"}
+                </span>
               </div>
               <time>{dateTime(entry.timestamp)}</time>
               {entry.before || entry.after ? (

@@ -78,12 +78,29 @@ export interface AuditEntry {
   id: string;
   timestamp: string;
   actor: string;
+  actor_type?: "system" | "human" | "model";
   action: string;
   object?: string;
   before?: unknown;
   after?: unknown;
 }
 export interface Incident {
+  correlation?: {
+    principal_ids: string[];
+    alert_count: number;
+    distinct_rule_count: number;
+    rule_ids: string[];
+    rule_families: string[];
+    first_alert_at: string;
+    last_alert_at: string;
+    span_minutes: number;
+    window_minutes: number;
+    minimum_rules: number;
+    minimum_families: number;
+    grouping_keys: string[];
+    context_only: string[];
+    explanation: string[];
+  };
   id: string;
   title: string;
   severity: Severity;
@@ -170,6 +187,40 @@ export interface EvaluationCase {
   details?: string;
   expected?: string;
   actual?: string;
+  execution?: string;
+  status?: "passed" | "failed" | "blocked" | "skipped";
+}
+export interface LiveEvaluationRun {
+  id?: string;
+  provider?: string;
+  run_kind?: string;
+  status: "not_run" | "partial" | "passed" | "blocked" | "failed";
+  total?: number;
+  passed?: number;
+  failed?: number;
+  skipped?: number;
+  cases?: EvaluationCase[];
+  live_cases?: {
+    total: number;
+    passed: number;
+    failed: number;
+    skipped: number;
+  };
+  boundary_cases?: { total: number; passed: number; failed: number };
+  provider_requests_attempted?: number;
+  provider_requests_succeeded?: number;
+  provider_requests_failed?: number;
+  attempts?: {
+    attempt: number;
+    case_id: string;
+    status: string;
+    http_status?: number;
+    safe_error?: string;
+  }[];
+  live_model_tested?: boolean;
+  scope?: string;
+  completed_at?: string;
+  created_at?: string;
 }
 export interface EvaluationRun {
   scope?: string;

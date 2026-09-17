@@ -355,17 +355,48 @@ def entity_detail(entity_id: str, db: Session = Depends(get_db)):
 
 @app.get("/api/evaluations")
 def evaluations(db: Session = Depends(get_db)):
-    run = db.scalar(select(m.EvaluationRun).order_by(m.EvaluationRun.created_at.desc()).limit(1))
+    run = db.scalar(
+        select(m.EvaluationRun)
+        .where(m.EvaluationRun.result["provider"].as_string() == "deterministic")
+        .order_by(m.EvaluationRun.created_at.desc())
+        .limit(1)
+    )
     return (
         {**run.result, "id": run.id, "created_at": svc.iso(run.created_at)}
         if run
         else {
+            "provider": "deterministic",
             "total": 0,
             "passed": 0,
             "failed": 0,
             "cases": [],
             "categories": [],
             "status": "not_run",
+            "live_model_tested": False,
+        }
+    )
+
+
+@app.get("/api/evaluations/live")
+def live_evaluations(db: Session = Depends(get_db)):
+    run = db.scalar(
+        select(m.EvaluationRun)
+        .where(m.EvaluationRun.result["provider"].as_string() == "openai")
+        .order_by(m.EvaluationRun.created_at.desc())
+        .limit(1)
+    )
+    return (
+        {**run.result, "id": run.id, "created_at": svc.iso(run.created_at)}
+        if run
+        else {
+            "provider": "openai",
+            "run_kind": "live",
+            "status": "not_run",
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "cases": [],
+            "categories": [],
             "live_model_tested": False,
         }
     )

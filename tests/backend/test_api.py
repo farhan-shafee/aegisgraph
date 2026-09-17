@@ -98,6 +98,14 @@ def test_incident_evidence_graph_and_alerts_are_linked(client):
         assert edge["source"] in nodes and edge["target"] in nodes
         assert set(edge["evidence_ids"]).issubset(evidence_ids)
     assert any(row["actor_type"] == "system" for row in case["audit"])
+    explanation = case["correlation"]
+    assert explanation["principal_ids"] == ["USR-004"]
+    assert explanation["alert_count"] == 10
+    assert explanation["distinct_rule_count"] == 9
+    assert len(explanation["rule_families"]) == 5
+    assert explanation["span_minutes"] == 22
+    assert explanation["grouping_keys"] == ["principal", "event_time"]
+    assert explanation["context_only"] == ["device", "session", "ip"]
 
 
 def test_ai_grounding_and_false_premise_do_not_mutate_case(client):
@@ -247,3 +255,31 @@ def test_event_payload_is_immutable_and_seed_idempotent(seeded_database):
 def test_all_expected_tables_have_foreign_key_integrity(seeded_database):
     with seeded_database.connect() as connection:
         assert connection.execute(text("PRAGMA foreign_key_check")).all() == []
+
+
+def test_live_and_deterministic_evaluation_results_remain_separate(client, seeded_database):
+    deterministic = client.post("/api/evaluations/run").json()
+    with Session(seeded_database) as session:
+        session.add(
+            m.EvaluationRun(
+                id="EVAL-LIVE-FIXTURE",
+                total=0,
+                passed=0,
+                result={
+                    "provider": "openai",
+                    "run_kind": "live",
+                    "total": 0,
+                    "passed": 0,
+                    "failed": 0,
+                    "cases": [],
+                    "live_model_tested": False,
+                    "scope": "isolated test fixture",
+                },
+            )
+        )
+        session.commit()
+    assert client.get("/api/evaluations").json()["id"] == deterministic["id"]
+    live = client.get("/api/evaluations/live").json()
+    assert live["id"] == "EVAL-LIVE-FIXTURE"
+    assert live["provider"] == "openai"
+    assert not live["live_model_tested"]

@@ -92,6 +92,7 @@ test("analyst investigates, cites evidence, rejects a false premise, and approve
   await expect(answer).toContainText(/malware/i);
   await expect(answer.locator(".analysis-findings > li")).toHaveCount(0);
 
+  await page.getByText("Manage incident", { exact: false }).click();
   await page.getByLabel("Incident status").selectOption("investigating");
   await page.getByLabel("Assigned analyst").fill("demo.reviewer");
   await page.getByRole("button", { name: "Save changes" }).click();
@@ -210,5 +211,48 @@ for (const width of [320, 375, 430, 768, 1280, 1440, 1920]) {
           document.documentElement.clientWidth + 1,
       ),
     ).toBeTruthy();
+  });
+}
+
+for (const width of [390, 768, 1440]) {
+  test(`light theme persists across core routes at ${width}px`, async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width, height: 900 });
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    const incidentId = (await (await request.get("/api/incidents")).json())
+      .items[0].id;
+    await page.goto("/");
+    await page.getByRole("button", { name: "Switch to light theme" }).click();
+    for (const route of [
+      "/",
+      "/events",
+      "/detections",
+      "/alerts",
+      "/incidents",
+      `/incidents/${incidentId}`,
+      "/evaluations",
+      "/architecture",
+    ]) {
+      await page.goto(route);
+      await expect(page.locator("main h1")).toBeVisible();
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth + 1,
+        ),
+        route,
+      ).toBeTruthy();
+    }
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    await page.getByRole("button", { name: "Switch to dark theme" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    expect(errors).toEqual([]);
   });
 }

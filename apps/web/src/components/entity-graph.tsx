@@ -22,6 +22,8 @@ export function EntityGraph({
   const [selectedId, setSelectedId] = useState(
     entities.find((e) => e.type === "user")?.id || entities[0]?.id,
   );
+  const [query, setQuery] = useState("");
+  const [entityType, setEntityType] = useState("");
   const selected = entities.find((e) => e.id === selectedId);
   if (!selected) return <Empty title="No linked entities" />;
   const links = relationships.filter(
@@ -65,12 +67,34 @@ export function EntityGraph({
   );
   const labelFor = (id: string) =>
     entities.find((e) => e.id === id)?.label || id;
+  const filteredEntities = entities.filter(
+    (entity) =>
+      (!entityType || entity.type === entityType) &&
+      entity.label.toLowerCase().includes(query.toLowerCase()),
+  );
   return (
     <>
       <p className="graph-explanation">
         Select an entity to inspect its evidence and relationships. The graph
         shows up to ten neighbors; the entity list includes every linked entity.
       </p>
+      <div className="graph-selection-summary">
+        <div>
+          <span className="source-chip">{selected.type}</span>
+          <strong>{selected.label}</strong>
+          <small>
+            {related.length} source events · {relatedAlerts.length} linked
+            alerts · {links.length} relationships
+          </small>
+        </div>
+        <button
+          className="button secondary small"
+          onClick={() => onFilter(selected)}
+        >
+          <Filter size={13} />
+          Filter timeline to this entity
+        </button>
+      </div>
       <div className="graph-wrap">
         <svg
           className="entity-graph"
@@ -119,8 +143,34 @@ export function EntityGraph({
           ))}
         </svg>
       </div>
+      <div className="entity-toolbar">
+        <div className="form-field">
+          <label htmlFor="entity-search">Find an entity</label>
+          <input
+            id="entity-search"
+            placeholder="Identity, device, IP, or resource…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="entity-type">Entity type</label>
+          <select
+            id="entity-type"
+            value={entityType}
+            onChange={(e) => setEntityType(e.target.value)}
+          >
+            <option value="">All types</option>
+            {[...new Set(entities.map((entity) => entity.type))].map((type) => (
+              <option key={type} value={type}>
+                {humanize(type)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
       <div className="entity-list" aria-label="Incident entities">
-        {entities.map((entity) => (
+        {filteredEntities.map((entity) => (
           <button
             key={entity.id}
             aria-pressed={selected.id === entity.id}
@@ -130,6 +180,11 @@ export function EntityGraph({
           </button>
         ))}
       </div>
+      {!filteredEntities.length && (
+        <p className="graph-explanation">
+          No matching entities. Change the search or type filter.
+        </p>
+      )}
       <section className="entity-detail" aria-label="Selected entity">
         <div className="inline-meta">
           <Network size={16} />
@@ -171,14 +226,6 @@ export function EntityGraph({
             </li>
           ))}
         </ul>
-        <button
-          className="button secondary small"
-          style={{ marginTop: 16 }}
-          onClick={() => onFilter(selected)}
-        >
-          <Filter size={13} />
-          Filter timeline to this entity
-        </button>
       </section>
     </>
   );

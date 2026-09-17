@@ -26,7 +26,7 @@ fixtures, or dependencies. The database owner and machine administrator remain
 trusted in V1.
 
 Entry points are API request bodies and query parameters, normalized source
-payloads, model responses, environment variables, database content, and dependency
+payloads, model responses, process environment and the ignored root `.env` file, database content, and dependency
 installation. Ingestion is a local generator/adapter/CLI path; there is no public
 telemetry ingestion, reset, arbitrary file-upload, or command-execution API.
 
@@ -55,7 +55,7 @@ flowchart TB
 | Malicious upload | No file upload feature; bounded JSON inputs and source adapters | Real ingestion needs decompression limits, quotas, source credentials and schema version controls |
 | Hallucination / citation laundering | Strict structured claim types, exact support sets, deterministic findings and cited summary; one invalid claim rejects the whole answer | Source facts or predicates can be wrong; supported selections can be incomplete; the phrase-based false-premise guard is not a general entailment classifier |
 | Benign activity supporting suspicion | Analyst-benign evidence is excluded before provider context and claim selection; result discloses exclusions | The initial correlation may include benign context, annotations can be wrong, and the remaining bounded selection can omit useful alternative explanations |
-| Secrets exposure | Environment-only live key; `.env`, local databases, runtime files excluded from Git; no full prompts in logs | Machine/environment compromise remains possible; add managed secrets and rotation |
+| Secrets exposure | Ignored root `.env` loads without overriding explicit process values or interpolating variables; configuration diagnostics never include secret values; database URL excluded from settings repr; deterministic demo children remove provider key/model variables; tests disable workstation `.env` loading; no full prompts in logs | Machine/environment compromise remains possible; `.env` is trusted local configuration, not a secret vault; add managed secrets and rotation |
 | Unsafe tool execution | Provider interface has no tools or mutation handles | Future tools would require separate design and approval; do not infer safety from prompting |
 | Audit log alteration | Application audits workflow actions; no audit edit API; migrated DB triggers reject ordinary audit UPDATE/DELETE; human/system labels distinguished | Labels are not authenticated identities; privileged owners can remove triggers; logs are not cryptographically immutable or externally retained |
 | Report manipulation or stale approval | Deterministic template uses scoped evidence and approved findings; case changes mark it stale, clear approval metadata, and block approval until regeneration | Human-approved narratives are not semantically verified; only the current report is stored, and external copies do not update when the case changes |
@@ -64,6 +64,8 @@ flowchart TB
 | CSRF / hostile web origin | Loopback defaults, trusted-host checks, local-client restriction, explicit mutation-origin allowlist when Origin is present, and restricted CORS | Requests without Origin may be accepted locally; these are not authenticated sessions or complete shared-deployment CSRF controls |
 | Resource exhaustion | Paginated events, case detail capped at 500 evidence rows, first 50 rows retrieved for AI, separate 80-row/64,000-byte analyst cap, 1 MiB HTTP body limit, bounded provider response and timeout | No production rate limiting or per-user quotas; synchronous requests and model cost can exhaust resources; bounded retrieval can omit evidence |
 | Dependency compromise | Lockfiles, audit commands, CI checks and versioned migrations | Audits detect known advisories only; they do not establish supply-chain integrity |
+| Accidental destructive reset | `demo-reset` ignores `DATABASE_URL` and selects only a reserved SQLite file or fixed loopback PostgreSQL database named `aegisgraph_demo`; legacy reset is also guarded; SQLite links/hard links and PostgreSQL URL query overrides are rejected | Reset intentionally removes annotations, findings, audits and evaluations in that disposable target; direct database-owner tools can bypass the CLI, and filesystem checks are not race-proof against hostile local users |
+| Evaluation provenance confusion | Deterministic and live-provider records are read through separate API endpoints; the live endpoint only reads recorded runs; live execution requires a separately invoked opt-in runner | A trusted DB owner can fabricate records; measured live samples do not establish a population-level resistance or accuracy rate |
 
 ## Abuse-focused validation
 
@@ -76,8 +78,18 @@ for the exact checked scope and execution limitations.
 
 Database-trigger guarantees require applying Alembic migrations. Model-only tests
 that create tables directly are not evidence that the triggers are installed.
-The CLI reset deliberately drops and recreates application tables and their
-triggers; it is an owner-operated maintenance operation for disposable data.
+The guarded demo reset deliberately drops and recreates application tables and
+their triggers only in its reserved disposable target. It runs migrations, seed,
+detections, correlation and deterministic evaluations. The default demo server is
+deterministic even when the local `.env` selects a live provider; external calls
+require `demo-api --provider openai`. The health command accepts only a plain
+loopback HTTP URL, does not inherit proxy settings, and uses an explicit
+deterministic provider without transmitting context externally.
+
+Correlation explanations are derived from linked alert records and shared rule
+constants. They expose actual principal/rule/family counts and measured alert
+span. Device/session/IP relationships are explicitly investigation context, not
+additional grouping predicates or evidence of real-world actor attribution.
 
 ## Production gates
 

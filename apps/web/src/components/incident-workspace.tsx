@@ -3,36 +3,23 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import {
   ArrowLeft,
-  ArrowUpRight,
   Bell,
   Clock3,
   FileSearch,
-  FilterX,
   Network,
   Save,
 } from "lucide-react";
-import type {
-  Entity,
-  Evidence,
-  Incident,
-  IncidentStatus,
-  Severity,
-} from "@/lib/types";
+import type { Entity, Incident, IncidentStatus, Severity } from "@/lib/types";
 import { api, errorMessage } from "@/lib/api";
-import {
-  dateTime,
-  eventContext,
-  eventLabel,
-  evidenceForEntity,
-  humanize,
-  time,
-} from "@/lib/format";
-import { Badge, Empty, ErrorNotice, Panel } from "./ui";
+import { dateTime, humanize } from "@/lib/format";
+import { Badge, ErrorNotice, Panel } from "./ui";
 import { AlertTable } from "./data-tables";
 import { EvidenceDrawer } from "./evidence-drawer";
 import { EntityGraph } from "./entity-graph";
 import { EvidenceAnalyst, type FindingDraft } from "./evidence-analyst";
 import { Findings, NotesAndAudit, ReportPanel } from "./incident-records";
+import { CorrelationSummary } from "./correlation-summary";
+import { EvidenceTimeline } from "./evidence-timeline";
 const tabs = [
   "Timeline",
   "Entities",
@@ -103,25 +90,6 @@ export function IncidentWorkspace({ initial }: { initial: Incident }) {
     });
     await refresh();
   }
-  const timeline = (
-    entityFilter
-      ? evidenceForEntity(
-          entityFilter,
-          incident.evidence,
-          incident.relationships,
-        )
-      : incident.evidence
-  )
-    .slice()
-    .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-  function relatedEntities(item: Evidence) {
-    const ids = new Set(
-      incident.relationships
-        .filter((r) => r.evidence_ids.includes(item.id))
-        .flatMap((r) => [r.source, r.target]),
-    );
-    return incident.entities.filter((entity) => ids.has(entity.id)).slice(0, 3);
-  }
   return (
     <>
       <Link className="back-link" href="/incidents">
@@ -152,77 +120,89 @@ export function IncidentWorkspace({ initial }: { initial: Incident }) {
             </span>
             <span>
               <Clock3 size={13} />
-              {dateTime(incident.created_at)}
+              Opened {dateTime(incident.created_at)}
             </span>
+            <span>Owner: {incident.owner || "Unassigned"}</span>
           </div>
         </div>
       </div>
-      <form className="panel incident-controls" onSubmit={saveIncident}>
-        <div className="form-field">
-          <label htmlFor="incident-status">Incident status</label>
-          <select
-            id="incident-status"
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value as IncidentStatus);
-              setSaved(false);
-            }}
-          >
-            {["new", "investigating", "contained", "resolved"].map((item) => (
-              <option key={item} value={item}>
-                {humanize(item)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-field">
-          <label htmlFor="incident-severity">Severity</label>
-          <select
-            id="incident-severity"
-            value={severity}
-            onChange={(e) => {
-              setSeverity(e.target.value as Severity);
-              setSaved(false);
-            }}
-          >
-            {["low", "medium", "high", "critical"].map((item) => (
-              <option key={item} value={item}>
-                {humanize(item)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-field">
-          <label htmlFor="incident-owner">Assigned analyst</label>
-          <input
-            id="incident-owner"
-            value={owner}
-            maxLength={100}
-            onChange={(e) => {
-              setOwner(e.target.value);
-              setSaved(false);
-            }}
-            placeholder="Unassigned"
-          />
-        </div>
-        <button className="button secondary" type="submit" disabled={busy}>
-          <Save size={14} />
-          {busy ? "Saving…" : "Save changes"}
-        </button>
-        {error && (
-          <div style={{ gridColumn: "1 / -1" }}>
-            <ErrorNotice message={error} />
+      <CorrelationSummary correlation={incident.correlation} />
+      <details className="incident-management">
+        <summary>
+          Manage incident{" "}
+          <span>Update status, severity, or assigned analyst</span>
+        </summary>
+        <form className="panel incident-controls" onSubmit={saveIncident}>
+          <div className="form-field">
+            <label htmlFor="incident-status">Incident status</label>
+            <select
+              id="incident-status"
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value as IncidentStatus);
+                setSaved(false);
+              }}
+            >
+              {["new", "investigating", "contained", "resolved"].map((item) => (
+                <option key={item} value={item}>
+                  {humanize(item)}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
-        {saved && (
-          <p
-            role="status"
-            style={{ gridColumn: "1 / -1", fontSize: 12, color: "var(--teal)" }}
-          >
-            Incident changes saved and recorded in audit history.
-          </p>
-        )}
-      </form>
+          <div className="form-field">
+            <label htmlFor="incident-severity">Severity</label>
+            <select
+              id="incident-severity"
+              value={severity}
+              onChange={(e) => {
+                setSeverity(e.target.value as Severity);
+                setSaved(false);
+              }}
+            >
+              {["low", "medium", "high", "critical"].map((item) => (
+                <option key={item} value={item}>
+                  {humanize(item)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-field">
+            <label htmlFor="incident-owner">Assigned analyst</label>
+            <input
+              id="incident-owner"
+              value={owner}
+              maxLength={100}
+              onChange={(e) => {
+                setOwner(e.target.value);
+                setSaved(false);
+              }}
+              placeholder="Unassigned"
+            />
+          </div>
+          <button className="button secondary" type="submit" disabled={busy}>
+            <Save size={14} />
+            {busy ? "Saving…" : "Save changes"}
+          </button>
+          {error && (
+            <div style={{ gridColumn: "1 / -1" }}>
+              <ErrorNotice message={error} />
+            </div>
+          )}
+          {saved && (
+            <p
+              role="status"
+              style={{
+                gridColumn: "1 / -1",
+                fontSize: 12,
+                color: "var(--teal)",
+              }}
+            >
+              Incident changes saved and recorded in audit history.
+            </p>
+          )}
+        </form>
+      </details>
       <div className="investigation-grid">
         <Panel>
           <div className="tabs" role="tablist" aria-label="Investigation views">
@@ -267,90 +247,12 @@ export function IncidentWorkspace({ initial }: { initial: Incident }) {
             tabIndex={0}
           >
             {active === "Timeline" && (
-              <>
-                <div className="timeline-heading">
-                  <div>
-                    <h2>Evidence timeline</h2>
-                    <p>
-                      {timeline.length} chronological events · all timestamps in
-                      UTC
-                    </p>
-                  </div>
-                  {entityFilter && (
-                    <button
-                      className="button ghost small"
-                      onClick={() => setEntityFilter(null)}
-                    >
-                      <FilterX size={12} />
-                      Clear entity filter
-                    </button>
-                  )}
-                </div>
-                {entityFilter && (
-                  <div className="notice" style={{ margin: "0 20px 16px" }}>
-                    Showing evidence related to {entityFilter.label}
-                  </div>
-                )}
-                {timeline.length ? (
-                  <ol className="timeline-list">
-                    {timeline.map((item) => (
-                      <li
-                        className={`timeline-item ${item.relevance}`}
-                        key={item.id}
-                      >
-                        <span className="timeline-marker" />
-                        <div className="timeline-meta">
-                          <time dateTime={item.timestamp}>
-                            {time(item.timestamp)}
-                          </time>
-                          <span className="source-chip">
-                            {humanize(item.event.source)}
-                          </span>
-                          {item.relevance !== "unreviewed" && (
-                            <Badge value={item.relevance} />
-                          )}
-                        </div>
-                        <div className="timeline-card">
-                          <button
-                            className="timeline-title"
-                            onClick={() => openEvidence(item.id)}
-                          >
-                            {eventLabel(item.event)}
-                            <ArrowUpRight size={14} />
-                          </button>
-                          <p className="timeline-context">
-                            {eventContext(item.event)}
-                          </p>
-                          <div className="timeline-tags">
-                            <button
-                              className="evidence-citation"
-                              onClick={() => openEvidence(item.id)}
-                              aria-label={`Inspect evidence ${item.id}`}
-                            >
-                              {item.id}
-                            </button>
-                            {relatedEntities(item).map((entity) => (
-                              <button
-                                className="entity-tag"
-                                key={entity.id}
-                                onClick={() => setEntityFilter(entity)}
-                                aria-label={`Filter timeline by ${entity.label}`}
-                              >
-                                {entity.label}
-                              </button>
-                            ))}
-                          </div>
-                          {item.note && (
-                            <p className="timeline-note">{item.note}</p>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <Empty title="No evidence matches this entity" />
-                )}
-              </>
+              <EvidenceTimeline
+                incident={incident}
+                entityFilter={entityFilter}
+                onFilter={setEntityFilter}
+                onEvidence={openEvidence}
+              />
             )}
             {active === "Entities" && (
               <EntityGraph
@@ -407,6 +309,9 @@ export function IncidentWorkspace({ initial }: { initial: Incident }) {
         <EvidenceDrawer
           key={selectedEvidence.id}
           evidence={selectedEvidence}
+          alerts={incident.alerts.filter((alert) =>
+            alert.event_ids.includes(selectedEvidence.event_id),
+          )}
           onClose={closeEvidence}
           onSave={saveEvidence}
         />

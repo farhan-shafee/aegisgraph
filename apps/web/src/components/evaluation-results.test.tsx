@@ -48,7 +48,11 @@ describe("evaluation display", () => {
     expect(
       screen.queryByText("Valid citation accepted"),
     ).not.toBeInTheDocument();
-    await userEvent.click(screen.getByText("Untrusted instruction isolated"));
+    await userEvent.click(
+      screen.getByText("Untrusted instruction isolated", {
+        selector: "summary",
+      }),
+    );
     expect(screen.getByText("Boundary assertion failed.")).toBeVisible();
   });
   it("does not display invented scores before a run and loads executed results on request", async () => {
@@ -57,7 +61,7 @@ describe("evaluation display", () => {
     expect(screen.getByText("No evaluation has been run")).toBeVisible();
     expect(screen.queryByText("Passed")).not.toBeInTheDocument();
     await userEvent.click(
-      screen.getByRole("button", { name: "Run evaluation suite" }),
+      screen.getByRole("button", { name: "Run deterministic suite" }),
     );
     expect(
       await screen.findByText("Showing 3 of 3 executed cases"),
