@@ -129,5 +129,8 @@ from undisclosed vulnerabilities. CI configuration is versioned in
 
 The initial implementation commit `3764a742f89139813cf4e429d33bad325087b907`
 passed all three hosted GitHub Actions jobs, including ten browser tests in that
-earlier version. The hardening commit requires its own hosted run after push;
-the local hardening results above do not substitute for that new CI result.
+earlier version. The hardening commit `7293c515d47178405df6fcf93feeeadac067cf64`
+also passed [all three hosted jobs](https://github.com/farhan-shafee/aegisgraph/actions/runs/35176511095),
+with 146 backend tests, 23 frontend tests and 13 browser tests. This document
+records that historical hardening run; the newer [public release review](PUBLIC_RELEASE_REVIEW.md)
+records fresh validation and any changed counts for release preparation.

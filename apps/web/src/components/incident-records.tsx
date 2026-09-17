@@ -271,7 +271,8 @@ export function NotesAndAudit({
         <div>
           <h2>Audit history</h2>
           <p>
-            System, analyst, and model-related actions are recorded separately.
+            Recorded actors distinguish system processing from analyst actions.
+            AI-assisted findings retain their analyst author.
           </p>
         </div>
       </div>
@@ -284,14 +285,23 @@ export function NotesAndAudit({
               <div>
                 <strong>{humanize(entry.action)}</strong> · {entry.actor}
                 <span className="audit-actor-type">
-                  {entry.actor === "system" ||
-                  entry.actor === "correlation-engine"
+                  {entry.actor_type === "system"
                     ? "System"
-                    : entry.actor.startsWith("model:") ||
-                        entry.actor.startsWith("ai:")
-                      ? "Model-related"
-                      : "Analyst"}
+                    : entry.actor_type === "human"
+                      ? "Analyst"
+                      : entry.actor_type === "model"
+                        ? "Model"
+                        : "Unspecified"}
                 </span>
+                {entry.action === "finding_created" &&
+                  entry.after !== null &&
+                  typeof entry.after === "object" &&
+                  "ai_assisted" in entry.after &&
+                  entry.after.ai_assisted === true && (
+                    <span className="audit-actor-type">
+                      AI-assisted finding
+                    </span>
+                  )}
               </div>
               <time>{dateTime(entry.timestamp)}</time>
               {entry.before || entry.after ? (

@@ -12,7 +12,14 @@ concurrency:
   group: validate-${{ github.ref }}
   cancel-in-progress: true
 
+# Public CI never loads workstation configuration or calls a live model.
+# OPENAI_API_KEY and OPENAI_MODEL are intentionally not supplied to any job.
+env:
+  AEGISGRAPH_LOAD_ENV: 'false'
+  AI_PROVIDER: deterministic
+
 jobs:
+  # API/AI boundaries, PostgreSQL migrations and seed, smoke, dependency audit.
   backend:
     runs-on: ubuntu-latest
     services:
@@ -47,6 +54,7 @@ jobs:
       - run: python scripts/smoke.py
       - run: pip-audit -r requirements.lock
 
+  # Formatting, lint, types, component tests, production build, dependency audit.
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -67,6 +75,7 @@ jobs:
       - run: npm run build
       - run: npm audit --audit-level=moderate
 
+  # Isolated SQLite case: analyst workflow and responsive dark/light routes.
   browser:
     runs-on: ubuntu-latest
     steps:

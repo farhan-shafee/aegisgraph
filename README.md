@@ -2,348 +2,220 @@
 
 **Evidence-grounded security investigation for a simulated fintech environment.**
 
-Investigate a suspicious Atlas engineer-account sequence from source telemetry
-through detection, deterministic correlation, evidence review, bounded AI analysis,
-and explicit human decisions.
+![Incident workspace with correlation rationale, evidence timeline, and Evidence Analyst](docs/screenshots/02-incident.png)
 
-![Primary incident: correlation rationale, chronology, and evidence analyst](docs/screenshots/02-incident.png)
+AegisGraph turns synthetic identity, API, endpoint, and application telemetry into
+an inspectable investigation. FastAPI and PostgreSQL hold the evidence; Next.js
+provides the analyst workspace. An optional OpenAI provider proposes typed claims
+that the application validates against case evidence before displaying them.
 
-This is a local engineering demonstration. All telemetry, identities, devices,
-IPs and financial resources are synthetic. It has no real banking integration,
-production identity system, autonomous response actions, or enterprise scale claim.
+[Architecture](docs/architecture/SYSTEM.md) ·
+[Seven-minute demo](docs/DEMO.md) ·
+[Code and documentation guide](docs/README.md) ·
+[Public release review](docs/PUBLIC_RELEASE_REVIEW.md)
 
-## What is implemented
+## What it demonstrates
 
-- Four telemetry adapters and immutable persisted canonical events.
-- A default seed with 4,000 baseline events and 26 scenario observations (4,026 total).
-- Ten inspectable JSON detection rules, evidence-backed alerts, and deterministic
-  incident correlation separate from detection.
-- A paginated event explorer, alert and incident queues, chronological evidence
-  timeline, entity relationship graph, and source-event inspection.
-- Case evidence annotations, analyst notes, cited findings, deterministic template reports,
-  explicit human approval, and audit history.
-- A credential-free deterministic Evidence Analyst and optional OpenAI provider
-  behind one interface.
-- Structured claim proposals, deterministic citation/scope/support validation,
-  false-premise responses, and executed AI/security evaluations.
+- A reproducible path from four source adapters to canonical events, rule alerts,
+  and deterministic incident correlation.
+- Investigation through a chronological timeline, entity graph, source-event
+  inspection, separate annotations, and cited findings.
+- Bounded AI context, structured output, external citation and claim validation,
+  and explicit insufficient-evidence behavior.
+- Human review: findings and template reports require separate approval actions;
+  case changes invalidate report approval and record an audit event.
+- Credential-free local operation, deterministic fixtures, and separately
+  recorded live-provider results.
+
+All application data is synthetic. This is a local engineering demonstration,
+with no real banking integration or production authentication.
+
+## Demo scenario
+
+A fictional Atlas engineer account moves from recognized-device activity to an
+unfamiliar login, MFA acceptance, a privileged role grant, endpoint enumeration,
+sensitive account access, unusual data volume, a second session, and rapid role
+reversion.
+
+The default seed produces **4,026 events, 10 alerts, and one incident with 26
+evidence items**. These are reproducible fixture counts, not detection-quality or
+performance metrics. The sequence supports investigation of possible account
+misuse; it does not establish malware, exfiltration, or the person behind it.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Sources[Identity / API gateway / endpoint / Atlas] --> Normalize[Canonical events]
+  Sources[Synthetic sources] --> Normalize[Canonical events]
   Normalize --> DB[(PostgreSQL)]
   Normalize --> Rules[Detection rules]
   Rules --> Alerts[Alerts]
   Alerts --> Correlation[Deterministic correlation]
-  Correlation --> Case[Incident evidence set]
-  Case --> Web[Next.js analyst workspace]
-  Case --> Context[Bounded evidence projection]
+  Correlation --> Case[Incident evidence]
+  Case --> Web[Next.js workspace]
+  Case --> Context[Bounded projection]
   Context --> Provider[Deterministic or OpenAI provider]
-  Provider --> Validate[Schema + citation + claim validation]
+  Provider --> Validate[Schema + citation + claim checks]
   Validate --> Web
   Web --> Human[Explicit analyst actions]
   Human --> DB
 ```
 
-Next.js App Router, TypeScript, React and Tailwind form the web application.
-FastAPI, Pydantic, SQLAlchemy and Alembic form the single API. PostgreSQL is the
-primary database; SQLite is supported for a lightweight local demo and isolated
-tests. No Redis, Kafka, Elasticsearch, graph database or queue is required.
+One API and one relational database serve the investigation. The entity graph is
+derived from event/entity associations. SQLite supports lightweight demos and
+isolated tests; PostgreSQL is the primary database. See the
+[system design and trust boundaries](docs/architecture/SYSTEM.md).
 
-See [system architecture](docs/architecture/SYSTEM.md), the
-[threat model](docs/threat-model/THREAT_MODEL.md), and [ADRs](docs/adr).
+## Detection and correlation
 
-## Primary scenario
+The [ten JSON rules](packages/detections/rules.json) describe authentication,
+privilege, API, and sensitive-access signals. The
+[detection engine](apps/api/aegisgraph/detection.py) emits alerts with source-event
+references. These rules are synthetic policy examples, not calibrated detectors.
 
-An Atlas engineer account has normal recognized-device activity, followed by a
-new source/device, MFA acceptance, a privileged role grant, internal endpoint
-enumeration, sensitive account access, abnormal data volume, a second unusual
-session, and a quick role reversion. The sequence spans 13:57–14:24 UTC in the
-fixed synthetic dataset. Weak signals acquire relevance through shared identity
-and time; the graph exposes supporting device/session/IP relationships.
+[Correlation](apps/api/aegisgraph/correlation.py) groups alerts for one principal
+within 30 minutes of the first alert, requiring at least three distinct rules
+across two families. Session, device, and IP links provide investigation context.
+The primary incident has ten alerts from nine distinct rules across five families
+over 22 minutes. Baseline observations and alert-cited events remain available to
+explain the sequence. Detection and correlation can be reviewed and tested
+independently.
 
-The default seed produces 10 alerts and one incident with 26 evidence items. These
-are reproducible dataset counts, not detection-quality or operational-performance
-metrics. Changing the generator, rules, or seed can change the derived results.
+## Evidence-grounded AI
 
-The data does **not** establish malware, SSN exfiltration, the real-world person
-behind the account, or an attacker's country. The documented false-premise prompts
-exercise explicit insufficient-evidence behavior.
+The API retrieves up to 50 current-case evidence rows in event-time order. The
+[analyst boundary](apps/api/aegisgraph/analyst.py) validates scope, projects
+allowlisted fields, excludes analyst-marked benign observations, and enforces
+context limits. Providers receive no database session, retrieval tools, or
+mutation functions.
 
-## Local setup
+The provider selects typed claims and evidence IDs. The
+[claim validator](apps/api/aegisgraph/analyst.py#L692) checks the schema, exact
+context membership, and deterministic support predicates outside
+the model. One invalid claim rejects the whole proposed answer. Server templates
+render accepted findings and their summary; arbitrary model-written prose cannot
+bypass these checks. The deterministic and OpenAI providers use the same boundary.
 
-Requirements: Python 3.12+ and Node.js 24+. Run from the repository root.
-The quickest demo uses a reserved SQLite database and needs no external credentials.
-PostgreSQL 17 is the intended primary database and is validated separately.
+The narrow claim vocabulary is intentional. Grounding means consistency with
+supplied telemetry, not proof that the telemetry is true or the answer complete.
+The confidence label is qualitative, not a measured probability. See the
+[evaluation methodology and limits](docs/evaluations/README.md).
+
+## Security boundaries
+
+- **Local access:** the demo uses a fixed analyst label and loopback restrictions.
+  Case scoping is implemented; authenticated user and tenant authorization are not.
+- **Untrusted telemetry:** raw text and unnecessary metadata are excluded from
+  model context. Tested prompt-like fields remain data, not instructions.
+- **Evidence integrity:** migrated PostgreSQL/SQLite triggers reject ordinary
+  event and audit updates/deletes. A database owner can bypass these controls;
+  they are not cryptographic tamper-proof storage.
+- **Human decisions:** the model cannot edit incidents, save findings, or approve
+  reports. Human-authored findings still require human judgment.
+
+Read the [threat model](docs/threat-model/THREAT_MODEL.md) and
+[security reporting policy](SECURITY.md). Keep the demo local.
+
+## Evaluation
+
+[Synthetic fixtures](tests/fixtures/ai_cases.json) exercise grounding, false
+premises, prompt-like telemetry, cross-case input, invalid citations, malformed
+output, context limits, and mutation attempts. The evaluation UI displays results
+from executed runs and labels deterministic and live results separately. Passing
+fixtures does not establish general model safety or production readiness.
+
+The recorded **2026-09-17 live validation** passed three named scenarios over six
+harness requests: grounded investigation, a malware question returning insufficient
+evidence, and malicious telemetry excluded by projection. Three earlier HTTP 429
+failures remain recorded. Five local boundary checks and two additional live
+browser confirmations are counted separately. The injection fixture does not show
+a model resisting instructions it never received. See the
+[complete live record](docs/evaluations/LIVE_VALIDATION.md).
+
+Current test counts and executed outcomes are in the
+[validation record](docs/VALIDATION.md) and
+[public release review](docs/PUBLIC_RELEASE_REVIEW.md). Public CI requires no
+OpenAI credentials or live calls.
+
+## Tech stack
+
+| Layer | Technologies |
+|---|---|
+| Web | Next.js App Router, React, TypeScript, Tailwind CSS |
+| API | Python, FastAPI, Pydantic, HTTPX |
+| Persistence | PostgreSQL, SQLAlchemy, Alembic; SQLite for demos/tests |
+| AI | Deterministic provider; optional OpenAI Responses API with structured output |
+| Verification | pytest, Ruff, Vitest, Testing Library, Playwright, ESLint, Prettier |
+| Delivery | GitHub Actions, dependency lockfiles, Docker Compose |
+
+## Quick start
+
+Requirements: **Python 3.12+ and Node.js 24+**. Run from the repository root.
+The reserved SQLite demo needs no external service or API key.
 
 ```sh
 python -m venv .venv
-# macOS/Linux
+# macOS/Linux; PowerShell: .\.venv\Scripts\Activate.ps1
 source .venv/bin/activate
-# Windows PowerShell: .\.venv\Scripts\Activate.ps1
-
 python -m pip install -r requirements.lock
 python -m pip install -e . --no-deps
 npm ci --prefix apps/web
-
 python -m aegisgraph.cli demo-reset
 python -m aegisgraph.cli demo-api
 ```
 
-Start the web application in another terminal:
+In another terminal, run `npm run dev --prefix apps/web`, then open
+[localhost:3000](http://127.0.0.1:3000). With the API running, an activated API
+terminal can run `python -m aegisgraph.cli demo-health`.
 
-```sh
-npm run dev --prefix apps/web
-```
+`demo-reset` deletes disposable edits and saved runs in the reserved demo database.
+Stop the API before resetting. `demo-api` explicitly uses the deterministic
+provider unless live mode is requested. See
+[setup, PostgreSQL, configuration, and reset details](docs/SETUP.md).
 
-With the API running, verify the demo from an activated API terminal:
+## Demo walkthrough
 
-```sh
-python -m aegisgraph.cli demo-health
-```
+Follow the [seven-minute walkthrough](docs/DEMO.md): open the primary incident,
+inspect correlation and source evidence, follow entity links, ask what happened,
+inspect citations, ask what malware family was used, and review evaluations and
+human approval. [Screenshots](docs/screenshots/README.md) show the completed flow;
+[interview notes](docs/INTERVIEW_NOTES.md) explain the tradeoffs.
 
-Open [the application](http://127.0.0.1:3000) and
-[FastAPI OpenAPI](http://127.0.0.1:8000/docs). The web server proxies `/api` to the
-loopback API. Keep services local; this release has no production authentication.
+## Testing
 
-### Reproducible reset
+The [CI workflow](.github/workflows/ci.yml) has three jobs: backend checks with
+PostgreSQL migration/seed/smoke validation; frontend checks and production build;
+and an isolated Playwright investigation flow. Dependency audits run with the
+backend and frontend jobs. Tests and fixture evaluations are deterministic.
 
-```sh
-python -m aegisgraph.cli demo-reset
-```
+For the complete local commands and database requirements, see
+[running the checks](docs/SETUP.md#testing). Consult the
+[Actions runs](https://github.com/farhan-shafee/aegisgraph/actions/workflows/ci.yml)
+and dated [validation record](docs/VALIDATION.md) for results.
 
-Stop the demo API first. This command **deletes disposable demo data**, including
-annotations, findings and approvals, then migrates, seeds, detects, correlates,
-and runs deterministic evaluations. It targets only the reserved
-`.runtime/aegisgraph-demo.db` file and ignores an arbitrary `DATABASE_URL`.
-The matching `demo-api` command uses that target and explicitly selects the
-deterministic provider by default, even if `.env` selects OpenAI.
+## Threat model and decisions
 
-### PostgreSQL
+The [documentation guide](docs/README.md) maps a five-minute inspection to the
+architecture, threat model, nine ADRs, detection/correlation code, grounding and
+citation validator, evaluation fixtures, and demo instructions.
 
-```sh
-docker compose up -d --wait postgres
-alembic upgrade head
-python -m aegisgraph.cli seed
-python -m aegisgraph.cli evaluate
-uvicorn aegisgraph.main:app --host 127.0.0.1 --port 8000
-```
+## Implemented versus future work
 
-These ordinary commands honor `DATABASE_URL`, defaulting to the Compose database.
-They do not silently reset an existing database. For guarded reset on PostgreSQL,
-pre-create a **separate** local `aegisgraph_demo` database with the demo role, then
-run both `demo-reset --postgres-port 5432` and `demo-api --postgres-port 5432`.
-Change the port to match an existing local instance. The guarded commands do not
-target arbitrary database names or hosts. There is no HTTP reset endpoint.
-SQLite is a convenience, not a claim of PostgreSQL type/concurrency parity.
+Implemented: deterministic ingestion and rules, correlated cases, evidence and
+entity exploration, bounded claim validation, analyst annotations and findings,
+template reports with approval invalidation, audit history, evaluations, and
+reproducible local setup.
 
-### Optional live provider
+Production work remains: authenticated identities and case permissions, tenant
+isolation, authenticated ingestion, replay and rule rollout, least-privilege
+database roles, independent evidence/audit retention, backup/recovery, provider
+privacy review, and broader repeated live-model evaluation. Streaming and scaling
+decisions should follow measured workload needs. There is no autonomous response,
+enterprise readiness claim, or security certification.
 
-Place server configuration in the ignored repository `.env` or process environment.
-Process values take precedence. To use it with the reserved demo:
+## License status
 
-```sh
-python -m aegisgraph.cli demo-api --provider openai
-```
-
-This requires the configured key and compatible model and may incur API charges.
-No key is required for deterministic demos, tests, or the ordinary evaluation UI.
-See [live-provider results and commands](docs/evaluations/README.md). Provider
-failures are reported explicitly; there is no silent fallback pretending to be live.
-
-## Environment variables
-
-The API loads the repository `.env` without overriding process environment values
-or interpolating its contents. The [example file](.env.example) contains safe
-placeholders. Never display or commit credentials; no key is exposed to the browser.
-Set `AEGISGRAPH_LOAD_ENV=false` to disable file loading; tests do so by default.
-
-| Variable | Default / purpose |
-|---|---|
-| `DATABASE_URL` | Local PostgreSQL URL from Compose; `postgresql+psycopg://aegisgraph:demo-local-only@127.0.0.1:5432/aegisgraph` |
-| `AI_PROVIDER` | `deterministic`; use `openai` to opt into external model calls |
-| `AEGISGRAPH_LOAD_ENV` | `true`; set `false` to disable repository `.env` loading (tests do this) |
-| `OPENAI_API_KEY` | Required only in OpenAI mode; server environment only |
-| `OPENAI_MODEL` | Required only in OpenAI mode; choose an account-available model supporting Responses structured output |
-| `API_INTERNAL_URL` | `http://127.0.0.1:8000`; Next.js server proxy target, set before build/start |
-| `DEMO_ANALYST` | `demo.analyst`; local audit label, **not authentication** |
-| `ALLOWED_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000`; accepted mutation origins |
-| `ALLOW_REMOTE_DEMO` | `false`; retains the API's local-client restriction. Setting `true` does not add authentication or make public deployment supported |
-
-The Compose password is a public local-only demo value, not a production secret.
-OpenAI mode sends bounded synthetic context to the provider and may incur charges.
-No live API call is necessary for the demo, test suite, or evaluation dashboard.
-
-## Evidence and AI boundaries
-
-The API checks that the incident exists and retrieves its earliest 50 evidence rows
-in event-time order before calling a provider. All cases are visible to the fixed
-local demo analyst; this is case scoping, not user or tenant authorization. The
-analyst boundary separately rejects inputs above 80 evidence rows or 64,000 bytes
-of projected context. Evidence marked benign by the analyst is excluded before
-provider selection, and the result discloses the excluded count. This bounded
-selection does not claim to include every observation in a larger incident.
-
-Providers have
-no database session, command tools, retrieval tools or state-changing functions.
-They propose a strict set of claim types and evidence IDs. The server checks:
-
-1. The response matches the structured schema with no extra fields.
-2. Every cited evidence ID exists in the current incident and provided context.
-3. Each claim's evidence satisfies a deterministic event predicate.
-4. Only server-rendered supported statements are displayed.
-
-The summary is derived from accepted findings and includes their citations; no
-free-form model-written summary can bypass claim checks. One invalid claim rejects
-the whole proposed answer. An existing citation is not sufficient to support
-arbitrary prose. Raw telemetry and analyst questions are always untrusted data;
-unnecessary metadata is omitted from model context. The same validator applies
-to deterministic and external providers. Recognized false-premise questions receive
-a fixed insufficient-evidence response and identify missing evidence. The question
-guard is not a universal entailment classifier; novel wording may return only
-supported case observations, but cannot create arbitrary new factual claims.
-
-The confidence label is qualitative and fixed by the renderer, not a measured
-probability of compromise. The sequence interpretation remains an investigation
-hypothesis.
-
-This deliberately constrains natural-language expressiveness. It does not prove
-that the source telemetry is truthful, eliminate incomplete selection of facts,
-or establish production-grade prompt-injection resistance. Read
-[evaluation methodology](docs/evaluations/README.md) for exact guarantees.
-
-## Detection and correlation
-
-Definitions live in [rules.json](packages/detections/rules.json). Implemented
-families cover repeated failures, unseen source/device, unusual synthetic
-location, MFA after unfamiliar authentication, privileged role grant, privilege
-after unfamiliar authentication, distinct internal endpoint enumeration,
-sensitive account access, abnormal record volume, and rapid role reversion.
-
-Detection emits alerts with source-event references. Correlation requires at
-least three distinct rules across at least two families for one principal in a
-thirty-minute cluster anchored at its first alert. Principal and event time are
-the grouping keys; session/device/IP relationships provide investigation context,
-not additional correlation predicates. Some temporal detection rules independently
-require a matching session. Correlation brings the same principal's observations
-from five minutes before the first alert through the last alert into the timeline,
-plus all source events cited by those alerts. Generic clusters receive a generic
-summary; the account-compromise hypothesis requires the corresponding auth, role,
-and sensitive-access rules.
-Rules are explicit synthetic policy examples, not calibrated production detectors.
-
-## Data model
-
-Canonical events include ID, timezone-aware event timestamp, source, event type,
-action, outcome, actor, target, network, device, session, extensible attributes,
-and a sanitized synthetic source reference. The generator adapters store only an
-allowlisted source-reference object in `raw`. Canonical `attributes` and `raw` are
-bounded JSON maps; they are not trusted instructions. Pydantic models are frozen
-at their top-level fields, not recursively throughout nested Python dictionaries.
-Persisted source observations are the system of record; annotations live separately.
-
-Relational tables connect events to alerts, entities and incident evidence;
-findings reference case evidence. Analyses, reports, notes, evaluations and audit
-entries retain workflow context. Useful indexes cover time, event type, user,
-session, severity and association keys. Alembic tracks the schema and installs
-PostgreSQL/SQLite triggers that reject ordinary `UPDATE` and `DELETE` operations
-on events and audit records. ORM guards also reject source-event edits and deletes.
-These controls require migrated tables and do not defend against a database owner
-who can disable triggers or change schema. No cryptographic tamper-proof storage
-is claimed.
-
-## Report review
-
-Reports are generated by a deterministic template from current-case evidence,
-entities, workflow state, and analyst-approved findings. The optional model does
-not write the report. A generated report starts as a draft and requires an explicit
-human approval action. Changes to case fields, evidence annotations, findings or
-notes mark the report stale, clear its approval metadata, and record invalidation
-in audit history. A stale report cannot be approved until regenerated and reviewed.
-V1 keeps the current report in the database; it does not provide immutable report
-version history or establish that a person actually read every statement.
-
-## Verification
-
-```sh
-ruff check apps/api tests/backend
-ruff format --check apps/api tests/backend
-pytest -q
-python -m aegisgraph.cli evaluate
-python scripts/smoke.py
-
-npm run format:check --prefix apps/web
-npm run lint --prefix apps/web
-npm run typecheck --prefix apps/web
-npm test --prefix apps/web
-npm run build --prefix apps/web
-
-python scripts/prepare_e2e.py
-node apps/web/node_modules/@playwright/test/cli.js install chromium
-node apps/web/node_modules/@playwright/test/cli.js test --config playwright.config.ts
-
-pip-audit -r requirements.lock
-npm audit --prefix apps/web --audit-level=moderate
-```
-
-The E2E preparation command uses a separate ignored SQLite database, and browser
-tests run separate loopback servers. They do not reset your main demo database.
-Backend tests cover normalization, deterministic data, detection windows,
-correlation, evidence scope, schema/citation/claim validation, injection fixtures,
-false premises and workflow boundaries. Browser tests exercise the investigation
-flow and responsive layouts. CI is configured to run clean PostgreSQL
-migration/seed/smoke checks; a configured workflow is not itself a completed CI run.
-
-Only actual executed results appear in the evaluation UI. Deterministic provider
-tests are labeled accordingly; they are not live-model performance scores. See
-[validation record](docs/VALIDATION.md) for locally executed checks and limitations.
-
-The 2026-09-17 hardening pass passed **146 backend tests, 23 frontend tests,
-13 browser tests, and 28 deterministic evaluation cases**. Three named live
-OpenAI scenarios ultimately passed over six requests; three earlier HTTP 429
-failures remain recorded. Five additional local boundary checks and two separate
-live browser confirmations passed. See [live results](docs/evaluations/LIVE_VALIDATION.md)
-for the exact scope, failures, and injection-test limits.
-
-## Repository structure
-
-```text
-apps/api/aegisgraph/      API, domain services, persistence, analyst providers
-apps/api/migrations/     Alembic schema history
-apps/web/                Next.js application and component tests
-packages/schemas/        Canonical schema reference
-packages/detections/     Versioned detection definitions
-packages/synthetic-data/ Generator usage and dataset specification
-tests/backend/           Backend and AI boundary tests
-tests/fixtures/          Reproducible evaluation cases
-tests/e2e/               Playwright investigation and responsive tests
-scripts/                 Smoke and isolated E2E setup
-docs/                    Architecture, ADRs, threat model and demo guides
-```
-
-## Demonstrate and discuss
-
-Follow [the 5–7 minute demo](docs/DEMO.md), then use
-[interview notes](docs/INTERVIEW_NOTES.md) for the technical tradeoffs. Start with
-operations, open the correlated incident, inspect the timeline and entity links,
-ask “What most likely happened?”, click citations, ask “What malware family was
-used?”, run evaluations, and finish with analyst approval and architecture.
-
-See the [portfolio summary and screenshots](docs/PORTFOLIO_SUMMARY.md) for concise
-descriptions, and the [baseline UX audit](docs/UX_AUDIT.md) for the observed workflow
-issues that motivated the hardening pass. Both light and dark themes support the
-same investigation workflow.
-
-## Limits and future work
-
-V1 has one fixed local analyst, synchronous bounded ingestion, deterministic
-correlation, no multi-tenancy, no real-time queue, no enterprise IAM, no automatic
-containment, and no compliance certification. Markdown reports are reviewable;
-PDF export is outside the core implementation.
-
-Production work would begin with real identity and case entitlements, source
-authentication, tenant isolation, least-privilege database roles, immutable
-external audit retention, operational limits, backup/recovery, provider privacy
-review, and separate repeated live-model adversarial evaluations. Larger-scale
-storage and streaming infrastructure should follow measured workload needs.
+No project license has been selected. Public visibility alone does not grant
+general permission to reuse or redistribute the code. The
+[release review](docs/PUBLIC_RELEASE_REVIEW.md#license-status-and-recommendation)
+compares the options; the repository owner retains the final choice.

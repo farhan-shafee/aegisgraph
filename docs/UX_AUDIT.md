@@ -46,9 +46,9 @@ The twelve inspected baseline captures are published under `docs/screenshots/bas
 
 This baseline audit is a visual and interaction review, not a claim of WCAG compliance. Screenshots alone cannot establish screen-reader behavior, contrast ratios, focus order, data isolation, citation correctness, or prompt-injection resistance. Those require source review, targeted unit tests, browser checks in both themes and responsive sizes, and the independently executed backend/evaluation suite. Baseline analyst calls exercised only the configured deterministic provider; live-provider outcomes are documented separately under `docs/evaluations/`.
 
-## Planned hardening
+## Original hardening plan
 
-Implement compact actual correlation context; improve event/detection labeling and optional repetitive-event grouping; strengthen analyst answer structure; expose selected-entity evidence; clarify measured evaluation cases and architecture trust boundaries; add tested light mode. Keep the existing product scope and navigation. Final implementation and validation outcomes will be appended after those checks complete.
+The baseline review proposed compact actual correlation context, clearer event/detection labels and optional repetitive-event grouping, stronger analyst answer structure, selected-entity evidence, measured evaluation cases, explicit architecture trust boundaries, and tested light mode. The completed outcomes follow below; product scope and navigation were retained.
 
 ## Verified hardening outcomes
 
