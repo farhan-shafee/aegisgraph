@@ -11,6 +11,7 @@ that the application validates against case evidence before displaying them.
 
 [Architecture](docs/architecture/SYSTEM.md) ·
 [Seven-minute demo](docs/DEMO.md) ·
+[Public demo deployment guide](docs/DEPLOYMENT.md) ·
 [Code and documentation guide](docs/README.md) ·
 [Public release review](docs/PUBLIC_RELEASE_REVIEW.md)
 
@@ -27,8 +28,11 @@ that the application validates against case evidence before displaying them.
 - Credential-free local operation, deterministic fixtures, and separately
   recorded live-provider results.
 
-All application data is synthetic. This is a local engineering demonstration,
-with no real banking integration or production authentication.
+All application data is synthetic. This is an engineering demonstration, with no
+real banking integration or production authentication. Local mode supports the
+analyst review workflow; explicit `APP_MODE=public_demo` provides read-only
+exploration and two deterministic analyst questions. No deployment is included
+in this repository preparation.
 
 ## Demo scenario
 
@@ -63,7 +67,8 @@ flowchart LR
 
 One API and one relational database serve the investigation. The entity graph is
 derived from event/entity associations. SQLite supports lightweight demos and
-isolated tests; PostgreSQL is the primary database. See the
+isolated tests; public-demo mode requires PostgreSQL. In public mode, the analyst
+write path in the diagram is disabled. See the
 [system design and trust boundaries](docs/architecture/SYSTEM.md).
 
 ## Detection and correlation
@@ -105,6 +110,10 @@ The confidence label is qualitative, not a measured probability. See the
 
 - **Local access:** the demo uses a fixed analyst label and loopback restrictions.
   Case scoping is implemented; authenticated user and tenant authorization are not.
+- **Public access:** explicit public-demo mode denies persistent API writes,
+  uses only deterministic analysis, and keeps answers temporary. Exact origins,
+  trusted hosts, bounded requests, and shared process budgets limit the exposed
+  surface. These controls do not create authenticated identities or tenant isolation.
 - **Untrusted telemetry:** raw text and unnecessary metadata are excluded from
   model context. Tested prompt-like fields remain data, not instructions.
 - **Evidence integrity:** migrated PostgreSQL/SQLite triggers reject ordinary
@@ -114,7 +123,8 @@ The confidence label is qualitative, not a measured probability. See the
   reports. Human-authored findings still require human judgment.
 
 Read the [threat model](docs/threat-model/THREAT_MODEL.md) and
-[security reporting policy](SECURITY.md). Keep the demo local.
+[security reporting policy](SECURITY.md). Keep writable local mode on loopback;
+use the [deployment guide](docs/DEPLOYMENT.md) for the restricted public demo.
 
 ## Evaluation
 
@@ -152,6 +162,8 @@ OpenAI credentials or live calls.
 
 Requirements: **Python 3.12+ and Node.js 24+**. Run from the repository root.
 The reserved SQLite demo needs no external service or API key.
+These commands run local mode. Public deployment uses a separate, explicit
+[PostgreSQL initialization workflow](docs/DEPLOYMENT.md).
 
 ```sh
 python -m venv .venv
@@ -205,6 +217,11 @@ Implemented: deterministic ingestion and rules, correlated cases, evidence and
 entity exploration, bounded claim validation, analyst annotations and findings,
 template reports with approval invalidation, audit history, evaluations, and
 reproducible local setup.
+
+Public-demo preparation adds a Vercel frontend/Railway API configuration,
+PostgreSQL-only initialization, read-only exploration, and ephemeral deterministic
+analysis. It does not deploy services or make the local analyst identity suitable
+for a shared writable service.
 
 Production work remains: authenticated identities and case permissions, tenant
 isolation, authenticated ingestion, replay and rule rollout, least-privilege

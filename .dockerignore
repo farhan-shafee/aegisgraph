@@ -1,0 +1,23 @@
+# Only the backend runtime, synthetic rules and evaluation fixtures enter the build context.
+**
+!Dockerfile
+!.dockerignore
+!requirements.lock
+!pyproject.toml
+!README.md
+!LICENSE
+!alembic.ini
+!apps/
+!apps/api/
+!apps/api/aegisgraph/
+!apps/api/aegisgraph/*.py
+!apps/api/migrations/
+!apps/api/migrations/*.py
+!apps/api/migrations/versions/
+!apps/api/migrations/versions/*.py
+!packages/
+!packages/detections/
+!packages/detections/rules.json
+!tests/
+!tests/fixtures/
+!tests/fixtures/*.json

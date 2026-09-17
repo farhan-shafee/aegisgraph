@@ -12,6 +12,7 @@ from .config import settings
 from .correlation import correlate, explain_correlation
 from .detection import evaluate, load_rules
 from .generator import generate_events
+from .public_security import PUBLIC_QUESTIONS
 
 
 def identifier(prefix: str) -> str:
@@ -385,12 +386,27 @@ def create_note(db: Session, incident_id: str, text: str) -> dict:
 
 
 def run_analysis(db: Session, incident_id: str, question: str) -> dict:
-    from .analyst import AnalysisInputError, analyze
+    from .analyst import AnalysisInputError, DeterministicProvider, analyze
 
     require_incident(db, incident_id)
+    if settings.public_demo and question not in PUBLIC_QUESTIONS:
+        raise HTTPException(422, "Choose one of the public demo questions")
     # In the documented single-analyst demo every local case is visible. Model receives only this case.
     allowed = {incident_id}
     evidence = evidence_for_incident(db, incident_id, limit=50)
+    if settings.public_demo:
+        # Explicit provider prevents accidental API spend even if a deployment
+        # inherits AI_PROVIDER=openai or a key. This branch performs no writes.
+        try:
+            return analyze(
+                question,
+                incident_id,
+                evidence,
+                allowed_incident_ids=allowed,
+                provider=DeterministicProvider(),
+            )
+        except AnalysisInputError as exc:
+            raise HTTPException(422, "Analysis input was rejected") from exc
     audit(
         db,
         incident_id,

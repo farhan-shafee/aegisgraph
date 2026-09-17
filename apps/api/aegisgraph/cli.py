@@ -56,7 +56,42 @@ def main():
         help="Check a local API, scenario, fixtures, and explicit deterministic provider without external calls",
     )
     health.add_argument("--api-url", default="http://127.0.0.1:8000")
+    initialize = subcommands.add_parser(
+        "public-init", help="Migrate public PostgreSQL; seed only when explicitly requested"
+    )
+    initialize.add_argument(
+        "--seed", action="store_true", help="Initialize an empty synthetic demo"
+    )
+    subcommands.add_parser("public-check", help="Verify the public synthetic dataset is ready")
+    subcommands.add_parser("public-serve", help="Serve read-only public demo on platform PORT")
     args = parser.parse_args()
+    if args.command.startswith("public-"):
+        from .deployment import InitializationError, check_public, initialize_public, serve_public
+
+        try:
+            if args.command == "public-serve":
+                serve_public()
+                return
+            result = (
+                initialize_public(seed=args.seed)
+                if args.command == "public-init"
+                else check_public()
+            )
+            print(json.dumps(result, indent=2))
+            if not result["ready"]:
+                raise SystemExit(1)
+        except InitializationError as exc:
+            parser.error(str(exc))
+        except Exception:
+            # Connection exceptions can contain credentials, hostnames and local paths.
+            parser.error(
+                "Public administration failed. Check database availability and configuration."
+            )
+        return
+    if settings.public_demo:
+        parser.error(
+            "Local demo commands are disabled in public_demo. Use public-init/public-check."
+        )
     if args.command in {"demo-reset", "demo-api", "demo-health"}:
         from .demo import DemoCommandError, check_demo_health, reset_demo, serve_demo
 

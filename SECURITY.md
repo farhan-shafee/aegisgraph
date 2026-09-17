@@ -1,10 +1,17 @@
 # Security policy
 
-AegisGraph is a local investigation demonstration with entirely synthetic data,
-not a production security service. Publishing its source does not make its API
-safe to expose to the public internet. The fixed local analyst is not production
-authentication or authorization. Do not load customer data or real credentials
-into fixtures, screenshots, issues, or evaluation records.
+AegisGraph is an investigation demonstration with entirely synthetic data, not a
+production security service. Publishing its source does not make the writable
+local mode safe to expose to the public internet. Its fixed analyst is not
+production authentication or authorization.
+
+The explicit `APP_MODE=public_demo` configuration provides a separate read-only
+deployment surface: persistent API writes are denied and only the curated,
+deterministic analyst is available. Follow the [deployment guide](docs/DEPLOYMENT.md)
+for the required PostgreSQL, host, origin, and environment configuration. Shared
+in-process request budgets are limited protection, not a distributed abuse defense.
+Do not load customer data or real credentials into fixtures, screenshots, issues,
+or evaluation records.
 
 Use **Security → Advisories → Report a vulnerability** to report a suspected issue
 privately when GitHub private vulnerability reporting is enabled. Include the

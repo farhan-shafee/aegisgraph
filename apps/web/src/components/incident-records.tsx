@@ -6,6 +6,7 @@ import { api, ApiError, errorMessage } from "@/lib/api";
 import { dateTime, eventLabel, humanize, time } from "@/lib/format";
 import { CitedText, type FindingDraft } from "./evidence-analyst";
 import { Badge, Empty, ErrorNotice } from "./ui";
+import { ReadOnlyNotice, usePublicDemo } from "./demo-mode";
 
 export function Findings({
   incident,
@@ -18,6 +19,7 @@ export function Findings({
   onEvidence: (id: string) => void;
   refresh: () => Promise<void>;
 }) {
+  const publicDemo = usePublicDemo();
   const [title, setTitle] = useState(draft?.title || ""),
     [narrative, setNarrative] = useState(draft?.narrative || ""),
     [evidenceIds, setEvidenceIds] = useState<string[]>(
@@ -102,7 +104,7 @@ export function Findings({
                 {finding.author || "Local analyst"} ·{" "}
                 {dateTime(finding.created_at)}
               </span>
-              {!finding.approved && (
+              {!publicDemo && !finding.approved && (
                 <button
                   className="button secondary small"
                   disabled={busy}
@@ -117,79 +119,89 @@ export function Findings({
         ))
       ) : (
         <Empty title="No findings recorded">
-          Turn evidence into a supported conclusion, then approve it after
-          review.
+          {publicDemo
+            ? "Explore the Evidence Analyst and its cited sources. Saving and approving findings is available in the local interview workflow."
+            : "Turn evidence into a supported conclusion, then approve it after review."}
         </Empty>
       )}
-      <hr className="section-divider" />
-      <form className="finding-form" onSubmit={save}>
-        <h3>{draft ? "Review AI-assisted draft" : "Create a finding"}</h3>
-        {draft && (
-          <div className="notice warning">
-            Review the narrative and every cited source before saving. Saving
-            creates an unapproved draft.
-          </div>
-        )}
-        <div className="form-field">
-          <label htmlFor="finding-title">Finding title</label>
-          <input
-            id="finding-title"
-            required
-            maxLength={200}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="State the supported conclusion"
-          />
-        </div>
-        <div className="form-field">
-          <label htmlFor="finding-narrative">Narrative</label>
-          <textarea
-            id="finding-narrative"
-            required
-            maxLength={5000}
-            value={narrative}
-            onChange={(e) => setNarrative(e.target.value)}
-            placeholder="Explain what the evidence supports and where uncertainty remains…"
-          />
-        </div>
-        <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-          <legend className="field-label" style={{ marginBottom: 8 }}>
-            Supporting evidence ({evidenceIds.length} selected)
-          </legend>
-          <div className="evidence-select-list">
-            {incident.evidence.map((item) => (
-              <label className="checkbox-row" key={item.id}>
-                <input
-                  type="checkbox"
-                  checked={evidenceIds.includes(item.id)}
-                  onChange={(e) =>
-                    setEvidenceIds(
-                      e.target.checked
-                        ? [...evidenceIds, item.id]
-                        : evidenceIds.filter((id) => id !== item.id),
-                    )
-                  }
-                />
-                <span>
-                  <span className="mono">{item.id}</span> ·{" "}
-                  {time(item.timestamp)} · {eventLabel(item.event)}
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <ErrorNotice message={error} />
-        <button
-          className="button primary"
-          disabled={
-            busy || !evidenceIds.length || !title.trim() || !narrative.trim()
-          }
-          type="submit"
-        >
-          <Plus size={14} />
-          {busy ? "Saving…" : "Save finding draft"}
-        </button>
-      </form>
+      {publicDemo ? (
+        <ReadOnlyNotice />
+      ) : (
+        <>
+          <hr className="section-divider" />
+          <form className="finding-form" onSubmit={save}>
+            <h3>{draft ? "Review AI-assisted draft" : "Create a finding"}</h3>
+            {draft && (
+              <div className="notice warning">
+                Review the narrative and every cited source before saving.
+                Saving creates an unapproved draft.
+              </div>
+            )}
+            <div className="form-field">
+              <label htmlFor="finding-title">Finding title</label>
+              <input
+                id="finding-title"
+                required
+                maxLength={200}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="State the supported conclusion"
+              />
+            </div>
+            <div className="form-field">
+              <label htmlFor="finding-narrative">Narrative</label>
+              <textarea
+                id="finding-narrative"
+                required
+                maxLength={5000}
+                value={narrative}
+                onChange={(e) => setNarrative(e.target.value)}
+                placeholder="Explain what the evidence supports and where uncertainty remains…"
+              />
+            </div>
+            <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+              <legend className="field-label" style={{ marginBottom: 8 }}>
+                Supporting evidence ({evidenceIds.length} selected)
+              </legend>
+              <div className="evidence-select-list">
+                {incident.evidence.map((item) => (
+                  <label className="checkbox-row" key={item.id}>
+                    <input
+                      type="checkbox"
+                      checked={evidenceIds.includes(item.id)}
+                      onChange={(e) =>
+                        setEvidenceIds(
+                          e.target.checked
+                            ? [...evidenceIds, item.id]
+                            : evidenceIds.filter((id) => id !== item.id),
+                        )
+                      }
+                    />
+                    <span>
+                      <span className="mono">{item.id}</span> ·{" "}
+                      {time(item.timestamp)} · {eventLabel(item.event)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <ErrorNotice message={error} />
+            <button
+              className="button primary"
+              disabled={
+                busy ||
+                !evidenceIds.length ||
+                !title.trim() ||
+                !narrative.trim()
+              }
+              type="submit"
+            >
+              <Plus size={14} />
+              {busy ? "Saving…" : "Save finding draft"}
+            </button>
+          </form>
+        </>
+      )}
     </>
   );
 }
@@ -201,6 +213,7 @@ export function NotesAndAudit({
   incident: Incident;
   refresh: () => Promise<void>;
 }) {
+  const publicDemo = usePublicDemo();
   const [text, setText] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null);
@@ -244,28 +257,32 @@ export function NotesAndAudit({
       ) : (
         <Empty title="No notes yet" />
       )}
-      <form className="finding-form" onSubmit={save}>
-        <div className="form-field">
-          <label htmlFor="analyst-note">Add a note</label>
-          <textarea
-            id="analyst-note"
-            required
-            maxLength={5000}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Add investigation context…"
-          />
-        </div>
-        <ErrorNotice message={error} />
-        <button
-          type="submit"
-          className="button secondary"
-          disabled={busy || !text.trim()}
-        >
-          <Save size={14} />
-          {busy ? "Saving…" : "Save note"}
-        </button>
-      </form>
+      {publicDemo ? (
+        <ReadOnlyNotice />
+      ) : (
+        <form className="finding-form" onSubmit={save}>
+          <div className="form-field">
+            <label htmlFor="analyst-note">Add a note</label>
+            <textarea
+              id="analyst-note"
+              required
+              maxLength={5000}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Add investigation context…"
+            />
+          </div>
+          <ErrorNotice message={error} />
+          <button
+            type="submit"
+            className="button secondary"
+            disabled={busy || !text.trim()}
+          >
+            <Save size={14} />
+            {busy ? "Saving…" : "Save note"}
+          </button>
+        </form>
+      )}
       <hr className="section-divider" />
       <div className="timeline-heading">
         <div>
@@ -345,6 +362,7 @@ export function ReportPanel({
   evidence: Evidence[];
   onEvidence: (id: string) => void;
 }) {
+  const publicDemo = usePublicDemo();
   const [report, setReport] = useState<IncidentReport | null>(null),
     [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false),
@@ -435,7 +453,7 @@ export function ReportPanel({
               onEvidence={onEvidence}
             />
           </div>
-          {report.status === "draft" && (
+          {!publicDemo && report.status === "draft" && (
             <label className="checkbox-row" style={{ padding: "0 20px 20px" }}>
               <input
                 type="checkbox"
@@ -448,7 +466,7 @@ export function ReportPanel({
             </label>
           )}
           <div className="report-controls">
-            {report.status === "draft" && (
+            {!publicDemo && report.status === "draft" && (
               <button
                 className="button primary"
                 disabled={busy || !reviewed}
@@ -458,14 +476,16 @@ export function ReportPanel({
                 Approve report
               </button>
             )}
-            <button
-              className="button secondary"
-              disabled={busy}
-              onClick={generate}
-            >
-              <RotateCcw size={14} />
-              {busy ? "Working…" : "Regenerate draft"}
-            </button>
+            {!publicDemo && (
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={generate}
+              >
+                <RotateCcw size={14} />
+                {busy ? "Working…" : "Regenerate draft"}
+              </button>
+            )}
             <button
               className="button ghost"
               onClick={() => downloadReport(report)}
@@ -479,23 +499,33 @@ export function ReportPanel({
               Approved by {report.approved_by} · {dateTime(report.approved_at)}
             </p>
           )}
+          {publicDemo && <ReadOnlyNotice />}
         </>
       ) : (
         <>
-          <Empty title="Ready for a reviewable report">
-            Generate a draft from this incident’s scoped evidence, findings, and
-            analyst decisions.
+          <Empty
+            title={
+              publicDemo
+                ? "Reports are part of the local review workflow"
+                : "Ready for a reviewable report"
+            }
+          >
+            {publicDemo
+              ? "The public demo preserves the seeded case. Generate and approve evidence-grounded reports in a local installation."
+              : "Generate a draft from this incident’s scoped evidence, findings, and analyst decisions."}
           </Empty>
-          <div className="report-controls">
-            <button
-              className="button primary"
-              onClick={generate}
-              disabled={busy}
-            >
-              <FileText size={14} />
-              {busy ? "Generating…" : "Generate report draft"}
-            </button>
-          </div>
+          {!publicDemo && (
+            <div className="report-controls">
+              <button
+                className="button primary"
+                onClick={generate}
+                disabled={busy}
+              >
+                <FileText size={14} />
+                {busy ? "Generating…" : "Generate report draft"}
+              </button>
+            </div>
+          )}
         </>
       )}
     </>

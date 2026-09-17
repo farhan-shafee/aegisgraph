@@ -24,6 +24,10 @@ flowchart LR
   H --> U[Audit history]
 ```
 
+The explicit analyst write path describes local/interview mode. In
+`APP_MODE=public_demo`, the same investigation data is explorable, but persistent
+API writes are denied and the two curated deterministic answers are not saved.
+
 ## Ingestion and detection
 
 Identity, API gateway, endpoint, and Atlas application adapters translate source
@@ -157,22 +161,38 @@ stateDiagram-v2
 ## Deployment boundary
 
 The local browser communicates with the Next.js server, which proxies `/api` to
-the loopback FastAPI service. Both development servers and Docker's PostgreSQL
+the loopback FastAPI service. Both local development servers and Docker's PostgreSQL
 port should remain bound to loopback. There is one fixed local analyst; there is
 no login screen or claim of multi-user access control. Case-scoped evidence
 validation is implemented, but all cases are accessible to that local analyst;
 it is not user or tenant authorization. The API also checks trusted host names,
 local client addresses by default, and mutation origins when an Origin header is
-present. Those transport checks do not establish a human identity. Public deployment
-requires identity, case entitlements, CSRF/session controls, rate limits, TLS,
+present. Those transport checks do not establish a human identity. A shared
+writable service requires identity, case entitlements, CSRF/session controls,
 restricted database roles, secret management, and independent audit retention.
+
+The prepared public demo uses Vercel for Next.js and Railway for FastAPI and
+PostgreSQL. Both application services explicitly select `APP_MODE=public_demo`;
+the frontend requires an HTTPS `API_INTERNAL_URL` and verifies that the backend
+advertises the same read-only, deterministic contract. No backend address or
+credential is passed to client components. The proxy preserves the actual
+browser Origin for backend allowlist validation and does not forward browser
+authorization headers or cookies. Public mode never falls back to SQLite or a
+live model provider. All API writes are denied except the two curated,
+non-persistent analysis requests. Source inspection and saved results remain
+available. Exact host/origin configuration, request limits, safe errors, and
+shared process budgets bound this intentionally small public surface. These are
+demo controls, not production authentication or an availability guarantee.
+See [deployment and manual initialization](../DEPLOYMENT.md); no deployment has
+been performed as part of this preparation.
 
 The optional model provider is a separate data boundary. Only synthetic bounded
 case context is sent; provider retention, data residency, and organizational
 approval must be resolved before any future real-data use.
 
-Configuration loads the repository-root `.env` once without overriding explicit
-process variables. Variable interpolation is disabled. Set
+Local configuration loads the repository-root `.env` once without overriding
+explicit process variables. Public mode skips that file and uses process
+environment configuration. Variable interpolation is disabled locally. Set
 `AEGISGRAPH_LOAD_ENV=false` to disable file loading. Provider keys remain in the
 server environment, never in serialized settings or health responses. Tests
 disable workstation `.env` loading and use deterministic mode. These are local
@@ -208,6 +228,8 @@ or exactly-once event transport. Request IDs and structured request logs support
 local diagnosis. Application logs omit telemetry bodies, model prompts, raw model
 answers, and API keys. No HTTP ingestion, reset, arbitrary command, or file-upload
 endpoint is exposed; the seed pipeline runs through the local CLI.
+Public deployment initialization is also an explicit administrator CLI workflow:
+migrate, inspect, and seed only when requested. API startup never reseeds data.
 Evaluation records identify the provider and actual cases executed; deterministic
 boundary tests do not establish live-model prompt-injection resistance.
 `GET /api/evaluations` selects deterministic records, and

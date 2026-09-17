@@ -5,6 +5,7 @@ import type { Alert, Evidence } from "@/lib/types";
 import { dateTime, eventLabel, humanize } from "@/lib/format";
 import { errorMessage } from "@/lib/api";
 import { Badge, ErrorNotice } from "./ui";
+import { ReadOnlyNotice, usePublicDemo } from "./demo-mode";
 export function EvidenceDrawer({
   evidence,
   onClose,
@@ -16,6 +17,7 @@ export function EvidenceDrawer({
   onSave: (id: string, relevance: string, note: string) => Promise<void>;
   alerts?: Alert[];
 }) {
+  const publicDemo = usePublicDemo();
   const [relevance, setRelevance] = useState(evidence.relevance),
     [note, setNote] = useState(evidence.note || ""),
     [busy, setBusy] = useState(false),
@@ -173,50 +175,61 @@ export function EvidenceDrawer({
             </ul>
           </section>
         )}
-        <form className="evidence-editor" onSubmit={submit}>
-          <h3>Analyst assessment</h3>
-          <p className="page-note" style={{ margin: 0 }}>
-            Annotations update this case. The source event remains immutable.
-          </p>
-          <div className="form-field">
-            <label htmlFor="evidence-relevance">Relevance</label>
-            <select
-              id="evidence-relevance"
-              value={relevance}
-              onChange={(e) => {
-                setRelevance(e.target.value);
-                setSaved(false);
-              }}
-            >
-              <option value="unreviewed">Unreviewed</option>
-              <option value="relevant">Relevant</option>
-              <option value="benign">Benign</option>
-            </select>
-          </div>
-          <div className="form-field">
-            <label htmlFor="evidence-note">Evidence annotation</label>
-            <textarea
-              id="evidence-note"
-              value={note}
-              maxLength={2000}
-              onChange={(e) => {
-                setNote(e.target.value);
-                setSaved(false);
-              }}
-              placeholder="Record context, alternative explanations, or your assessment…"
-            />
-          </div>
-          <ErrorNotice message={error} />
-          <button className="button primary" disabled={busy} type="submit">
-            {busy ? "Saving…" : "Save assessment"}
-          </button>
-          {saved && (
-            <p className="notice success" role="status">
-              <Check size={15} />
-              Evidence assessment saved.
+        {publicDemo ? (
+          <section className="evidence-editor">
+            <h3>Analyst assessment</h3>
+            <p>
+              {humanize(evidence.relevance)}
+              {evidence.note ? ` · ${evidence.note}` : ""}
             </p>
-          )}
-        </form>
+            <ReadOnlyNotice />
+          </section>
+        ) : (
+          <form className="evidence-editor" onSubmit={submit}>
+            <h3>Analyst assessment</h3>
+            <p className="page-note" style={{ margin: 0 }}>
+              Annotations update this case. The source event remains immutable.
+            </p>
+            <div className="form-field">
+              <label htmlFor="evidence-relevance">Relevance</label>
+              <select
+                id="evidence-relevance"
+                value={relevance}
+                onChange={(e) => {
+                  setRelevance(e.target.value);
+                  setSaved(false);
+                }}
+              >
+                <option value="unreviewed">Unreviewed</option>
+                <option value="relevant">Relevant</option>
+                <option value="benign">Benign</option>
+              </select>
+            </div>
+            <div className="form-field">
+              <label htmlFor="evidence-note">Evidence annotation</label>
+              <textarea
+                id="evidence-note"
+                value={note}
+                maxLength={2000}
+                onChange={(e) => {
+                  setNote(e.target.value);
+                  setSaved(false);
+                }}
+                placeholder="Record context, alternative explanations, or your assessment…"
+              />
+            </div>
+            <ErrorNotice message={error} />
+            <button className="button primary" disabled={busy} type="submit">
+              {busy ? "Saving…" : "Save assessment"}
+            </button>
+            {saved && (
+              <p className="notice success" role="status">
+                <Check size={15} />
+                Evidence assessment saved.
+              </p>
+            )}
+          </form>
+        )}
         <details className="source-details">
           <summary>
             <FileJson size={14} style={{ display: "inline", marginRight: 6 }} />

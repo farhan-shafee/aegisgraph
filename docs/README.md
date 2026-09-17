@@ -1,6 +1,7 @@
 # Code and documentation guide
 
 [Project overview](../README.md) · [Local setup](SETUP.md) ·
+[Public demo deployment](DEPLOYMENT.md) ·
 [Public release review](PUBLIC_RELEASE_REVIEW.md)
 
 ## Five-minute inspection
@@ -13,9 +14,15 @@
 | [Correlation](../apps/api/aegisgraph/correlation.py#L26) | `correlate()` groups principal/time/rule families; `explain_correlation()` exposes the actual rationale |
 | [Context projection](../apps/api/aegisgraph/analyst.py#L498) and [claim support](../apps/api/aegisgraph/analyst.py#L461) | `build_context()` scopes/projects input; `supported_claims()` derives support |
 | [Citation and output validator](../apps/api/aegisgraph/analyst.py#L692) | `validate_draft()` checks the schema, exact evidence set, and typed claim support before rendering |
-| [Analysis service](../apps/api/aegisgraph/services.py#L387) and [report workflow](../apps/api/aegisgraph/services.py#L468) | Bounded evidence retrieval and the separate human review lifecycle |
+| [Analysis service and report workflow](../apps/api/aegisgraph/services.py) | `run_analysis()` performs bounded retrieval; report functions implement the separate human review lifecycle |
 | [Evaluation fixtures](../tests/fixtures/ai_cases.json) and [runner](../apps/api/aegisgraph/evaluations.py) | Named positive/negative cases and observed outcomes |
 | [Seven-minute demo](DEMO.md) | Reproduce the investigation and inspect insufficient-evidence behavior |
+| [Public demo deployment](DEPLOYMENT.md) | Explicit runtime mode, read-only API boundary, deterministic answers, initialization, and manual Vercel/Railway steps |
+
+Local/interview mode supports case edits and human approvals. Public-demo mode
+preserves synthetic evidence exploration and the two curated analyst examples;
+answers do not persist, and case writes remain disabled. No deployment has been
+performed as part of this preparation.
 
 ## Evidence and validation
 

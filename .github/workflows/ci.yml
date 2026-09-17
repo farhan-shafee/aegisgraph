@@ -16,6 +16,7 @@ concurrency:
 # OPENAI_API_KEY and OPENAI_MODEL are intentionally not supplied to any job.
 env:
   AEGISGRAPH_LOAD_ENV: 'false'
+  APP_MODE: local
   AI_PROVIDER: deterministic
 
 jobs:
@@ -53,6 +54,14 @@ jobs:
       - run: python -m aegisgraph.cli evaluate
       - run: python scripts/smoke.py
       - run: pip-audit -r requirements.lock
+      - name: Build Railway image and check seeded PostgreSQL from the container
+        run: |
+          docker build --tag aegisgraph-api .
+          docker run --rm --network host --env DATABASE_URL \
+            --env APP_MODE=public_demo --env AI_PROVIDER=deterministic \
+            --env ALLOWED_ORIGINS=https://demo.example \
+            --env ALLOWED_HOSTS=api.example,healthcheck.railway.app \
+            aegisgraph-api python -m aegisgraph.cli public-check
 
   # Formatting, lint, types, component tests, production build, dependency audit.
   frontend:
@@ -75,9 +84,20 @@ jobs:
       - run: npm run build
       - run: npm audit --audit-level=moderate
 
-  # Isolated SQLite case: analyst workflow and responsive dark/light routes.
+  # Local SQLite workflow plus read-only PostgreSQL public demo over local HTTPS.
   browser:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: aegisgraph
+          POSTGRES_PASSWORD: demo-local-only
+          POSTGRES_DB: aegisgraph_public_validation
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U aegisgraph -d aegisgraph_public_validation"
+          --health-interval 5s --health-timeout 3s --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -93,6 +113,21 @@ jobs:
       - run: npm run build --prefix apps/web
       - run: python scripts/prepare_e2e.py
       - run: node apps/web/node_modules/@playwright/test/cli.js test --config playwright.config.ts
+      - name: Clean PostgreSQL public initialization and API boundaries
+        run: python scripts/validate_public_database.py
+        env:
+          APP_MODE: public_demo
+          DATABASE_URL: postgresql+psycopg://aegisgraph:demo-local-only@127.0.0.1:5432/aegisgraph_public_validation
+          ALLOWED_ORIGINS: https://127.0.0.1:3443
+          ALLOWED_HOSTS: 127.0.0.1,localhost
+      - name: Public production build and HTTPS browser workflow
+        run: |
+          npm run build --prefix apps/web
+          node apps/web/node_modules/@playwright/test/cli.js test --config playwright.public.config.ts
+        env:
+          APP_MODE: public_demo
+          API_INTERNAL_URL: https://127.0.0.1:8443
+          DATABASE_URL: postgresql+psycopg://aegisgraph:demo-local-only@127.0.0.1:5432/aegisgraph_public_validation
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

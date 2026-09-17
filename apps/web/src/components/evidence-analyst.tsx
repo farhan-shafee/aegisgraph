@@ -11,6 +11,8 @@ import type { Analysis } from "@/lib/types";
 import { api, errorMessage } from "@/lib/api";
 import { humanize } from "@/lib/format";
 import { Badge, ErrorNotice, Panel } from "./ui";
+import { usePublicDemo } from "./demo-mode";
+import { demoQuestions } from "@/lib/demo-questions";
 export interface FindingDraft {
   title: string;
   narrative: string;
@@ -58,6 +60,7 @@ export function EvidenceAnalyst({
   onDraft: (draft: FindingDraft) => void;
   onComplete: () => Promise<void>;
 }) {
+  const publicDemo = usePublicDemo();
   const [question, setQuestion] = useState(""),
     [answer, setAnswer] = useState<Analysis | null>(null),
     [busy, setBusy] = useState(false),
@@ -76,7 +79,7 @@ export function EvidenceAnalyst({
         { method: "POST", body: JSON.stringify({ question: question.trim() }) },
       );
       setAnswer(result);
-      await onComplete();
+      if (!publicDemo) await onComplete();
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -106,15 +109,27 @@ export function EvidenceAnalyst({
         source.
       </div>
       <div className="suggested-questions">
-        {["What most likely happened?", "What malware family was used?"].map(
-          (text) => (
-            <button key={text} type="button" onClick={() => setQuestion(text)}>
-              {text}
-              <ArrowUpRight size={12} />
-            </button>
-          ),
-        )}
+        {demoQuestions.map((text) => (
+          <button key={text} type="button" onClick={() => setQuestion(text)}>
+            {text}
+            <ArrowUpRight size={12} />
+          </button>
+        ))}
       </div>
+      {publicDemo && (
+        <p className="analyst-disclosure">
+          The public demo uses the deterministic evidence analyst for
+          reproducibility. A separately validated OpenAI provider is{" "}
+          <a
+            href="https://github.com/farhan-shafee/aegisgraph/blob/main/docs/evaluations/LIVE_VALIDATION.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            documented in the repository
+          </a>
+          . Answers are temporary and do not change this case.
+        </p>
+      )}
       <form onSubmit={submit} className="analyst-form">
         <label htmlFor="analyst-question" className="field-label">
           Investigation question
@@ -123,8 +138,13 @@ export function EvidenceAnalyst({
           id="analyst-question"
           value={question}
           maxLength={2000}
+          readOnly={publicDemo}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask about the sequence, supported findings, or gaps…"
+          placeholder={
+            publicDemo
+              ? "Choose a demo question above…"
+              : "Ask about the sequence, supported findings, or gaps…"
+          }
           required
         />
         <div className="analyst-form-footer">
@@ -206,21 +226,23 @@ export function EvidenceAnalyst({
                         </button>
                       ))}
                     </div>
-                    <button
-                      className="button ghost small"
-                      style={{ marginTop: 11 }}
-                      onClick={() =>
-                        onDraft({
-                          title: finding.statement.slice(0, 150),
-                          narrative: finding.statement,
-                          evidence_ids: finding.evidence_ids,
-                          ai_assisted: true,
-                        })
-                      }
-                    >
-                      <FilePenLine size={12} />
-                      Review as finding
-                    </button>
+                    {!publicDemo && (
+                      <button
+                        className="button ghost small"
+                        style={{ marginTop: 11 }}
+                        onClick={() =>
+                          onDraft({
+                            title: finding.statement.slice(0, 150),
+                            narrative: finding.statement,
+                            evidence_ids: finding.evidence_ids,
+                            ai_assisted: true,
+                          })
+                        }
+                      >
+                        <FilePenLine size={12} />
+                        Review as finding
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -260,8 +282,9 @@ export function EvidenceAnalyst({
       <div className="analyst-boundary">
         <LockKeyhole size={12} />
         <span>
-          No tools, state changes, or cross-incident access. Human approval is
-          required for findings and reports.
+          {publicDemo
+            ? "No tools, persistent state changes, or cross-incident access. Findings and approvals are read-only in the public demo."
+            : "No tools, state changes, or cross-incident access. Human approval is required for findings and reports."}
         </span>
       </div>
     </Panel>

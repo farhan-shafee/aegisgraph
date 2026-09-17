@@ -2,6 +2,8 @@
 
 Local hardening validation date: 2026-09-17 UTC. Dataset date: 2026-09-15 UTC.
 Results here describe this implementation run, not continuous operational metrics.
+The later public-demo implementation has a separate
+[validation record](PUBLIC_DEMO_VALIDATION.md); historical counts below are retained.
 
 ## Environment and persisted data
 

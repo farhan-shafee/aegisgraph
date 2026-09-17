@@ -20,6 +20,7 @@ import { EvidenceAnalyst, type FindingDraft } from "./evidence-analyst";
 import { Findings, NotesAndAudit, ReportPanel } from "./incident-records";
 import { CorrelationSummary } from "./correlation-summary";
 import { EvidenceTimeline } from "./evidence-timeline";
+import { ReadOnlyNotice, usePublicDemo } from "./demo-mode";
 const tabs = [
   "Timeline",
   "Entities",
@@ -38,6 +39,7 @@ const tabIds: Record<Tab, string> = {
   Report: "tab-report",
 };
 export function IncidentWorkspace({ initial }: { initial: Incident }) {
+  const publicDemo = usePublicDemo();
   const [incident, setIncident] = useState(initial);
   const [active, setActive] = useState<Tab>("Timeline");
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>(
@@ -127,82 +129,88 @@ export function IncidentWorkspace({ initial }: { initial: Incident }) {
         </div>
       </div>
       <CorrelationSummary correlation={incident.correlation} />
-      <details className="incident-management">
-        <summary>
-          Manage incident{" "}
-          <span>Update status, severity, or assigned analyst</span>
-        </summary>
-        <form className="panel incident-controls" onSubmit={saveIncident}>
-          <div className="form-field">
-            <label htmlFor="incident-status">Incident status</label>
-            <select
-              id="incident-status"
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value as IncidentStatus);
-                setSaved(false);
-              }}
-            >
-              {["new", "investigating", "contained", "resolved"].map((item) => (
-                <option key={item} value={item}>
-                  {humanize(item)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-field">
-            <label htmlFor="incident-severity">Severity</label>
-            <select
-              id="incident-severity"
-              value={severity}
-              onChange={(e) => {
-                setSeverity(e.target.value as Severity);
-                setSaved(false);
-              }}
-            >
-              {["low", "medium", "high", "critical"].map((item) => (
-                <option key={item} value={item}>
-                  {humanize(item)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-field">
-            <label htmlFor="incident-owner">Assigned analyst</label>
-            <input
-              id="incident-owner"
-              value={owner}
-              maxLength={100}
-              onChange={(e) => {
-                setOwner(e.target.value);
-                setSaved(false);
-              }}
-              placeholder="Unassigned"
-            />
-          </div>
-          <button className="button secondary" type="submit" disabled={busy}>
-            <Save size={14} />
-            {busy ? "Saving…" : "Save changes"}
-          </button>
-          {error && (
-            <div style={{ gridColumn: "1 / -1" }}>
-              <ErrorNotice message={error} />
+      {publicDemo ? (
+        <ReadOnlyNotice />
+      ) : (
+        <details className="incident-management">
+          <summary>
+            Manage incident{" "}
+            <span>Update status, severity, or assigned analyst</span>
+          </summary>
+          <form className="panel incident-controls" onSubmit={saveIncident}>
+            <div className="form-field">
+              <label htmlFor="incident-status">Incident status</label>
+              <select
+                id="incident-status"
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value as IncidentStatus);
+                  setSaved(false);
+                }}
+              >
+                {["new", "investigating", "contained", "resolved"].map(
+                  (item) => (
+                    <option key={item} value={item}>
+                      {humanize(item)}
+                    </option>
+                  ),
+                )}
+              </select>
             </div>
-          )}
-          {saved && (
-            <p
-              role="status"
-              style={{
-                gridColumn: "1 / -1",
-                fontSize: 12,
-                color: "var(--teal)",
-              }}
-            >
-              Incident changes saved and recorded in audit history.
-            </p>
-          )}
-        </form>
-      </details>
+            <div className="form-field">
+              <label htmlFor="incident-severity">Severity</label>
+              <select
+                id="incident-severity"
+                value={severity}
+                onChange={(e) => {
+                  setSeverity(e.target.value as Severity);
+                  setSaved(false);
+                }}
+              >
+                {["low", "medium", "high", "critical"].map((item) => (
+                  <option key={item} value={item}>
+                    {humanize(item)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-field">
+              <label htmlFor="incident-owner">Assigned analyst</label>
+              <input
+                id="incident-owner"
+                value={owner}
+                maxLength={100}
+                onChange={(e) => {
+                  setOwner(e.target.value);
+                  setSaved(false);
+                }}
+                placeholder="Unassigned"
+              />
+            </div>
+            <button className="button secondary" type="submit" disabled={busy}>
+              <Save size={14} />
+              {busy ? "Saving…" : "Save changes"}
+            </button>
+            {error && (
+              <div style={{ gridColumn: "1 / -1" }}>
+                <ErrorNotice message={error} />
+              </div>
+            )}
+            {saved && (
+              <p
+                role="status"
+                style={{
+                  gridColumn: "1 / -1",
+                  fontSize: 12,
+                  color: "var(--teal)",
+                }}
+              >
+                Incident changes saved and recorded in audit history.
+              </p>
+            )}
+          </form>
+        </details>
+      )}
       <div className="investigation-grid">
         <Panel>
           <div className="tabs" role="tablist" aria-label="Investigation views">

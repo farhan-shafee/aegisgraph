@@ -7,6 +7,11 @@ topics, website and reporting settings were not changed. After the audit, the
 owner explicitly selected MIT; the subsequent license-only update added
 [`LICENSE`](../LICENSE) and updated documentation without changing application behavior.
 
+This is the historical source-publication audit. A later implementation adds an
+explicit read-only public-demo mode; its current checks and deployment limitations
+are recorded separately in [PUBLIC_DEMO_VALIDATION.md](PUBLIC_DEMO_VALIDATION.md)
+and [DEPLOYMENT.md](DEPLOYMENT.md). Counts below remain scoped to this audit.
+
 ## Decision
 
 No blocking secret exposure, sensitive image, private path, dependency advisory,
@@ -195,9 +200,10 @@ The full terms are in the root license file; no license choice remains pending.
 - **License:** [MIT](../LICENSE).
 - **Topics:** `security-engineering`, `incident-response`, `detection-engineering`,
   `ai-security`, `fastapi`, `nextjs`, `postgresql`, `cybersecurity`.
-- **Website:** leave blank until there is a public, static portfolio page with the
-  reviewed screenshots. No hosted public demo exists; do not use localhost or
-  expose this unauthenticated application as the repository website.
+- **Website:** leave blank until a reviewed portfolio page or the explicitly
+  configured read-only public demo is actually hosted and verified. Follow the
+  [deployment runbook](DEPLOYMENT.md) for the latter. No hosted public demo exists
+  as of this preparation; never use localhost or expose the writable local mode.
 
 The existing description omits the simulation qualifier; changing it is
 recommended when the owner publishes. Metadata settings were only read.

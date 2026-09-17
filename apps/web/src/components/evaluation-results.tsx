@@ -6,6 +6,7 @@ import { api, errorMessage } from "@/lib/api";
 import { dateTime, humanize } from "@/lib/format";
 import { Badge, Empty, ErrorNotice, PageHeading, Panel } from "./ui";
 import { LiveEvaluationResults } from "./live-evaluation-results";
+import { usePublicDemo } from "./demo-mode";
 export function EvaluationResults({
   initial,
   live,
@@ -13,6 +14,7 @@ export function EvaluationResults({
   initial: EvaluationRun | null;
   live?: LiveEvaluationRun | null;
 }) {
+  const publicDemo = usePublicDemo();
   const [run, setRun] = useState(initial),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null),
@@ -41,6 +43,7 @@ export function EvaluationResults({
         title="AI & security evaluations"
         description="Executed tests of the evidence boundary, structured output, and unsupported claims."
         action={
+          !publicDemo &&
           view === "deterministic" && (
             <button
               className="button primary"
@@ -215,15 +218,18 @@ export function EvaluationResults({
             </div>
           </Panel>
           <p className="page-note">
-            Run {run.id || run.run_id}. Results are persisted by the API and
-            recalculated when you execute the suite.
+            Run {run.id || run.run_id}.{" "}
+            {publicDemo
+              ? "Saved evaluation results are read-only in the public demo. Run the suite locally to reproduce them."
+              : "Results are persisted by the API and recalculated when you execute the suite."}
           </p>
         </>
       ) : (
         <Panel className="mt-6">
           <Empty title="No evaluation has been run">
-            Run the suite to see actual case results. No scores are displayed
-            before execution.
+            {publicDemo
+              ? "Evaluation results appear after the deployment administrator initializes the demo dataset."
+              : "Run the suite to see actual case results. No scores are displayed before execution."}
           </Empty>
         </Panel>
       )}

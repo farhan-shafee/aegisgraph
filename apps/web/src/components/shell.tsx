@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "./theme-toggle";
+import { usePublicDemo } from "./demo-mode";
 const navigation = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/incidents", label: "Incidents", icon: FileSearch },
@@ -27,6 +28,7 @@ const navigation = [
   { href: "/architecture", label: "Architecture", icon: Blocks },
 ];
 export function Shell({ children }: { children: React.ReactNode }) {
+  const publicDemo = usePublicDemo();
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
   const active = navigation.find((item) =>
@@ -84,7 +86,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <br />
             Human decisions.
           </p>
-          <span className="version-label">LOCAL DEMO · V0.1</span>
+          <span className="version-label">
+            {publicDemo ? "PUBLIC DEMO · READ ONLY" : "LOCAL DEMO · V0.1"}
+          </span>
         </div>
       </aside>
       <div className="main-shell">
@@ -115,6 +119,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main id="main-content" tabIndex={-1}>
+          {publicDemo && (
+            <aside
+              className="public-demo-notice"
+              aria-label="Public demonstration"
+            >
+              <strong>Read-only public demo</strong>
+              <span>
+                AegisGraph uses synthetic fintech telemetry and is an
+                engineering demonstration, not a production SOC system.
+              </span>
+            </aside>
+          )}
           {children}
         </main>
         <footer className="main-footer">

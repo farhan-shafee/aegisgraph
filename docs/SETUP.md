@@ -118,6 +118,7 @@ environment file or expose credentials in screenshots/logs.
 
 | Variable | Default / purpose |
 |---|---|
+| `APP_MODE` | `local`; use the separate [deployment runbook](DEPLOYMENT.md) for `public_demo` |
 | `DATABASE_URL` | Loopback PostgreSQL URL matching Compose; see `.env.example` |
 | `AI_PROVIDER` | `deterministic`; `openai` explicitly opts into external calls |
 | `AEGISGRAPH_LOAD_ENV` | `true`; use `false` to disable repository `.env` loading |
@@ -126,10 +127,13 @@ environment file or expose credentials in screenshots/logs.
 | `API_INTERNAL_URL` | `http://127.0.0.1:8000`; Next.js server proxy target, set before build/start |
 | `DEMO_ANALYST` | `demo.analyst`; an audit label, not authentication |
 | `ALLOWED_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000`; mutation origins |
+| `ALLOWED_HOSTS` | Explicit loopback/test hosts in local mode |
 | `ALLOW_REMOTE_DEMO` | `false`; disabling the local-client guard does not add authentication |
 
-Keep services local. AegisGraph does not implement public-deployment authentication
-or tenant isolation. No API key is sent to the browser.
+Keep this writable local mode on loopback. The separate explicit
+[public-demo mode](DEPLOYMENT.md) blocks persistent writes and forces deterministic
+analysis. Neither mode implements production identity or tenant isolation.
+No API key is sent to the browser.
 
 ## Optional live provider
 

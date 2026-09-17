@@ -1,9 +1,12 @@
+import asyncio
 import json
 import logging
 import time
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import String, cast, func, or_, select, text
@@ -15,6 +18,7 @@ from . import services as svc
 from .config import settings
 from .db import get_db
 from .detection import load_rules
+from .public_security import PUBLIC_ANALYSIS_PATH, PUBLIC_QUESTIONS, PublicBudget
 from .schema import (
     AnalysisRequest,
     EvidencePatch,
@@ -33,6 +37,7 @@ class BoundaryMiddleware:
 
     def __init__(self, app):
         self.app = app
+        self.budget = PublicBudget()
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -43,39 +48,70 @@ class BoundaryMiddleware:
         headers = dict(scope.get("headers", []))
         method = scope["method"]
         client = (scope.get("client") or ("", 0))[0]
+        status_code = 500
 
-        async def reject(status: int, message: str):
+        async def reject(status: int, message: str, retry_after: int | None = None):
+            nonlocal status_code
+            status_code = status
+            response_headers = {
+                "X-Request-ID": request_id,
+                "X-Content-Type-Options": "nosniff",
+                "X-Frame-Options": "DENY",
+                "Referrer-Policy": "no-referrer",
+                "Cache-Control": "no-store",
+            }
+            if retry_after is not None:
+                response_headers["Retry-After"] = str(retry_after)
+            if settings.public_demo and origin in settings.allowed_origins:
+                response_headers["Access-Control-Allow-Origin"] = origin
+                response_headers["Vary"] = "Origin"
             response = JSONResponse(
-                {"detail": message}, status_code=status, headers={"X-Request-ID": request_id}
+                {"detail": message}, status_code=status, headers=response_headers
             )
             await response(scope, receive, send)
 
-        if not settings.allow_remote_demo and client not in {"127.0.0.1", "::1", "testclient"}:
+        public = settings.public_demo
+        path = scope["path"]
+        origin = headers.get(b"origin", b"").decode("latin1")
+        if (
+            not public
+            and not settings.allow_remote_demo
+            and client not in {"127.0.0.1", "::1", "testclient"}
+        ):
             return await reject(403, "This demo accepts local connections only")
-        if method in {"POST", "PATCH", "PUT", "DELETE"}:
-            origin = headers.get(b"origin", b"").decode("latin1")
+        if public:
+            if len(path) > 256 or len(scope.get("query_string", b"")) > 2048:
+                return await reject(414, "Request URL too long")
+            if sum(len(key) + len(value) for key, value in scope.get("headers", [])) > 16384:
+                return await reject(431, "Request headers too large")
             if origin and origin not in settings.allowed_origins:
                 return await reject(403, "Origin not allowed")
-        messages = []
-        size = 0
-        while True:
-            message = await receive()
-            messages.append(message)
-            size += len(message.get("body", b""))
-            if size > 1_048_576:
-                return await reject(413, "Request body too large")
-            if message["type"] == "http.disconnect" or not message.get("more_body", False):
-                break
-        cursor = iter(messages)
-
-        async def replay():
-            return next(cursor, {"type": "http.disconnect"})
-
-        status_code = 500
+            if method not in {"GET", "HEAD", "OPTIONS"}:
+                if method != "POST" or not PUBLIC_ANALYSIS_PATH.fullmatch(path):
+                    return await reject(403, "Public demo is read-only; this action is unavailable")
+                if origin not in settings.allowed_origins:
+                    return await reject(403, "An allowed frontend origin is required")
+            if path in {"/docs", "/docs/oauth2-redirect", "/redoc", "/openapi.json"}:
+                return await reject(404, "Not found")
+        elif method in {"POST", "PATCH", "PUT", "DELETE"}:
+            if origin and origin not in settings.allowed_origins:
+                return await reject(403, "Origin not allowed")
+        category = PublicBudget.category(method, path)
+        if public and (limited := self.budget.enter(category)):
+            status, retry = limited
+            return await reject(
+                status,
+                "Demo request budget reached; retry shortly"
+                if status == 429
+                else "Demo is busy; retry shortly",
+                retry,
+            )
+        response_started = False
 
         async def secured_send(message):
-            nonlocal status_code
+            nonlocal status_code, response_started
             if message["type"] == "http.response.start":
+                response_started = True
                 status_code = message["status"]
                 message["headers"] += [
                     (b"x-request-id", request_id.encode()),
@@ -87,14 +123,50 @@ class BoundaryMiddleware:
             await send(message)
 
         try:
+            limit = 8192 if public else 1_048_576
+            body = bytearray()
+            try:
+                async with asyncio.timeout(5 if public else None):
+                    while True:
+                        message = await receive()
+                        if message["type"] == "http.disconnect":
+                            return
+                        body.extend(message.get("body", b""))
+                        if len(body) > limit:
+                            return await reject(413, "Request body too large")
+                        if not message.get("more_body", False):
+                            break
+            except TimeoutError:
+                return await reject(408, "Request body timed out")
+            replayed = False
+
+            async def replay():
+                nonlocal replayed
+                if replayed:
+                    return {"type": "http.disconnect"}
+                replayed = True
+                return {"type": "http.request", "body": bytes(body), "more_body": False}
+
             await self.app(scope, replay, secured_send)
+        except Exception as exc:
+            if not public:
+                raise
+            # Handle before Uvicorn sees the exception; never log traceback, SQL,
+            # request values, filesystem paths, or credential-bearing URLs.
+            logger.error(
+                json.dumps({"error_type": type(exc).__name__, "message": "request failed"})
+            )
+            if not response_started:
+                await reject(500, "Request could not be completed")
         finally:
+            if public:
+                self.budget.leave(category)
             logger.info(
                 json.dumps(
                     {
                         "request_id": request_id,
                         "method": method,
-                        "path": scope["path"],
+                        **({} if public else {"path": path}),
                         "status": status_code,
                         "duration_ms": round((time.monotonic() - start) * 1000, 1),
                     }
@@ -105,18 +177,28 @@ class BoundaryMiddleware:
 app = FastAPI(
     title="AegisGraph",
     version="0.1.0",
-    description="Local, synthetic Atlas security investigation. No enterprise authentication is implemented.",
+    description="Synthetic Atlas security investigation. No enterprise authentication is implemented.",
+    docs_url=None if settings.public_demo else "/docs",
+    redoc_url=None if settings.public_demo else "/redoc",
+    openapi_url=None if settings.public_demo else "/openapi.json",
 )
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(settings.allowed_origins),
-    allow_methods=["GET", "POST", "PATCH"],
+    allow_methods=["GET", "HEAD", "POST"] if settings.public_demo else ["GET", "POST", "PATCH"],
     allow_headers=["Content-Type"],
 )
 app.add_middleware(BoundaryMiddleware)
 app.add_middleware(
-    TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "[::1]", "testserver"]
+    TrustedHostMiddleware, allowed_hosts=list(settings.allowed_hosts), www_redirect=False
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def safe_validation_error(request, exc):
+    if settings.public_demo:
+        return JSONResponse(status_code=422, content={"detail": "Request input is invalid"})
+    return await request_validation_exception_handler(request, exc)
 
 
 @app.exception_handler(Exception)
@@ -137,7 +219,32 @@ async def safe_error(_request, exc):
 @app.get("/health")
 def health(db: Session = Depends(get_db)):
     db.execute(text("SELECT 1"))
+    if settings.public_demo:
+        return {"status": "ok"}
     return {"status": "ok", "environment": "synthetic_demo", "authentication": "local_demo_analyst"}
+
+
+@app.get("/ready")
+def readiness(db: Session = Depends(get_db)):
+    from .deployment import dataset_status
+
+    try:
+        ready = dataset_status(db)["ready"]
+    except Exception:
+        ready = False
+    return JSONResponse(
+        {"status": "ready" if ready else "not_ready"}, status_code=200 if ready else 503
+    )
+
+
+@app.get("/api/runtime")
+def runtime():
+    return {
+        "app_mode": settings.app_mode,
+        "read_only": settings.public_demo,
+        "analyst_provider": "deterministic" if settings.public_demo else "configured",
+        "questions": list(PUBLIC_QUESTIONS),
+    }
 
 
 @app.get("/api/overview")
@@ -245,7 +352,7 @@ def detections(db: Session = Depends(get_db)):
 @app.get("/api/alerts")
 def alerts(
     limit: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=1000000),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -262,7 +369,7 @@ def alerts(
 @app.get("/api/incidents")
 def incidents(
     limit: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=1000000),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
