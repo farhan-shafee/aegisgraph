@@ -213,9 +213,6 @@ privacy review, and broader repeated live-model evaluation. Streaming and scalin
 decisions should follow measured workload needs. There is no autonomous response,
 enterprise readiness claim, or security certification.
 
-## License status
+## License
 
-No project license has been selected. Public visibility alone does not grant
-general permission to reuse or redistribute the code. The
-[release review](docs/PUBLIC_RELEASE_REVIEW.md#license-status-and-recommendation)
-compares the options; the repository owner retains the final choice.
+Licensed under the [MIT License](LICENSE).

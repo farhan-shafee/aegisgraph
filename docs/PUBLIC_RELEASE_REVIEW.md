@@ -3,15 +3,17 @@
 Reviewed on **2026-09-17 UTC**. Scope: publishing the repository for public
 inspection, not deploying the application as an internet-facing security service.
 The repository remained **private** throughout this audit. Visibility, description,
-topics, website, reporting settings and license were not changed.
+topics, website and reporting settings were not changed. After the audit, the
+owner explicitly selected MIT; the subsequent license-only update added
+[`LICENSE`](../LICENSE) and updated documentation without changing application behavior.
 
 ## Decision
 
 No blocking secret exposure, sensitive image, private path, dependency advisory,
 unsupported production claim, or failing local check was identified. The source
 is suitable for public portfolio inspection within the limitations below.
-No license was selected on the owner's behalf. Public inspection and permissive
-open-source reuse are separate decisions.
+The project is now licensed under [MIT](../LICENSE), as explicitly authorized by
+the owner, with **Copyright (c) 2026 Farhan Shafee**.
 
 ## Secret scan and repository contents
 
@@ -43,7 +45,7 @@ account or production system was tested.
 
 ## Git history and attribution
 
-Both existing commits were inspected:
+Both commits existing at the original audit were inspected:
 
 - `3764a742f89139813cf4e429d33bad325087b907` — initial implementation.
 - `7293c515d47178405df6fcf93feeeadac067cf64` — interview hardening.
@@ -56,7 +58,7 @@ No history rewrite or credential rotation was indicated by these findings.
 
 The review covers repository refs available locally, not unknown remote forks,
 external backups, private GitHub account data or unrelated machine files. The
-release commit's staged content is checked separately before push.
+release commit's staged content was checked separately before push.
 
 ## Images, personal data and local configuration
 
@@ -160,10 +162,11 @@ non-failing pip-audit cache-write warning did not prevent the advisory check.
 
 ## GitHub Actions
 
-The latest completed run at audit preparation,
-[hardening CI for `7293c51`](https://github.com/farhan-shafee/aegisgraph/actions/runs/35176511095),
-passed all three jobs. Its counts were 146 backend, 23 frontend and 13 browser
-tests; those are not substituted for the fresh 25-test frontend result above.
+The release-preparation commit `534679e` subsequently passed
+[all three hosted jobs](https://github.com/farhan-shafee/aegisgraph/actions/runs/35179396463).
+The earlier [hardening run for `7293c51`](https://github.com/farhan-shafee/aegisgraph/actions/runs/35176511095)
+also passed, but its 23 frontend tests remain historical; the release validation
+above includes the two attribution regression tests.
 
 The [workflow](../.github/workflows/ci.yml) retains three practical jobs:
 
@@ -175,35 +178,21 @@ The [workflow](../.github/workflows/ci.yml) retains three practical jobs:
 
 Workflow-wide `AEGISGRAPH_LOAD_ENV=false` and `AI_PROVIDER=deterministic` make the
 credential-free boundary explicit. No job references a private OpenAI secret or
-invokes the live runner. Workflow token permissions remain read-only. The exact
-release commit's hosted result is checked after push and is available in
+invokes the live runner. Workflow token permissions remain read-only. Results for
+subsequent commits are available in
 [main's Actions history](https://github.com/farhan-shafee/aegisgraph/actions/workflows/ci.yml).
 This file does not predeclare an unexecuted hosted run successful.
 
-## License status and recommendation
+## License status
 
-There is **no project license file**, and GitHub reports no detected license.
-No license was added or chosen during this task.
-
-| Choice | Practical implication |
-|---|---|
-| No license | Default copyright applies; public GitHub users can view/fork under GitHub's terms, but no broad permission to reuse, modify or redistribute is granted. Public source is not automatically open source. |
-| MIT | Short permissive terms allow use, modification and distribution, including commercial use, while requiring preservation of copyright/license notices; includes warranty/liability disclaimers. |
-| Apache-2.0 | Permissive terms with an explicit contributor patent grant and patent-litigation termination; redistribution also involves license/notices and marking modified files, including NOTICE obligations when applicable. |
-
-**Recommendation: MIT** for a straightforward educational portfolio where easy
-reuse is desired. Apache-2.0 is reasonable if an explicit patent grant is a
-priority. The owner must make the final choice and confirm rights to license the
-work. Leaving the current no-license state does not block public inspection,
-but must not be described as an open-source license or a reuse grant.
-
-Sources: [GitHub licensing guidance](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository),
-[MIT terms](https://choosealicense.com/licenses/mit/), and
-[Apache-2.0 terms](https://www.apache.org/licenses/LICENSE-2.0).
+The owner selected the **[MIT License](../LICENSE)** after the original audit.
+The repository's license states **Copyright (c) 2026 Farhan Shafee**.
+The full terms are in the root license file; no license choice remains pending.
 
 ## Recommended GitHub metadata
 
 - **Description:** Evidence-grounded security investigation for a simulated fintech environment.
+- **License:** [MIT](../LICENSE).
 - **Topics:** `security-engineering`, `incident-response`, `detection-engineering`,
   `ai-security`, `fastapi`, `nextjs`, `postgresql`, `cybersecurity`.
 - **Website:** leave blank until there is a public, static portfolio page with the
@@ -224,15 +213,13 @@ security certification or production readiness is claimed.
 No mandatory source, secret-removal, history-rewrite or screenshot fix remains
 before public inspection. The owner retains these publication decisions:
 
-1. Choose MIT/Apache-2.0 or intentionally retain no license, understanding the
-   reuse implications above. No license choice has been inferred.
-2. Review the exact pushed commit's Actions result before changing visibility.
-3. Enable and verify GitHub private vulnerability reporting as part of publication,
+1. Review the exact pushed commit's Actions result before changing visibility.
+2. Enable and verify GitHub private vulnerability reporting as part of publication,
    or provide another private contact route. The read-only status request returned
    404 while the repository was private, so availability was not verified and is
    not claimed. GitHub documents this feature for
    [public repositories](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configure-for-a-repository).
-4. Apply the suggested description/topics if desired and keep the application
+3. Apply the suggested description/topics if desired and keep the application
    local. Publishing source and deploying a service have different risk profiles.
 
 The release recommendation is limited to the reviewed public portfolio source,
