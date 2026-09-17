@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: aegisgraph
+      POSTGRES_USER: aegisgraph
+      POSTGRES_PASSWORD: demo-local-only
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - aegisgraph-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegisgraph -d aegisgraph"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  aegisgraph-postgres:

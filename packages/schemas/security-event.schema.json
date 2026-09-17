@@ -1,0 +1,266 @@
+{
+  "$defs": {
+    "Actor": {
+      "additionalProperties": false,
+      "properties": {
+        "user_id": {
+          "maxLength": 100,
+          "title": "User Id",
+          "type": "string"
+        },
+        "username": {
+          "maxLength": 100,
+          "title": "Username",
+          "type": "string"
+        },
+        "role": {
+          "maxLength": 100,
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_id",
+        "username",
+        "role"
+      ],
+      "title": "Actor",
+      "type": "object"
+    },
+    "Device": {
+      "additionalProperties": false,
+      "properties": {
+        "device_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Device Id",
+          "type": "string"
+        },
+        "trusted": {
+          "title": "Trusted",
+          "type": "boolean"
+        },
+        "posture": {
+          "maxLength": 100,
+          "title": "Posture",
+          "type": "string"
+        }
+      },
+      "required": [
+        "device_id",
+        "trusted",
+        "posture"
+      ],
+      "title": "Device",
+      "type": "object"
+    },
+    "Network": {
+      "additionalProperties": false,
+      "properties": {
+        "source_ip": {
+          "maxLength": 45,
+          "title": "Source Ip",
+          "type": "string"
+        },
+        "destination_ip": {
+          "anyOf": [
+            {
+              "maxLength": 45,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Destination Ip"
+        },
+        "user_agent": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "User Agent"
+        },
+        "location": {
+          "anyOf": [
+            {
+              "maxLength": 100,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Location"
+        }
+      },
+      "required": [
+        "source_ip"
+      ],
+      "title": "Network",
+      "type": "object"
+    },
+    "Session": {
+      "additionalProperties": false,
+      "properties": {
+        "session_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "session_id"
+      ],
+      "title": "Session",
+      "type": "object"
+    },
+    "Target": {
+      "additionalProperties": false,
+      "properties": {
+        "resource_id": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resource Id"
+        },
+        "resource_type": {
+          "maxLength": 100,
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "service": {
+          "maxLength": 100,
+          "title": "Service",
+          "type": "string"
+        },
+        "endpoint": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Endpoint"
+        }
+      },
+      "required": [
+        "resource_type",
+        "service"
+      ],
+      "title": "Target",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "event_id": {
+      "maxLength": 80,
+      "pattern": "^EVT-[A-Za-z0-9-]+$",
+      "title": "Event Id",
+      "type": "string"
+    },
+    "timestamp": {
+      "format": "date-time",
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "source": {
+      "enum": [
+        "identity",
+        "api_gateway",
+        "endpoint",
+        "atlas"
+      ],
+      "title": "Source",
+      "type": "string"
+    },
+    "event_type": {
+      "maxLength": 100,
+      "title": "Event Type",
+      "type": "string"
+    },
+    "action": {
+      "maxLength": 100,
+      "title": "Action",
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "success",
+        "failure",
+        "unknown"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "actor": {
+      "$ref": "#/$defs/Actor"
+    },
+    "target": {
+      "$ref": "#/$defs/Target"
+    },
+    "network": {
+      "$ref": "#/$defs/Network"
+    },
+    "device": {
+      "$ref": "#/$defs/Device"
+    },
+    "session": {
+      "$ref": "#/$defs/Session"
+    },
+    "attributes": {
+      "additionalProperties": true,
+      "title": "Attributes",
+      "type": "object"
+    },
+    "raw": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Raw"
+    }
+  },
+  "required": [
+    "event_id",
+    "timestamp",
+    "source",
+    "event_type",
+    "action",
+    "outcome",
+    "actor",
+    "target",
+    "network",
+    "device",
+    "session"
+  ],
+  "title": "CanonicalEvent",
+  "type": "object"
+}

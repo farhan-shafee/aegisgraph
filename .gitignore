@@ -1,0 +1,45 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+
+# Python and local data
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.db
+*.db-*
+*.sqlite*
+data/
+.runtime/
+.cache/
+
+# Node and generated artifacts
+node_modules/
+.next/
+next-env.d.ts
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+playwright-report/
+test-results/
+artifacts/
+*.log
+
+# Editor and operating system
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

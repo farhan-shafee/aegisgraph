@@ -1,0 +1,80 @@
+import type { Analysis, Evidence, Incident } from "@/lib/types";
+export const evidence: Evidence = {
+  id: "EVD-001",
+  event_id: "EVT-001",
+  timestamp: "2026-09-15T14:02:00Z",
+  relevance: "unreviewed",
+  note: "",
+  event: {
+    event_id: "EVT-001",
+    timestamp: "2026-09-15T14:02:00Z",
+    source: "identity",
+    event_type: "authentication",
+    action: "unfamiliar_login",
+    outcome: "success",
+    actor: { user_id: "USR-01", username: "synthetic.engineer" },
+    target: { service: "Identity Service" },
+    network: { source_ip: "192.0.2.10" },
+    device: { device_id: "DEV-01", trusted: false },
+    session: { session_id: "SES-01" },
+    attributes: { source_previously_seen: false },
+  },
+};
+export const incident: Incident = {
+  id: "INC-001",
+  title: "Suspected engineer account compromise",
+  severity: "high",
+  status: "new",
+  owner: null,
+  summary: "Related anomalous authentication and privileged activity.",
+  created_at: "2026-09-15T14:24:00Z",
+  updated_at: "2026-09-15T14:24:00Z",
+  evidence: [evidence],
+  alerts: [
+    {
+      id: "ALT-01",
+      title: "Unfamiliar source",
+      rule_id: "AUTH-002",
+      rule_name: "Unfamiliar source",
+      description: "A previously unseen source.",
+      severity: "medium",
+      timestamp: evidence.timestamp,
+      user_id: "USR-01",
+      event_ids: [evidence.event_id],
+      incident_id: "INC-001",
+    },
+  ],
+  entities: [
+    { id: "ENT-01", type: "user", label: "USR-01" },
+    { id: "ENT-02", type: "device", label: "DEV-01" },
+  ],
+  relationships: [
+    {
+      source: "ENT-01",
+      target: "ENT-02",
+      label: "used device",
+      evidence_ids: [evidence.id],
+    },
+  ],
+  findings: [],
+  notes: [],
+  audit: [],
+};
+export const analysis: Analysis = {
+  status: "answered",
+  summary: "Unfamiliar authentication is recorded [EVD-001].",
+  confidence: "moderate",
+  findings: [
+    {
+      statement: "Authentication used an unfamiliar source.",
+      evidence_ids: ["EVD-001"],
+      claim_type: "unfamiliar_authentication",
+    },
+  ],
+  missing_evidence: ["No evidence confirms malware execution."],
+  recommended_next_steps: ["Review the privileged activity."],
+  provider: "deterministic",
+  context_evidence_count: 1,
+  validation_errors: [],
+  review_required: true,
+};

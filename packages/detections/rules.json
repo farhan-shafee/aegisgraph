@@ -1,0 +1,12 @@
+[
+  {"id":"AUTH-001","name":"Repeated authentication failures","severity":"medium","kind":"failed_logins","window_minutes":5,"threshold":5,"description":"At least five failed logins for a user in five minutes."},
+  {"id":"AUTH-002","name":"Unseen authentication source or device","severity":"medium","kind":"unseen_auth","window_minutes":0,"threshold":3,"description":"Successful login uses an IP or device absent from at least three prior successful logins."},
+  {"id":"AUTH-003","name":"Unusual synthetic location","severity":"low","kind":"unseen_location","window_minutes":0,"threshold":3,"description":"Successful login uses a synthetic location absent from at least three prior successful logins. Location is a simulator label, not real IP geolocation."},
+  {"id":"MFA-001","name":"MFA accepted after unfamiliar login","severity":"medium","kind":"mfa_after_auth","window_minutes":5,"threshold":1,"description":"MFA acceptance within five minutes after an unfamiliar successful authentication on the same session."},
+  {"id":"IAM-001","name":"Privileged role assigned","severity":"medium","kind":"privileged_role","window_minutes":0,"threshold":1,"description":"A platform administrator role is granted."},
+  {"id":"IAM-002","name":"Privilege follows unfamiliar authentication","severity":"high","kind":"privilege_after_auth","window_minutes":15,"threshold":1,"description":"A privileged role is granted within fifteen minutes of unfamiliar successful authentication for the same user/session."},
+  {"id":"API-001","name":"Internal endpoint enumeration","severity":"medium","kind":"enumeration","window_minutes":5,"threshold":12,"description":"At least twelve distinct internal endpoints requested by one user/session within five minutes. Alert emits once per window."},
+  {"id":"APP-001","name":"Sensitive account resource accessed","severity":"medium","kind":"sensitive_access","window_minutes":0,"threshold":1,"description":"A successful read targets an explicitly classified sensitive account resource."},
+  {"id":"APP-002","name":"Abnormal account data volume","severity":"high","kind":"data_volume","window_minutes":0,"threshold":1000,"description":"A successful query accesses at least 1,000 records. Normal synthetic queries access no more than 90."},
+  {"id":"IAM-003","name":"Short-lived privileged role","severity":"medium","kind":"rapid_reversion","window_minutes":30,"threshold":1,"description":"A granted platform administrator role is reverted for the same user within thirty minutes."}
+]
