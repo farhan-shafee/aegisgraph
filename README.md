@@ -2,6 +2,8 @@
 
 **Evidence-grounded security investigation for a simulated fintech environment.**
 
+[Live demo](https://aegisgraph.farhan-shafee.com) · [Architecture](docs/architecture/SYSTEM.md) · [Seven-minute demo](docs/DEMO.md)
+
 ![Incident workspace with correlation rationale, evidence timeline, and Evidence Analyst](docs/screenshots/02-incident.png)
 
 AegisGraph turns synthetic identity, API, endpoint, and application telemetry into
@@ -31,8 +33,8 @@ that the application validates against case evidence before displaying them.
 All application data is synthetic. This is an engineering demonstration, with no
 real banking integration or production authentication. Local mode supports the
 analyst review workflow; explicit `APP_MODE=public_demo` provides read-only
-exploration and two deterministic analyst questions. No deployment is included
-in this repository preparation.
+exploration and two deterministic analyst questions. A hosted read-only public demo is available at
+https://aegisgraph.farhan-shafee.com.
 
 ## Demo scenario
 
