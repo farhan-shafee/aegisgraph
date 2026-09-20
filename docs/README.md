@@ -54,6 +54,7 @@ edits, human approvals, and optional OpenAI analysis.
 | [ADR-007](adr/ADR-007.md) | Deterministic correlation before model-based grouping |
 | [ADR-008](adr/ADR-008.md) | Immutable observations and case annotations |
 | [ADR-009](adr/ADR-009.md) | Deterministic reports and explicit review state |
+| [ADR-010](adr/ADR-010.md) | Synthetic scenario corpus and separate evaluation labels |
 
 ## Explore further
 

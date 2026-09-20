@@ -16,6 +16,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from . import models as m
 from . import services as svc
 from .config import settings
+from .corpus_api import router as corpus_router
 from .db import get_db
 from .detection import load_rules
 from .public_security import PUBLIC_ANALYSIS_PATH, PUBLIC_QUESTIONS, PublicBudget
@@ -182,6 +183,7 @@ app = FastAPI(
     redoc_url=None if settings.public_demo else "/redoc",
     openapi_url=None if settings.public_demo else "/openapi.json",
 )
+app.include_router(corpus_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(settings.allowed_origins),
