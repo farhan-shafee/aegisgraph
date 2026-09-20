@@ -8,9 +8,15 @@ database. Writable local mode binds to loopback; its fixed analyst is not
 authentication. Public mode exposes synthetic reads and two ephemeral
 deterministic analyst examples, with persistent API writes denied. Production
 data, shared authenticated writes, hostile administrators, and multi-tenant
-access remain outside this release's guarantees. See the
-[deployment guide](../DEPLOYMENT.md) for the Vercel/Railway configuration; no
-deployment has been performed as part of this preparation.
+access remain outside this release's guarantees.
+
+The [hosted demo](https://aegisgraph.farhan-shafee.com) follows Browser → Vercel
+Next.js → Railway FastAPI → Railway PostgreSQL. Its public analyst is deterministic,
+requires no OpenAI key, and incurs no OpenAI spend. See the current
+[deployment guide](../DEPLOYMENT.md) for operating requirements; actual platform
+settings and recovery controls remain the operator's responsibility. The
+[September 17 preparation record](../PUBLIC_DEMO_VALIDATION.md) documents earlier
+local validation, not the current deployment status.
 
 ## Assets
 

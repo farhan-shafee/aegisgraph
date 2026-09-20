@@ -1,6 +1,7 @@
 # Code and documentation guide
 
 [Project overview](../README.md) · [Local setup](SETUP.md) ·
+[Live demo](https://aegisgraph.farhan-shafee.com) ·
 [Public demo deployment](DEPLOYMENT.md) ·
 [Public release review](PUBLIC_RELEASE_REVIEW.md)
 
@@ -17,12 +18,14 @@
 | [Analysis service and report workflow](../apps/api/aegisgraph/services.py) | `run_analysis()` performs bounded retrieval; report functions implement the separate human review lifecycle |
 | [Evaluation fixtures](../tests/fixtures/ai_cases.json) and [runner](../apps/api/aegisgraph/evaluations.py) | Named positive/negative cases and observed outcomes |
 | [Seven-minute demo](DEMO.md) | Reproduce the investigation and inspect insufficient-evidence behavior |
-| [Public demo deployment](DEPLOYMENT.md) | Explicit runtime mode, read-only API boundary, deterministic answers, initialization, and manual Vercel/Railway steps |
+| [Public demo deployment](DEPLOYMENT.md) | Hosted Vercel/Railway architecture, public runtime boundary, initialization, updates, and recovery |
 
-Local/interview mode supports case edits and human approvals. Public-demo mode
-preserves synthetic evidence exploration and the two curated analyst examples;
-answers do not persist, and case writes remain disabled. No deployment has been
-performed as part of this preparation.
+The [hosted demo](https://aegisgraph.farhan-shafee.com) uses a Vercel Next.js frontend,
+Railway FastAPI backend, and Railway PostgreSQL database. `APP_MODE=public_demo`
+preserves synthetic evidence exploration and two curated deterministic analyst
+examples; answers do not persist, case writes remain disabled, and no OpenAI key
+or public OpenAI spend is required. Local/interview mode separately supports case
+edits, human approvals, and optional OpenAI analysis.
 
 ## Evidence and validation
 
@@ -32,7 +35,9 @@ performed as part of this preparation.
   preserved availability failures, and separate local/browser checks.
 - [Validation record](VALIDATION.md): executed tests and environment limitations.
 - [Public release review](PUBLIC_RELEASE_REVIEW.md): repository audit, licensing
-  decision, release status, and current validation counts.
+  decision, release status, and validation counts recorded at review time.
+- [Public demo preparation validation](PUBLIC_DEMO_VALIDATION.md): historical
+  September 17 local/CI preparation evidence, preceding the hosted deployment.
 - [Screenshots](screenshots/README.md): reviewed synthetic investigation views.
 - [UX audit](UX_AUDIT.md): observed baseline issues and the changes made.
 

@@ -171,8 +171,9 @@ present. Those transport checks do not establish a human identity. A shared
 writable service requires identity, case entitlements, CSRF/session controls,
 restricted database roles, secret management, and independent audit retention.
 
-The prepared public demo uses Vercel for Next.js and Railway for FastAPI and
-PostgreSQL. Both application services explicitly select `APP_MODE=public_demo`;
+The [hosted public demo](https://aegisgraph.farhan-shafee.com) follows
+Browser → Vercel Next.js → Railway FastAPI → Railway PostgreSQL.
+Both application services explicitly select `APP_MODE=public_demo`;
 the frontend requires an HTTPS `API_INTERNAL_URL` and verifies that the backend
 advertises the same read-only, deterministic contract. No backend address or
 credential is passed to client components. The proxy preserves the actual
@@ -182,9 +183,12 @@ live model provider. All API writes are denied except the two curated,
 non-persistent analysis requests. Source inspection and saved results remain
 available. Exact host/origin configuration, request limits, safe errors, and
 shared process budgets bound this intentionally small public surface. These are
-demo controls, not production authentication or an availability guarantee.
-See [deployment and manual initialization](../DEPLOYMENT.md); no deployment has
-been performed as part of this preparation.
+demo controls, not production authentication or an availability guarantee. The
+public analyst requires no OpenAI key and incurs no OpenAI spend.
+See the current [deployment runbook](../DEPLOYMENT.md) for operating requirements.
+The [September 17 preparation record](../PUBLIC_DEMO_VALIDATION.md) preserves the
+earlier local validation evidence; it is not a statement of current hosting status
+or independent verification of hosting-dashboard settings.
 
 The optional model provider is a separate data boundary. Only synthetic bounded
 case context is sent; provider retention, data residency, and organizational

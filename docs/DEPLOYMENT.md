@@ -1,8 +1,18 @@
 # Public demo deployment
 
-This is an operator runbook for a future deployment. No hosted deployment was
-performed as part of this preparation. Local validation is recorded in
-[PUBLIC_DEMO_VALIDATION.md](PUBLIC_DEMO_VALIDATION.md).
+AegisGraph is hosted at [aegisgraph.farhan-shafee.com](https://aegisgraph.farhan-shafee.com).
+The current architecture is Browser → Vercel Next.js → Railway FastAPI → Railway
+PostgreSQL. Both application services use `APP_MODE=public_demo`: synthetic data,
+read-only investigation, curated deterministic analyst questions, and ephemeral
+answers. The public analyst requires no OpenAI key and incurs no OpenAI spend.
+
+This runbook describes the required configuration and operating procedures.
+Hosting-dashboard settings, backups, billing limits, and platform logs must be
+checked by the operator; the public URL alone does not verify those settings.
+[PUBLIC_DEMO_VALIDATION.md](PUBLIC_DEMO_VALIDATION.md) is the historical
+**2026-09-17 preparation record**, when local validation was complete and hosting
+had not yet been performed. Its dated statements do not describe current hosting
+status.
 
 ```mermaid
 flowchart LR
@@ -51,8 +61,10 @@ local review workflow.
 
 ## Environment configuration
 
-Enter actual values in the hosting dashboards. Placeholders below are not usable
-configuration and contain no secrets. Do not upload a workstation `.env`.
+Maintain these values in the hosting dashboards. The table specifies required
+configuration, not an export of verified dashboard settings. API-host placeholders
+below are not usable configuration and contain no secrets. Do not upload a
+workstation `.env`.
 
 | Service | Variable | Value or source |
 |---|---|---|
@@ -60,7 +72,7 @@ configuration and contain no secrets. Do not upload a workstation `.env`.
 | Railway API | `AEGISGRAPH_LOAD_ENV` | `false` |
 | Railway API | `DATABASE_URL` | Reference the Railway PostgreSQL service's private `DATABASE_URL` |
 | Railway API | `AI_PROVIDER` | `deterministic` (also enforced by public mode) |
-| Railway API | `ALLOWED_ORIGINS` | Exact frontend origin, e.g. `https://demo.example.com` |
+| Railway API | `ALLOWED_ORIGINS` | Exact hosted frontend origin: `https://aegisgraph.farhan-shafee.com` |
 | Railway API | `ALLOWED_HOSTS` | Exact API hostname and `healthcheck.railway.app`, comma separated |
 | Railway API | `PORT` | Supplied by Railway; do not hard-code 8000 |
 | Vercel web | `APP_MODE` | `public_demo`, at build and runtime |
@@ -115,8 +127,10 @@ activation; it is not continuous uptime monitoring.
 
 ## Database initialization
 
-Use a **fresh, dedicated PostgreSQL database**, not an interview database with
-saved analyst work. Do not import customer data or local live-provider artifacts.
+For a new or intentionally replaced deployment, use a **fresh, dedicated
+PostgreSQL database**, not an interview database with saved analyst work. Do not
+import customer data or local live-provider artifacts. The existing hosted
+database does not need reseeding for ordinary application updates.
 
 ```sh
 # Run in the configured Railway API deployment/admin environment.
@@ -142,7 +156,8 @@ workflow with a backup or a fresh replacement database; there is no automatic re
 
 ## Vercel project
 
-Import the same repository as a separate **Next.js** project:
+The hosted frontend is a separate **Next.js** project. Use these settings when
+maintaining it or creating a replacement project:
 
 | Setting | Value |
 |---|---|
@@ -190,7 +205,24 @@ database backups in the dashboards; application controls do not govern platform
 logs or hosting charges. No public OpenAI spend is possible through the implemented
 analyst path, but ordinary hosting/database costs still apply.
 
-## Manual deployment sequence
+## Updating the existing deployment
+
+Keep the existing Vercel frontend, Railway API, and Railway PostgreSQL services.
+Before an update, review the commit, CI results, migrations, and compatibility with
+the currently hosted dataset. Retain the last known-good deployments and verify
+the operator's database recovery plan. Keep public mode and exact origins/hosts
+throughout the rollout; no OpenAI credentials are required.
+
+The normal API pre-deploy command is `python -m aegisgraph.cli public-init`, without
+`--seed`. Require `/ready` and the hosted checks below to pass before treating the
+update as complete. Check the actual platform deployment results separately from
+local and CI validation. Do not reset, reseed, or recreate the hosted database to
+work around a failed migration or readiness check.
+
+## Initial deployment or deliberate replacement
+
+The following sequence documents reproducible setup of a new deployment. It does
+not imply that the current hosted services still need to be created.
 
 1. Review the commit, passing CI, [validation record](PUBLIC_DEMO_VALIDATION.md),
    and host billing/limits. No repository visibility change is required.
@@ -218,8 +250,8 @@ analyst path, but ordinary hosting/database costs still apply.
 Keep the last known-good API image, Vercel deployment, and environment settings.
 Roll back both services to a version that supports `public_demo`; **never roll a
 public endpoint back to a writable local-only version**. Keep the same read-only
-mode and exact origin/host settings. The current change adds no schema migration,
-but future schema changes must remain compatible with the chosen older image.
+mode and exact origin/host settings. Review schema compatibility for each release
+before rolling application code back to an older image.
 Do not automatically run Alembic downgrade or seed/reset during rollback. For an
 incompatible schema or damaged fixture, stop public traffic, restore a verified
 backup or initialize a fresh replacement database intentionally, then rerun

@@ -220,10 +220,11 @@ entity exploration, bounded claim validation, analyst annotations and findings,
 template reports with approval invalidation, audit history, evaluations, and
 reproducible local setup.
 
-Public-demo preparation adds a Vercel frontend/Railway API configuration,
-PostgreSQL-only initialization, read-only exploration, and ephemeral deterministic
-analysis. It does not deploy services or make the local analyst identity suitable
-for a shared writable service.
+The hosted public demo runs on Vercel (Next.js) and Railway (FastAPI/PostgreSQL),
+with read-only exploration and ephemeral deterministic analysis. It requires no
+OpenAI key. The fixed local analyst label is not an authenticated identity for a
+shared writable service. [Current operations](docs/DEPLOYMENT.md) are separate from
+the dated [preparation evidence](docs/PUBLIC_DEMO_VALIDATION.md).
 
 Production work remains: authenticated identities and case permissions, tenant
 isolation, authenticated ingestion, replay and rule rollout, least-privilege
