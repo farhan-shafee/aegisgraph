@@ -111,7 +111,16 @@ def dataset_status(db: Session) -> dict:
     # A public dataset must not contain a local analyst's saved work or live-provider output.
     saved_work = any(
         db.scalar(select(func.count()).select_from(model))
-        for model in (m.Finding, m.Note, m.Analysis, m.Report)
+        for model in (
+            m.Finding,
+            m.Note,
+            m.Analysis,
+            m.Report,
+            m.RuleVersion,
+            m.DetectionRegressionRun,
+            m.RuleReview,
+            m.RulesetState,
+        )
     )
     evaluations = db.scalars(select(m.EvaluationRun).limit(2)).all()
     core_ready = core_ready and clean_initialization_audit(db, evaluations)

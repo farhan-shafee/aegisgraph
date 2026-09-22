@@ -1,6 +1,17 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Text, event
+from sqlalchemy import (
+    JSON,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    event,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base
@@ -159,3 +170,69 @@ class EvaluationRun(Base):
     total: Mapped[int] = mapped_column(Integer)
     passed: Mapped[int] = mapped_column(Integer)
     result: Mapped[dict] = mapped_column(JSON)
+
+
+class RuleVersion(Base):
+    __tablename__ = "rule_versions"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    rule_id: Mapped[str] = mapped_column(String(40), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    parent_version: Mapped[int] = mapped_column(Integer)
+    base_generation: Mapped[int] = mapped_column(Integer)
+    base_ruleset_digest: Mapped[str] = mapped_column(String(64))
+    snapshot: Mapped[dict] = mapped_column(JSON)
+    actor_label: Mapped[str] = mapped_column(String(100))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (
+        UniqueConstraint("rule_id", "version", name="uq_rule_version_number"),
+        CheckConstraint(
+            "version >= 2 AND parent_version >= 1 AND base_generation >= 0",
+            name="ck_rule_version_numbers",
+        ),
+    )
+
+
+class DetectionRegressionRun(Base):
+    __tablename__ = "detection_regression_runs"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    revision_id: Mapped[str] = mapped_column(ForeignKey("rule_versions.id"), index=True)
+    base_ruleset_digest: Mapped[str] = mapped_column(String(64))
+    proposed_ruleset_digest: Mapped[str] = mapped_column(String(64))
+    corpus_digest: Mapped[str] = mapped_column(String(64))
+    result: Mapped[dict] = mapped_column(JSON)
+    actor_label: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class RuleReview(Base):
+    __tablename__ = "rule_reviews"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    revision_id: Mapped[str] = mapped_column(ForeignKey("rule_versions.id"), unique=True)
+    decision: Mapped[str] = mapped_column(String(20))
+    regression_id: Mapped[str | None] = mapped_column(
+        ForeignKey("detection_regression_runs.id"), nullable=True
+    )
+    actor_label: Mapped[str] = mapped_column(String(100))
+    reason: Mapped[str] = mapped_column(String(1000))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (
+        CheckConstraint("decision IN ('approve', 'reject')", name="ck_rule_review_decision"),
+    )
+
+
+class RulesetState(Base):
+    __tablename__ = "ruleset_state"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    generation: Mapped[int] = mapped_column(Integer, default=0)
+    active_versions: Mapped[dict] = mapped_column(JSON, default=dict)
+    __table_args__ = (CheckConstraint("id = 1 AND generation >= 0", name="ck_ruleset_singleton"),)
+
+
+def prevent_rule_record_mutation(_mapper, _connection, _target):
+    raise ValueError("Rule versions, regression runs, and review decisions are immutable")
+
+
+for immutable_model in (RuleVersion, DetectionRegressionRun, RuleReview):
+    event.listen(immutable_model, "before_update", prevent_rule_record_mutation)
+    event.listen(immutable_model, "before_delete", prevent_rule_record_mutation)

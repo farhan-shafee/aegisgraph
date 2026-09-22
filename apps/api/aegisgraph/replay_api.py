@@ -2,8 +2,12 @@
 
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Request
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.orm import Session
+
+from . import config
+from .db import get_db
 
 router = APIRouter(prefix="/api/replays", tags=["replay"])
 
@@ -76,12 +80,19 @@ class ReplayProjection(ReplayModel):
 def get_replay(
     scenario_id: Annotated[str, Path(min_length=1, max_length=60, pattern=r"^[a-z][a-z0-9-]*$")],
     request: Request,
+    db: Session = Depends(get_db),
 ):
-    from .replay import replay_projection
+    from .replay import build_projection, replay_projection
+    from .rule_specs import baseline_rules
+    from .rule_workflow import effective_rules
 
     if request.query_params:
         raise HTTPException(422, "Replay query parameters are not supported")
     try:
+        if not config.settings.public_demo:
+            rules = effective_rules(db, public_demo=False)
+            if rules != baseline_rules():
+                return build_projection(scenario_id, rules)
         return replay_projection(scenario_id)
     except KeyError:
         raise HTTPException(404, "Scenario not found") from None

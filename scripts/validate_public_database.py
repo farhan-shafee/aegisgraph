@@ -42,7 +42,21 @@ def main():
     with TestClient(app, base_url=f"https://{host}") as client:
         assert client.get("/ready").status_code == 200
         assert client.get("/api/runtime").json()["app_mode"] == "public_demo"
-        for path in ("overview", "events", "detections", "alerts", "incidents", "evaluations"):
+        for path in (
+            "overview",
+            "events",
+            "detections",
+            "alerts",
+            "incidents",
+            "evaluations",
+            "scenarios",
+            "replays/atlas-compromise",
+            "replays/bulk-automation",
+            "detections/APP-002/workbench",
+            "regressions/examples/reduce-benign-volume",
+            "regressions/examples/unchanged-volume",
+            "regressions/examples/miss-service-access",
+        ):
             assert client.get(f"/api/{path}").status_code == 200, path
         detail = client.get(f"/api/incidents/{incident}").json()
         assert len(detail["evidence"]) == 26
@@ -66,6 +80,10 @@ def main():
             ("POST", "/api/evaluations/run"),
             ("POST", "/api/demo-reset"),
             ("DELETE", "/api/detections"),
+            ("POST", "/api/detections/APP-002/versions"),
+            ("POST", "/api/detection-versions/REV-example/regressions"),
+            ("POST", "/api/detection-versions/REV-example/review"),
+            ("POST", "/api/replays/atlas-compromise"),
         ):
             assert client.request(method, path, json={}).status_code == 403, path
     assert snapshot() == before, "Public requests persisted a change."

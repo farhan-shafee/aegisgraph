@@ -12,6 +12,11 @@ frames, and a separately named completed result. All public activity is ephemera
 neither fetching a replay nor changing its eventual browser cursor changes the
 canonical PostgreSQL fixture.
 
+Public replay always uses the shipped rules. Local replay uses the current
+human-approved ruleset from the [detection workbench](DETECTION_WORKBENCH.md),
+identified by its digest in the projection. Approval changes subsequent local
+projections; it does not rewrite historical canonical incidents or alerts.
+
 Frames describe actual stages: context initialization, telemetry arrival,
 normalization, rule match, alert, correlation decision and incident creation or
 update. The detector is causal: it uses prior observations and the current event.
@@ -26,8 +31,9 @@ Smaller scenarios play every event. A scenario that never reaches the correlatio
 threshold retains an **observation scope**, with no invented incident ID.
 
 The API bounds replay to 5,000 source events, 80 playback observations, 600 frames
-and a 1 MiB serialized projection. A finite cache stores serialized values and
-returns fresh objects. Existing public request/concurrency budgets still apply.
+and a 1 MiB serialized projection. A finite cache stores shipped-rule projections
+as serialized values and returns fresh objects; changed local rules are evaluated
+against the requested scenario. Existing public request/concurrency budgets still apply.
 These are demonstration-scale controls, not flood resistance or a scale benchmark.
 
 Required execution calls neither OpenAI nor another external provider. Evaluation

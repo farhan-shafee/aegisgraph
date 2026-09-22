@@ -14,6 +14,7 @@ def test_advertised_v2_reads_exist_without_changing_the_public_question_contract
     for capability, path in (
         ("scenarios", "/api/scenarios"),
         ("replay", "/api/replays/isolated-anomaly"),
+        ("rule_workbench", "/api/detections/APP-002/workbench"),
     ):
         assert runtime.get("capabilities", {}).get(capability) == 1
         assert client.get(path).status_code == 200
