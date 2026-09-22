@@ -55,6 +55,7 @@ edits, human approvals, and optional OpenAI analysis.
 | [ADR-008](adr/ADR-008.md) | Immutable observations and case annotations |
 | [ADR-009](adr/ADR-009.md) | Deterministic reports and explicit review state |
 | [ADR-010](adr/ADR-010.md) | Synthetic scenario corpus and separate evaluation labels |
+| [ADR-011](adr/ADR-011.md) | Bounded replay projections and browser-owned playback |
 
 ## Explore further
 

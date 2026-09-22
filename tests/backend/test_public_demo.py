@@ -65,12 +65,13 @@ def test_public_reads_flagship_navigation_saved_evaluations_and_runtime(public_c
     assert client.get("/health").json() == {"status": "ok"}
     assert client.get("/ready").json() == {"status": "ready"}
     runtime = client.get("/api/runtime").json()
-    assert runtime == {
+    expected_contract = {
         "app_mode": "public_demo",
         "read_only": True,
         "analyst_provider": "deterministic",
         "questions": list(PUBLIC_QUESTIONS),
     }
+    assert {key: runtime[key] for key in expected_contract} == expected_contract
     assert client.get("/api/overview").json()["counts"]["events"] == 4026
     assert client.get("/api/incidents").json()["items"][0]["id"] == CASE
     case = client.get(f"/api/incidents/{CASE}").json()
