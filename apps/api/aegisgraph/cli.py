@@ -1,5 +1,6 @@
 import argparse
 import json
+from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
@@ -42,6 +43,11 @@ def main():
         "evaluate-benchmark",
         help="Execute the versioned analyst benchmark without database or model calls",
     )
+    verify = subcommands.add_parser(
+        "verify-bundle",
+        help="Verify a local JSON evidence bundle without extraction or network calls",
+    )
+    verify.add_argument("file", type=Path)
     reset = subcommands.add_parser(
         "demo-reset",
         help="DESTROY and recreate only the reserved disposable demo database, then evaluate",
@@ -69,6 +75,19 @@ def main():
     subcommands.add_parser("public-check", help="Verify the public synthetic dataset is ready")
     subcommands.add_parser("public-serve", help="Serve read-only public demo on platform PORT")
     args = parser.parse_args()
+    if args.command == "verify-bundle":
+        from .evidence_bundle import MAX_BUNDLE_BYTES, verify_bundle
+
+        try:
+            with args.file.open("rb") as source:
+                raw = source.read(MAX_BUNDLE_BYTES + 1)
+        except OSError:
+            parser.error("Bundle file could not be read")
+        result = verify_bundle(raw)
+        print(json.dumps(result, indent=2))
+        if result["status"] != "VALID":
+            raise SystemExit(1)
+        return
     if args.command == "evaluate-benchmark":
         from .analyst_benchmark import run_benchmark
 

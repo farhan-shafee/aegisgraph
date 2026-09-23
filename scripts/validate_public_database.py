@@ -10,6 +10,7 @@ import json
 from aegisgraph import deployment
 from aegisgraph.config import settings
 from aegisgraph.db import Base, engine
+from aegisgraph.evidence_bundle import verify_bundle
 from aegisgraph.main import app
 from fastapi.testclient import TestClient
 from sqlalchemy import inspect, select
@@ -58,6 +59,7 @@ def main():
             "regressions/examples/unchanged-volume",
             "regressions/examples/miss-service-access",
             f"incidents/{incident}/hypotheses",
+            f"incidents/{incident}/export",
             "scenarios/approved-admin/hypotheses",
             "hypotheses/malware_execution/gaps",
         ):
@@ -70,6 +72,9 @@ def main():
                 assert response.json()["analysis"]["status"] == "insufficient_evidence"
         detail = client.get(f"/api/incidents/{incident}").json()
         assert len(detail["evidence"]) == 26
+        bundle = client.get(f"/api/incidents/{incident}/export")
+        assert bundle.status_code == 200
+        assert verify_bundle(bundle.content)["status"] == "VALID"
         for question in ("What most likely happened?", "What malware family was used?"):
             response = client.post(
                 f"/api/incidents/{incident}/analysis",
@@ -95,6 +100,8 @@ def main():
             ("POST", "/api/detection-versions/REV-example/review"),
             ("POST", "/api/replays/atlas-compromise"),
             ("POST", f"/api/incidents/{incident}/hypotheses/account_compromise/review"),
+            ("POST", f"/api/incidents/{incident}/export"),
+            ("POST", "/api/exports/verify"),
         ):
             assert client.request(method, path, json={}).status_code == 403, path
     assert snapshot() == before, "Public requests persisted a change."

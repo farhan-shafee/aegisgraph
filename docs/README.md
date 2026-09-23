@@ -20,6 +20,7 @@
 | [Analysis service and report workflow](../apps/api/aegisgraph/services.py) | `run_analysis()` performs bounded retrieval; report functions implement the separate human review lifecycle |
 | [Evaluation fixtures](../tests/fixtures/ai_cases.json) and [runner](../apps/api/aegisgraph/evaluations.py) | Named positive/negative cases and observed outcomes |
 | [V2 analyst benchmark](evaluations/BENCHMARK.md) | Scenario and adversarial obligations, metric denominators, and separation from historical/live results |
+| [Evidence bundles](EVIDENCE_BUNDLES.md) | Scoped exports, SHA-256 verification, public projection, and authenticity limitations |
 | [Seven-minute demo](DEMO.md) | Reproduce the investigation and inspect insufficient-evidence behavior |
 | [Public demo deployment](DEPLOYMENT.md) | Hosted Vercel/Railway architecture, public runtime boundary, initialization, updates, and recovery |
 
@@ -61,6 +62,7 @@ edits, human approvals, and optional OpenAI analysis.
 | [ADR-011](adr/ADR-011.md) | Bounded replay projections and browser-owned playback |
 | [ADR-012](adr/ADR-012.md) | Typed rule revisions and synthetic regression gates |
 | [ADR-013](adr/ADR-013.md) | Evidence-derived hypotheses and separate human review |
+| [ADR-014](adr/ADR-014.md) | Bounded JSON evidence bundles and local hash verification |
 
 ## Explore further
 

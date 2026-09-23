@@ -17,6 +17,7 @@ def test_advertised_v2_reads_exist_without_changing_the_public_question_contract
         ("rule_workbench", "/api/detections/APP-002/workbench"),
         ("hypotheses", "/api/incidents/INC-fe8fa4b9508c/hypotheses"),
         ("analyst_benchmark", "/api/evaluations/benchmark"),
+        ("evidence_bundle", "/api/incidents/INC-fe8fa4b9508c/export"),
     ):
         assert runtime.get("capabilities", {}).get(capability) == 1
         assert client.get(path).status_code == 200

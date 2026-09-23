@@ -141,6 +141,21 @@ def main():
             actor_label="upgrade.fixture",
             public_demo=False,
         )
+    from aegisgraph.evidence_bundle import verify_bundle
+    from aegisgraph.evidence_export import _read_snapshot, export_incident
+
+    before_export = snapshot(current)
+    with Session(engine) as db:
+        with _read_snapshot(db) as reader:
+            assert reader.scalar(text("SHOW transaction_isolation")) == "repeatable read"
+            assert reader.scalar(text("SHOW transaction_read_only")) == "on"
+        bundle = export_incident(db, "INC-fe8fa4b9508c", public_demo=False)
+    assert verify_bundle(bundle)["status"] == "VALID"
+    assert snapshot(current) == before_export, "Evidence export changed database state."
+    with Session(engine) as db:
+        # A read-only export connection must not poison later pooled write sessions.
+        assert db.scalar(text("SHOW transaction_read_only")) == "off"
+        services.create_note(db, "INC-fe8fa4b9508c", "Synthetic note after read-only export.")
     for table in (
         "events",
         "audit_log",
@@ -163,7 +178,8 @@ def main():
     print(
         "Populated PostgreSQL upgrade passed: V1 canonical data, notes, reports, "
         "audit and evaluation history preserved; additive empty tables; idempotent "
-        "upgrade; usable local rule and hypothesis workflows; SQL append-only controls retained."
+        "upgrade; usable local rule and hypothesis workflows; read-only verifiable export; "
+        "SQL append-only controls retained."
     )
 
 

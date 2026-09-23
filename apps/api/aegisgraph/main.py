@@ -18,6 +18,7 @@ from . import services as svc
 from .config import settings
 from .corpus_api import router as corpus_router
 from .db import get_db
+from .export_api import router as export_router
 from .hypothesis_api import router as hypothesis_router
 from .public_security import PUBLIC_ANALYSIS_PATH, PUBLIC_QUESTIONS, PublicBudget
 from .replay_api import router as replay_router
@@ -190,6 +191,7 @@ app.include_router(corpus_router)
 app.include_router(replay_router)
 app.include_router(rule_router)
 app.include_router(hypothesis_router)
+app.include_router(export_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(settings.allowed_origins),
@@ -258,6 +260,7 @@ def runtime():
             "rule_workbench": 1,
             "hypotheses": 1,
             "analyst_benchmark": 1,
+            "evidence_bundle": 1,
         },
     }
 
