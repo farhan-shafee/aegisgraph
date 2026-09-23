@@ -56,8 +56,17 @@ def main():
             "regressions/examples/reduce-benign-volume",
             "regressions/examples/unchanged-volume",
             "regressions/examples/miss-service-access",
+            f"incidents/{incident}/hypotheses",
+            "scenarios/approved-admin/hypotheses",
+            "hypotheses/malware_execution/gaps",
         ):
             assert client.get(f"/api/{path}").status_code == 200, path
+        for example in ("summary", "malware"):
+            response = client.get(f"/api/scenarios/mixed-context/analysis/{example}")
+            assert response.status_code == 200
+            assert response.json()["analysis"]["provider"] == "deterministic"
+            if example == "malware":
+                assert response.json()["analysis"]["status"] == "insufficient_evidence"
         detail = client.get(f"/api/incidents/{incident}").json()
         assert len(detail["evidence"]) == 26
         for question in ("What most likely happened?", "What malware family was used?"):
@@ -84,6 +93,7 @@ def main():
             ("POST", "/api/detection-versions/REV-example/regressions"),
             ("POST", "/api/detection-versions/REV-example/review"),
             ("POST", "/api/replays/atlas-compromise"),
+            ("POST", f"/api/incidents/{incident}/hypotheses/account_compromise/review"),
         ):
             assert client.request(method, path, json={}).status_code == 403, path
     assert snapshot() == before, "Public requests persisted a change."
@@ -91,7 +101,7 @@ def main():
         "Public PostgreSQL validation passed: clean migrations, explicit seed, unchanged reinitialization,"
     )
     print(
-        "read routes, two deterministic questions, mutation denials, and identical database snapshot."
+        "read routes, case/scenario deterministic examples, mutation denials, and identical database snapshot."
     )
 
 

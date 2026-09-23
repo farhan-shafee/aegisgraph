@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from . import config
 from .db import get_db
+from .scenario_investigation import scenario_projection
 
 router = APIRouter(prefix="/api/replays", tags=["replay"])
 
@@ -82,17 +83,6 @@ def get_replay(
     request: Request,
     db: Session = Depends(get_db),
 ):
-    from .replay import build_projection, replay_projection
-    from .rule_specs import baseline_rules
-    from .rule_workflow import effective_rules
-
     if request.query_params:
         raise HTTPException(422, "Replay query parameters are not supported")
-    try:
-        if not config.settings.public_demo:
-            rules = effective_rules(db, public_demo=False)
-            if rules != baseline_rules():
-                return build_projection(scenario_id, rules)
-        return replay_projection(scenario_id)
-    except KeyError:
-        raise HTTPException(404, "Scenario not found") from None
+    return scenario_projection(db, scenario_id, public_demo=config.settings.public_demo)

@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from fastapi import HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from . import models as m
@@ -55,6 +55,26 @@ def audit(
 
 def require_incident(db: Session, incident_id: str) -> m.Incident:
     incident = db.get(m.Incident, incident_id)
+    if incident is None:
+        raise HTTPException(404, "Incident not found")
+    return incident
+
+
+def lock_incident(db: Session, incident_id: str) -> m.Incident:
+    """Serialize local case mutations before reading evidence or review context."""
+    if db.get_bind().dialect.name == "sqlite":
+        # SQLite lacks row-level FOR UPDATE; acquire its write lock first.
+        db.execute(
+            update(m.Incident)
+            .where(m.Incident.id == incident_id)
+            .values(updated_at=m.Incident.updated_at)
+        )
+    incident = db.scalar(
+        select(m.Incident)
+        .where(m.Incident.id == incident_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if incident is None:
         raise HTTPException(404, "Incident not found")
     return incident
@@ -270,7 +290,7 @@ def invalidate_report(db: Session, incident: m.Incident):
 
 
 def patch_incident(db: Session, incident_id: str, changes: dict) -> dict:
-    incident = require_incident(db, incident_id)
+    incident = lock_incident(db, incident_id)
     for key, value in changes.items():
         if key in {"status", "severity"} and value is None:
             raise HTTPException(422, f"{key} cannot be null")
@@ -294,7 +314,7 @@ def patch_incident(db: Session, incident_id: str, changes: dict) -> dict:
 
 
 def patch_evidence(db: Session, incident_id: str, evidence_id: str, changes: dict) -> dict:
-    incident = require_incident(db, incident_id)
+    incident = lock_incident(db, incident_id)
     evidence = db.scalar(
         select(m.Evidence).where(
             m.Evidence.id == evidence_id, m.Evidence.incident_id == incident_id
@@ -314,7 +334,7 @@ def patch_evidence(db: Session, incident_id: str, evidence_id: str, changes: dic
 
 
 def create_finding(db: Session, incident_id: str, payload) -> dict:
-    incident = require_incident(db, incident_id)
+    incident = lock_incident(db, incident_id)
     ids = set(payload.evidence_ids)
     allowed = set(db.scalars(select(m.Evidence.id).where(m.Evidence.incident_id == incident_id)))
     if not ids.issubset(allowed):
@@ -348,7 +368,7 @@ def create_finding(db: Session, incident_id: str, payload) -> dict:
 
 
 def approve_finding(db: Session, incident_id: str, finding_id: str, approved: bool) -> dict:
-    incident = require_incident(db, incident_id)
+    incident = lock_incident(db, incident_id)
     finding = db.scalar(
         select(m.Finding).where(m.Finding.id == finding_id, m.Finding.incident_id == incident_id)
     )
@@ -369,7 +389,7 @@ def approve_finding(db: Session, incident_id: str, finding_id: str, approved: bo
 
 
 def create_note(db: Session, incident_id: str, text: str) -> dict:
-    incident = require_incident(db, incident_id)
+    incident = lock_incident(db, incident_id)
     note = m.Note(
         id=identifier("NOTE"), incident_id=incident_id, text=text, author=settings.demo_analyst
     )
@@ -482,6 +502,7 @@ def report_json(report: m.Report) -> dict:
 
 
 def generate_report(db: Session, incident_id: str) -> dict:
+    lock_incident(db, incident_id)
     case = detail(db, incident_id)
     lines = [
         f"# {case['title']}",
@@ -508,6 +529,32 @@ def generate_report(db: Session, incident_id: str) -> dict:
     )
     if not approved:
         lines.append("No analyst-approved findings have been recorded.")
+    from . import config
+    from .hypothesis_workflow import get_ledger
+
+    hypotheses = get_ledger(db, incident_id, public_demo=config.settings.public_demo)
+    reviewed = [item for item in hypotheses["items"] if item["review"]["status"] == "accepted"]
+    lines.extend(
+        [
+            "",
+            "## Human-reviewed hypotheses",
+            "Human acceptance records review of a proposition; it does not confirm the proposition or change its evidence-derived status.",
+        ]
+    )
+    if not reviewed:
+        lines.append("No current accepted hypothesis reviews are available.")
+    for hypothesis in reviewed:
+        lines.append(
+            f"- Hypothesis: {hypothesis['title']} · evidence status: {hypothesis['epistemic_status']}"
+        )
+        for label, field in (
+            ("Supporting evidence", "supporting_evidence_ids"),
+            ("Contradicting evidence", "contradicting_evidence_ids"),
+        ):
+            references = " · ".join(hypothesis[field]) or "None established"
+            lines.append(f"  {label}: {references}")
+        for gap in hypothesis["missing_evidence"]:
+            lines.append(f"  Investigation gap ({gap['category']}): {gap['guidance']}")
     lines.extend(
         [
             "",
@@ -550,13 +597,18 @@ def generate_report(db: Session, incident_id: str) -> dict:
 
 def get_report(db: Session, incident_id: str) -> m.Report:
     require_incident(db, incident_id)
-    report = db.scalar(select(m.Report).where(m.Report.incident_id == incident_id))
+    report = db.scalar(
+        select(m.Report)
+        .where(m.Report.incident_id == incident_id)
+        .execution_options(populate_existing=True)
+    )
     if report is None:
         raise HTTPException(404, "Generate a report before viewing or approving it")
     return report
 
 
 def approve_report(db: Session, incident_id: str) -> dict:
+    lock_incident(db, incident_id)
     report = get_report(db, incident_id)
     if report.status == "stale":
         raise HTTPException(

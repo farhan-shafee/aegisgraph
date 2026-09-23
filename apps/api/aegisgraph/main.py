@@ -18,6 +18,7 @@ from . import services as svc
 from .config import settings
 from .corpus_api import router as corpus_router
 from .db import get_db
+from .hypothesis_api import router as hypothesis_router
 from .public_security import PUBLIC_ANALYSIS_PATH, PUBLIC_QUESTIONS, PublicBudget
 from .replay_api import router as replay_router
 from .rule_api import router as rule_router
@@ -188,6 +189,7 @@ app = FastAPI(
 app.include_router(corpus_router)
 app.include_router(replay_router)
 app.include_router(rule_router)
+app.include_router(hypothesis_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(settings.allowed_origins),
@@ -250,7 +252,7 @@ def runtime():
         "read_only": settings.public_demo,
         "analyst_provider": "deterministic" if settings.public_demo else "configured",
         "questions": list(PUBLIC_QUESTIONS),
-        "capabilities": {"scenarios": 1, "replay": 1, "rule_workbench": 1},
+        "capabilities": {"scenarios": 1, "replay": 1, "rule_workbench": 1, "hypotheses": 1},
     }
 
 

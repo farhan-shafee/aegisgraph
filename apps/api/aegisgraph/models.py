@@ -236,3 +236,46 @@ def prevent_rule_record_mutation(_mapper, _connection, _target):
 for immutable_model in (RuleVersion, DetectionRegressionRun, RuleReview):
     event.listen(immutable_model, "before_update", prevent_rule_record_mutation)
     event.listen(immutable_model, "before_delete", prevent_rule_record_mutation)
+
+
+class HypothesisState(Base):
+    __tablename__ = "hypothesis_states"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    incident_id: Mapped[str] = mapped_column(ForeignKey("incidents.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(60))
+    current_version: Mapped[int] = mapped_column(Integer)
+    __table_args__ = (
+        UniqueConstraint("incident_id", "kind", name="uq_hypothesis_scope_kind"),
+        CheckConstraint(
+            "current_version >= 1 AND current_version <= 20", name="ck_hypothesis_state_version"
+        ),
+    )
+
+
+class HypothesisRevision(Base):
+    __tablename__ = "hypothesis_revisions"
+    id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    state_id: Mapped[str] = mapped_column(ForeignKey("hypothesis_states.id"), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    snapshot: Mapped[dict] = mapped_column(JSON)
+    context_digest: Mapped[str] = mapped_column(String(64))
+    review_status: Mapped[str] = mapped_column(String(20))
+    related_finding_ids: Mapped[list] = mapped_column(JSON)
+    reason: Mapped[str] = mapped_column(String(1000))
+    actor_label: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (
+        UniqueConstraint("state_id", "version", name="uq_hypothesis_revision_version"),
+        CheckConstraint("version >= 1 AND version <= 20", name="ck_hypothesis_revision_version"),
+        CheckConstraint(
+            "review_status IN ('open', 'accepted', 'rejected')", name="ck_hypothesis_review_status"
+        ),
+    )
+
+
+def prevent_hypothesis_revision_mutation(_mapper, _connection, _target):
+    raise ValueError("Hypothesis review revisions are immutable")
+
+
+event.listen(HypothesisRevision, "before_update", prevent_hypothesis_revision_mutation)
+event.listen(HypothesisRevision, "before_delete", prevent_hypothesis_revision_mutation)

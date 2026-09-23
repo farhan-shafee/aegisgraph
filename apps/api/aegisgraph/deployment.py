@@ -120,6 +120,8 @@ def dataset_status(db: Session) -> dict:
             m.DetectionRegressionRun,
             m.RuleReview,
             m.RulesetState,
+            m.HypothesisState,
+            m.HypothesisRevision,
         )
     )
     evaluations = db.scalars(select(m.EvaluationRun).limit(2)).all()

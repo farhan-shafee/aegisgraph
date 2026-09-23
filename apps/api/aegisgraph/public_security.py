@@ -8,6 +8,9 @@ from dataclasses import dataclass
 
 PUBLIC_QUESTIONS = ("What most likely happened?", "What malware family was used?")
 PUBLIC_ANALYSIS_PATH = re.compile(r"/api/incidents/[A-Za-z0-9-]{1,80}/analysis")
+PUBLIC_SCENARIO_ANALYSIS_PATH = re.compile(
+    r"/api/scenarios/[a-z][a-z0-9-]{0,59}/analysis/(summary|malware)"
+)
 
 
 @dataclass
@@ -48,6 +51,8 @@ class PublicBudget:
     @staticmethod
     def category(method: str, path: str) -> str:
         if method == "POST" and PUBLIC_ANALYSIS_PATH.fullmatch(path):
+            return "analysis"
+        if method in {"GET", "HEAD"} and PUBLIC_SCENARIO_ANALYSIS_PATH.fullmatch(path):
             return "analysis"
         if path in {"/health", "/ready"}:
             return "health"

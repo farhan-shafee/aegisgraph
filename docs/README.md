@@ -13,6 +13,7 @@
 | [Threat model](threat-model/THREAT_MODEL.md) | Assets, attacker-controlled input, controls, and remaining risks |
 | [Detection rules](../packages/detections/rules.json) and [engine](../apps/api/aegisgraph/detection.py) | Thresholds/windows and evidence-backed signal generation |
 | [Detection workbench](DETECTION_WORKBENCH.md) | Typed revisions, full-corpus comparison, synthetic measurement definitions and human review gates |
+| [Hypothesis ledger](HYPOTHESES.md) | Supporting and contradicting evidence, typed investigation gaps, and separate human review |
 | [Correlation](../apps/api/aegisgraph/correlation.py#L26) | `correlate()` groups principal/time/rule families; `explain_correlation()` exposes the actual rationale |
 | [Context projection](../apps/api/aegisgraph/analyst.py#L498) and [claim support](../apps/api/aegisgraph/analyst.py#L461) | `build_context()` scopes/projects input; `supported_claims()` derives support |
 | [Citation and output validator](../apps/api/aegisgraph/analyst.py#L692) | `validate_draft()` checks the schema, exact evidence set, and typed claim support before rendering |
@@ -58,6 +59,7 @@ edits, human approvals, and optional OpenAI analysis.
 | [ADR-010](adr/ADR-010.md) | Synthetic scenario corpus and separate evaluation labels |
 | [ADR-011](adr/ADR-011.md) | Bounded replay projections and browser-owned playback |
 | [ADR-012](adr/ADR-012.md) | Typed rule revisions and synthetic regression gates |
+| [ADR-013](adr/ADR-013.md) | Evidence-derived hypotheses and separate human review |
 
 ## Explore further
 

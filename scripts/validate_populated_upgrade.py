@@ -48,8 +48,27 @@ def main():
         assert result["failed"] == 0
         services.create_note(db, "INC-fe8fa4b9508c", "Synthetic pre-upgrade analyst note.")
         # A populated report, note, audit and evaluation history must survive too.
-        services.generate_report(db, "INC-fe8fa4b9508c")
-        services.approve_report(db, "INC-fe8fa4b9508c")
+        # Build a V1 report fixture directly: current report generation correctly
+        # requires the new ledger schema, which does not exist before this upgrade.
+        db.add(
+            m.Report(
+                id="RPT-UPGRADE-FIXTURE",
+                incident_id="INC-fe8fa4b9508c",
+                title="Synthetic pre-upgrade report",
+                content="Preserved V1 report snapshot.",
+                status="approved",
+                approved_by="upgrade.fixture",
+                approved_at=m.utcnow(),
+            )
+        )
+        services.audit(
+            db,
+            "INC-fe8fa4b9508c",
+            "report_approved",
+            "RPT-UPGRADE-FIXTURE",
+            after={"status": "approved"},
+        )
+        db.commit()
     before = snapshot(legacy)
     command.upgrade(configuration, "head")
     assert snapshot(legacy) == before, "Upgrade changed V1 data."
@@ -100,12 +119,35 @@ def main():
             public_demo=False,
         )
     # Database enforcement is tested through SQL, independently of ORM listeners.
+    from aegisgraph.hypothesis_workflow import (
+        ReviewHypothesisRequest,
+        get_ledger,
+        review_hypothesis,
+    )
+
+    with Session(engine) as db:
+        ledger = get_ledger(db, "INC-fe8fa4b9508c", public_demo=False)
+        review_hypothesis(
+            db,
+            "INC-fe8fa4b9508c",
+            "account_compromise",
+            ReviewHypothesisRequest(
+                expected_version=0,
+                context_digest=ledger["context_digest"],
+                review_status="accepted",
+                related_finding_ids=[],
+                reason="Verify scoped human review after the additive migration.",
+            ),
+            actor_label="upgrade.fixture",
+            public_demo=False,
+        )
     for table in (
         "events",
         "audit_log",
         "rule_versions",
         "detection_regression_runs",
         "rule_reviews",
+        "hypothesis_revisions",
     ):
         for operation in (f"UPDATE {table} SET id = id", f"DELETE FROM {table}"):
             with engine.connect() as connection:
@@ -121,7 +163,7 @@ def main():
     print(
         "Populated PostgreSQL upgrade passed: V1 canonical data, notes, reports, "
         "audit and evaluation history preserved; additive empty tables; idempotent "
-        "upgrade; usable local rule workflow; SQL append-only controls retained."
+        "upgrade; usable local rule and hypothesis workflows; SQL append-only controls retained."
     )
 
 
