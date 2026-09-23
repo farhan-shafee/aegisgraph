@@ -21,7 +21,7 @@ This is a dated engineering record, not a continuous monitoring claim.
 | PostgreSQL clean initialization      | Passed on PostgreSQL 17.10                                                                  |
 | PostgreSQL populated V1 → V2 upgrade | Passed, preserving V1 state                                                                 |
 | Dependency audits                    | `pip-audit -r requirements.lock`: no known vulnerabilities; npm audit: zero vulnerabilities |
-| Reachable Git history secret scan    | Gitleaks 8.30.1: 15 commits scanned before the Phase 8 commit, zero leaks                   |
+| Reachable Git history secret scan    | Gitleaks 8.30.1: 16 commits through the release push, zero leaks                            |
 | Browser / Python bundle parity       | 40 valid and hostile cases agreed                                                           |
 
 The Windows workstation used Python 3.14.7, Node.js 26.9.0, native PostgreSQL
@@ -139,9 +139,70 @@ Farhan Shafee, 2026. No visibility or repository-setting change is part of V2.
 
 ## Hosted verification
 
-Local validation is complete. Verification of the V2 GitHub Actions run, deployed
-revisions, and actual hosted interactions is pending the release push. This
-section will be updated with observed results, not inferred from local tests.
+Release commit `559e3adfb525bec806c72556db69f22b2a96c91e` was pushed to `main`.
+[GitHub Actions run 35892420786](https://github.com/farhan-shafee/aegisgraph/actions/runs/35892420786)
+passed all three jobs: backend, frontend, and browser. Its logs independently
+confirm 670 backend tests, 121 frontend tests, 20 local browser tests, six public
+browser tests, 145 benchmark obligations, PostgreSQL clean initialization and
+populated upgrade, dependency audits, and the Docker public readiness check.
+
+Both application services deployed that exact release commit:
+
+- Vercel production deployment `EM9QcQ6iSxHv15TWTnWegEf8TnGG`, recorded by GitHub
+  deployment `6619656133`, succeeded at 16:58 UTC.
+- Railway API deployment `58dd9191-4061-488b-ad7b-f0f012a0db48` succeeded; its public
+  runtime advertised all six V2 capabilities and `/ready` returned 200.
+- The existing PostgreSQL service, service configuration, variables, repository
+  visibility, and domain were not changed. The existing predeploy command ran
+  `public-init` without `--seed`.
+
+Railway's initial redeploy action rebuilt the previous revision; commit metadata
+identified that immediately. An explicit deployment of the latest connected
+repository commit then deployed V2. During the staggered rollout, the new frontend
+served the original case and hid unsupported V2 controls until capabilities were
+available. No architecture or hosting-configuration workaround was needed.
+
+Direct Railway-origin validation completed at 17:04 UTC: readiness and runtime
+passed, seven invalid/nonexistent-target write probes returned 403, and `/docs`,
+`/redoc`, and `/openapi.json` returned 404. The canonical incident response matched
+the pre-V2 snapshot and remained unchanged after these probes. The saved PowerShell
+snapshot had converted UTC timestamps to local offsets; comparison normalized
+only equivalent ISO timestamp instants, preserving every other field and value.
+
+Hosted browser verification completed at **17:11 UTC**. All ten planned check
+categories passed across the bounded main run and a six-check continuation:
+runtime, dashboard, scenario replay, canonical investigation, detection regression,
+benchmark, architecture, mobile, proxy denials/docs, and unchanged canonical state.
+This was not a single uninterrupted ten-check pass.
+
+The canonical investigation showed evidence drawers, entity filtering, four
+hypotheses, and a 35-file downloaded bundle verified VALID. The summary question
+returned ten deterministic findings; the malware question returned insufficient
+evidence and no findings. Both had zero validation errors. APP-002's 1,500-record
+example computed PASS with the documented populations. The hosted benchmark
+executed 145/145 obligations; filtering and expanded expected/observed values
+worked. At 320 pixels, architecture, replay, evidence, entities, hypotheses, and
+light-theme views had no horizontal overflow; reduced motion used manual stepping.
+Five invalid/nonexistent-target writes through the frontend proxy returned 403,
+and its docs/OpenAPI probes returned 404. There were no browser console/page
+problems or unexpected application HTTP errors in the passing checks.
+
+Two smoke-harness issues were retained and investigated. Chromium could not return
+the cached network body for an export even though its download and visible VALID
+state succeeded; the check now reads the bounded actual downloaded file. A later
+benchmark assertion timed out and did not reproduce in a targeted probe or manual
+browser inspection. The continuation explicitly observed a view transition before
+filtering and passed all remaining checks without repeating analyst questions.
+Observed canceled requests were Next.js RSC prefetches. No application change or
+weakened assertion was needed to complete verification.
+
+The canonical incident and hypothesis responses were byte-equivalent under sorted
+JSON serialization before and after the live interactions, with combined SHA-256
+`519f581d516714b911b9edca29165962f063b03df2a73cc58c28dfc56b1cb4b7`.
+This is public API state evidence, not a privileged snapshot of every hosted
+database table. The whole-database non-mutation check remains the dedicated local
+PostgreSQL result above. Hosting variable names were inspected without retrieving
+values; no OpenAI credential name was present on the API service.
 
 ## Limits
 

@@ -1,7 +1,7 @@
 # AegisGraph V2 release report
 
-Prepared 2026-09-23. Application implementation and local validation are complete;
-CI and hosted rollout verification remain pending the release push. The
+Prepared 2026-09-23. Application implementation, local validation, GitHub CI, and
+the V2 hosted rollout are complete. The
 [validation record](V2_VALIDATION.md) separates observed local results from
 hosted evidence.
 
@@ -92,44 +92,54 @@ hosted evidence.
 20. **Evaluation counts.** Original suite 28/28; V2 benchmark 145/145. The 145
     cases and overlapping metric populations are not independent statistical
     samples or a claim of AI accuracy.
-21. **CI status.** Pending release push. Three deterministic jobs validate backend,
-    frontend, and browsers; PostgreSQL clean/populated migrations, Docker image,
-    corpus/regression/export boundaries, build, and dependency audits are included.
-    No live OpenAI calls or private key are required.
-22. **Deployment status.** Pending V2 rollout verification. Existing Vercel Next.js,
-    Railway FastAPI, and Railway PostgreSQL are retained. No new paid service,
-    hosting configuration, repository visibility change, or public OpenAI key is
-    part of this release.
+21. **CI status.** [Run 35892420786](https://github.com/farhan-shafee/aegisgraph/actions/runs/35892420786)
+    passed backend, frontend, and browser jobs for release commit `559e3ad`.
+    PostgreSQL clean/populated migrations, the Docker image/public readiness,
+    corpus/regression/export boundaries, production build, and dependency audits
+    passed. No live OpenAI calls or private key were required.
+22. **Deployment status.** Release commit `559e3adfb525bec806c72556db69f22b2a96c91e`
+    deployed successfully to Vercel (`EM9QcQ6iSxHv15TWTnWegEf8TnGG`) and Railway
+    API (`58dd9191-4061-488b-ad7b-f0f012a0db48`). PostgreSQL and the existing
+    architecture remain in place. There was no new paid service, hosting
+    configuration change, repository visibility change, or public OpenAI key.
 23. **Public smoke results.** Local public production rehearsal passed all six
-    browser tests and whole-database state-preservation checks. Actual hosted V2
-    routes, mobile/console/network, two curated answers, denied writes, disabled
-    docs, and canonical state comparison remain to be verified after deployment.
+    browser tests and whole-database state-preservation checks. All ten planned
+    live check categories subsequently passed across a main run and continuation:
+    V2 routes, 320px layouts, browser errors/network, both deterministic answers,
+    actual downloaded-bundle verification, denied writes, disabled docs, and
+    canonical API state preservation. The direct backend additionally passed
+    seven write denials and three disabled-doc routes. Harness failures and
+    their investigation are retained in the [validation record](V2_VALIDATION.md#hosted-verification);
+    this is not a claim of an uninterrupted ten-check run or privileged hosted
+    whole-database inspection.
 24. **Remaining limitations.** Synthetic fixtures and finite claim predicates;
     curated public language; unauthenticated local actor labels; no tenants or
     production ingestion; process-local limits/caches; no production performance
     or detection-effectiveness measurements; unsigned replaceable manifests;
     no source-truth, enterprise-readiness, or universal injection-resistance claim.
     Optional local OpenAI behavior retains the historical validation's scope.
-25. **Commits.** The ordered implementation commits are recorded below. Phase 8
-    documentation and final hosted verification commits will be identified in
-    the delivery report after they exist.
-26. **Working tree.** Phase 8 documentation/screenshots are awaiting the reviewed
-    commit. Final delivery requires push confirmation and a clean working tree;
-    this draft does not claim those steps have happened.
+25. **Commits.** The ordered implementation and Phase 8 release commits are recorded
+    below. The delivery response also identifies the final documentation-only
+    commit recording hosted verification; it changes no application behavior.
+26. **Working tree.** The release push to `origin/main` succeeded and the working
+    tree was verified clean at `559e3ad`. Hosted results are recorded in the final
+    documentation commit. Its hash, push result, and final working-tree check are
+    reported with delivery rather than creating a self-referential commit hash.
 
 ## Implementation commits
 
-| Phase                       | Commit                                     |
-| --------------------------- | ------------------------------------------ |
-| 0: audit and plan           | `56bffc4131bb3ce08f08f0b83931a2ffb1a9e476` |
-| 1: scenario corpus          | `9d4d07d279dd84f7c45f6c6352c3a1ecc5cb4971` |
-| 2: causal replay            | `26784d43319d1b3ab6f4f2b0bb0fe8e3b48b4631` |
-| 3: typed rule revisions     | `12b3ad6cd899c80f8b0163b3c2695b7c45f626c2` |
-| 4: hypotheses               | `170fce1427c811d7680ceedceb3913960d49f33f` |
-| Finding-capacity correction | `ddccab5877b3ef508a1c3b0d3544ccb90bcc0eef` |
-| 5: analyst benchmark        | `0a55153a529cbd14172bc21cd996b1340fd4943b` |
-| 6: evidence bundles         | `d46b49eae5ada6fbe4725e3b86f6cb48450bcbc7` |
-| 7: integrated workflows     | `5c21a05c42cf5746a0b1148ff06fe07c5eeddca2` |
+| Phase                           | Commit                                     |
+| ------------------------------- | ------------------------------------------ |
+| 0: audit and plan               | `56bffc4131bb3ce08f08f0b83931a2ffb1a9e476` |
+| 1: scenario corpus              | `9d4d07d279dd84f7c45f6c6352c3a1ecc5cb4971` |
+| 2: causal replay                | `26784d43319d1b3ab6f4f2b0bb0fe8e3b48b4631` |
+| 3: typed rule revisions         | `12b3ad6cd899c80f8b0163b3c2695b7c45f626c2` |
+| 4: hypotheses                   | `170fce1427c811d7680ceedceb3913960d49f33f` |
+| Finding-capacity correction     | `ddccab5877b3ef508a1c3b0d3544ccb90bcc0eef` |
+| 5: analyst benchmark            | `0a55153a529cbd14172bc21cd996b1340fd4943b` |
+| 6: evidence bundles             | `d46b49eae5ada6fbe4725e3b86f6cb48450bcbc7` |
+| 7: integrated workflows         | `5c21a05c42cf5746a0b1148ff06fe07c5eeddca2` |
+| 8: documentation and validation | `559e3adfb525bec806c72556db69f22b2a96c91e` |
 
 ## Interview and site handoff
 
