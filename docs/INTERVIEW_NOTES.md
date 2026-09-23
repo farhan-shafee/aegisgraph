@@ -1,264 +1,303 @@
 # Technical interview notes
 
-Use these answers to explain implemented decisions and their limits. Separate
-possible production designs from measured behavior. See [validation](VALIDATION.md)
-and [provider evaluations](evaluations/README.md) for executed results.
+Explain implemented behavior first, then its limits and possible production
+extensions. The [seven-minute script](DEMO.md) exercises the main loop;
+[validation](VALIDATION.md) records executed outcomes. These notes describe the
+current repository, not an assertion that every feature is deployed at a
+particular public revision.
 
-## Why PostgreSQL? Why no Elasticsearch?
+## What changed in the expanded workflow?
 
-V1 needs transactional relationships among events, evidence, incidents and
-findings. Indexed relational queries are enough for thousands of events and a
-bounded case timeline. Elasticsearch would add ingestion synchronization,
-operational overhead and another authorization surface. I would benchmark
-retention and query requirements before adding specialized search or analytics.
+The original Atlas case, its evidence IDs, and the FastAPI/Next.js/PostgreSQL
+architecture remain intact. The repository adds eight inspectable scenarios,
+causal replay, typed rule proposals with regression gates, a hypothesis ledger,
+an expanded deterministic analyst benchmark, and scoped evidence bundles. These
+features expose how decisions are made without introducing another database,
+message broker, autonomous agent, or executable detection editor.
+
+The core loop is replay → investigate → assess a hypothesis → compare a rule
+change → record a human decision → export and verify. Public mode supports
+read-only inspection; local mode supports saved reviews and optional OpenAI.
+
+## Why PostgreSQL? Why no Elasticsearch or graph database?
+
+The application needs transactional relationships among observations, evidence,
+alerts, incidents, findings, and reviews. Indexed relational queries and a small
+case graph meet the demonstrated workload. Entity edges carry evidence IDs; a
+second graph store would add synchronization and operational work without a
+measured need. Search and analytics infrastructure should follow retention,
+selectivity, and workload measurements rather than a portfolio checklist.
+
+SQLite remains useful for disposable local runs and isolated tests. The public
+deployment requires PostgreSQL. A bounded export uses a consistent read snapshot;
+shared in-memory SQLite pools are rejected because they cannot guarantee an
+independent transaction without affecting another session.
+
+## What does replay actually replay?
+
+It runs inert repository-owned observations through the existing detector and
+correlator, producing a bounded causal projection. The browser advances a cursor
+over frames for receipt, normalization, detection, alerts, and correlation. It
+shows only reached state and withholds completed-scenario evidence and analysis
+until the end. No attack is executed and no external telemetry is collected.
+
+Atlas initializes its normal background context before the investigation sequence.
+Source-time gaps are divided by playback speed and capped, with that compression
+shown in the UI. This is not a wall-clock execution trace or performance test.
+Fetching or playing a scenario does not persist a new incident. When correlation
+produces none, the result remains an observation scope.
 
 ## Why deterministic correlation?
 
-The grouping rationale must be reproducible, inspectable and testable. V1 groups
-by principal and event time: at least three distinct rule IDs across at least two
-families within 30 minutes of the first alert. Device/session/IP links provide
-investigation context, not additional grouping conditions. Some temporal
-detections separately require matching sessions. This will miss unencoded patterns and can merge benign activity;
-that tradeoff is documented. Model-based grouping would make the evidence scope
-itself probabilistic and harder to evaluate.
+The grouping rationale needs to be reproducible and reviewable. One principal's
+alerts form a case only when three distinct rule IDs across two families fit
+within 30 minutes of the first alert. Device, session, and IP links provide
+context; they are not extra grouping predicates. Some individual temporal rules
+separately require a shared session.
+
+This policy can miss unencoded patterns or group benign activity. Its explicit
+tradeoff is preferable here to allowing a model to choose its own evidence scope.
+The original Atlas case has ten alerts from nine distinct rules across five
+families over 22 minutes. Alerts, distinct rules, and rule families are different
+quantities. Severity is a rule-mix policy, not a probability of compromise.
+
+## Why separate detection from correlation?
+
+Detection says an observation or sequence satisfies a rule and emits source-cited
+signals. Correlation decides whether several signals warrant a shared
+investigation. An unfamiliar login may remain weak alone; privilege and access
+activity can supply additional context. The components can be tested separately,
+and a rule comparison still checks correlation effects across the complete corpus.
+
+## How are rules versioned and reviewed?
+
+Repository rules provide the baseline. Local proposals accept only bounded integer
+thresholds/windows for the chosen rule. A proposal is an immutable snapshot tied
+to its parent version, complete ruleset digest, and generation. It cannot contain
+arbitrary Python or expressions.
+
+An explicit comparison evaluates the full before/after rulesets against independent
+scenario obligations. Approval requires a prior run, recomputes the outcome, and
+checks that the ruleset, corpus, and result still match what was reviewed. Competing
+or obsolete approvals fail rather than silently overwriting one another. Review
+reasons and immutable run records preserve the local decision history.
+
+Approval changes future local replay projections. Historical Atlas alerts and case
+evidence are preserved. Public mode uses shipped rules and exposes only three
+fixed comparisons; it cannot create or approve proposals. Multi-instance rollout,
+shadow deployment, and production alert revision retention remain separate work.
+
+## What do PASS, WARN, and BLOCK mean?
+
+BLOCK identifies a proposed-state violation: a missing required rule, a forbidden
+rule firing, or an unexpected correlated-incident count. It cannot be approved.
+WARN means no measured improvement or increased permitted benign-fixture burden;
+the UI requires deliberate acknowledgment and a human reason. PASS means an
+observed fixture improvement without a blocking violation.
+
+For APP-002, 1,000 → 1,500 records removes the scheduled-reconciliation match while
+retaining required service and Atlas volume signals. A 2,200-record threshold
+loses the required service signal and its correlation outcome. A 1,100-record
+threshold leaves fixture outcomes unchanged. These are actual computed comparisons
+on synthetic observations, not predictions about production traffic.
+
+TP/FN use scenarios that independently require the selected rule; FP/TN use
+explicitly benign scenarios. Other scenarios remain in regression checks but are
+excluded from that selected-rule matrix. Denominators are displayed. Production
+tuning would need outcome labels, representative and held-out traffic, analyst
+burden measurement, drift monitoring, and rollout/rollback policies.
+
+## What is a hypothesis, and what does acceptance mean?
+
+The ledger derives a small fixed set of propositions from scoped evidence. It
+shows supporting/contradicting citations, evidence-derived status, typed gaps,
+and source-time bounds. For example, unfamiliar authentication can partially
+support unauthorized control; it cannot prove the actor's identity or intent.
+Narrow recorded change approvals and automation allowances can contradict specific
+propositions. Missing approval is not proof that a change was unauthorized.
+
+Human review is separate. Acceptance records a working hypothesis without
+promoting partial support to confirmation. Version and context checks reject stale
+writes. Changes in observations, annotations, derivation, or current findings make
+prior reviews stale; current accepted reviews can appear in a report with their
+uncertainty intact. Local actor labels are attribution labels, not authenticated
+identities. The [ledger contract](HYPOTHESES.md) explains the exact propositions.
 
 ## Why AI only after evidence retrieval?
 
-The application checks incident existence and resolves case scope before invoking the provider. The provider
-cannot decide what it is entitled to retrieve. This reduces context size and
-prevents the whole database from being sent to an external API. Authorization
-belongs in the application, not in natural-language instructions.
+The application resolves case existence and scope before invoking a provider.
+The provider cannot decide what it is entitled to retrieve and receives no database
+connection, retrieval tools, or mutation functions. The local case service retrieves
+a bounded event-time-ordered evidence set; the analyst boundary independently
+checks scope, count, and context bytes, then excludes analyst-marked benign rows.
+Those limits bound exposure but do not establish completeness for a larger case.
 
-The local service retrieves the earliest 50 evidence rows, then the analyst
-boundary excludes rows marked benign and discloses that count. The boundary also
-enforces an independent 80-row and 64,000-byte context limit. This bounds exposure
-and cost; it is not a completeness guarantee for a larger case. All local demo
-cases are accessible to the fixed analyst. Production subject-to-case permissions
-are still future work.
+All local demo cases are accessible to the configured analyst label. Authenticated
+subject-to-case permissions and tenant isolation are not implemented. Case
+membership checks must not be presented as those missing authorization controls.
 
 ## How do you prevent hallucinations?
 
-I don't claim to eliminate every incorrect interpretation. The implementation
-enforces a narrower contract: factual findings need current-case, in-context
-citations and supported typed claim predicates. The server renders the accepted
-facts and cited summary instead of trusting arbitrary model prose. A single invalid
-claim rejects the whole answer. Recognized false-premise questions produce an
-insufficient-evidence result; the phrase guard is not a universal entailment
-classifier. Novel question wording still cannot introduce new factual claim types.
-Source telemetry can still be false, and supported
-facts can still be selected incompletely or interpreted poorly by a human.
+I do not claim to eliminate every incorrect interpretation. The implemented
+contract is narrower: proposed factual claims need current-case, in-context
+citations and an exact evidence set satisfying deterministic support predicates.
+The application validates the structured draft and renders accepted facts through
+server templates. One invalid claim rejects the whole proposed answer.
 
-The confidence field is a fixed qualitative display label associated with the
-accepted result. It is not calibrated against an empirical probability of
-compromise. The possible-account-misuse statement is explicitly a hypothesis.
+Recognized unsupported questions produce insufficient-evidence behavior; the phrase
+guard is not a general entailment classifier. Novel wording still cannot add a
+new factual claim type to the output schema. Source observations can be forged,
+predicates can have defects, accepted claims can be incomplete, and humans can
+misinterpret them. Confidence is a qualitative display label, not a calibrated
+probability of compromise.
 
 ## How do you handle prompt injection?
 
-All telemetry and the analyst's question are untrusted data. The provider gets an
-allowlisted projection with explicit instruction/data separation. Raw strings,
-annotations, user agents, endpoint strings, and free-form metadata are omitted.
-The model has no
-tools or mutation interface. Structured output is independently checked. Tests
-include malicious metadata and attempted policy overrides. These checks are not
-a measured universal live-model resistance rate.
+Telemetry and user questions are untrusted. The provider receives an allowlisted
+projection with instruction/data separation. Raw prose, annotations, user-agent
+strings, endpoints, and unnecessary free-form metadata are omitted. The model has
+no tools or mutation interface, and structured output is validated independently.
 
-## How would this scale?
+Tested malicious fields are excluded before provider execution. That demonstrates
+application enforcement; it does not prove a model resisted instructions it never
+received. Historical live attempts, including availability failures, remain
+separate from deterministic fixtures. Neither is a universal resistance score.
 
-One billion events per day averages roughly 11,574 events per second before burst
-headroom, replication, indexes, replay, or late arrivals. At an illustrative one
-kilobyte per event, that is roughly one terabyte of raw data per day. These are
-sizing calculations, not measured AegisGraph throughput.
+## How is cross-case leakage checked?
 
-First measure event ingestion, retention, query selectivity and incident size.
-Likely steps are batched ingestion, partitioned event storage, appropriate
-indexes, retention policies, a durable worker for rules/correlation, and cursor
-pagination. Separate immutable evidence from derived materializations. Introduce
-a queue or search engine only when measured throughput and query requirements
-justify it. V1 has synchronous ingestion and no distributed scheduler.
+Retrieval selects incident evidence first. The analyst boundary independently
+checks allowed scope, incident membership, unique evidence IDs, and context limits.
+Output citations must belong to the exact request context, not merely exist in
+the database. Unknown, foreign-case, and omitted-context citations reject the draft.
+A valid citation also needs support for the selected claim.
 
-At that scale I would separate durable ingestion, independently retained source
-observations, partitioned canonical storage, bounded-state rule workers, derived
-query indexes, and a transactional case-management store. PostgreSQL could remain
-the case store without holding every raw event indefinitely. Establish peak rates,
-tenant skew, latency targets, retention, and recovery requirements before choosing
-infrastructure. Load tests and failure exercises would determine the actual design.
+Human findings, hypothesis links, rule review runs, and exported references have
+their own scoping checks. These are application boundaries; they do not create
+an authenticated subject or tenant entitlement. Safe errors omit raw rejected
+drafts and credentials. Provider failure returns unavailable rather than a
+successful answer or a conclusion of insufficient evidence.
 
-## What changes for production?
+## How do you distinguish volume from exfiltration?
 
-Real authentication, case authorization, tenant isolation, CSRF/session handling,
-TLS, ingestion authentication and quotas, rate limits, managed secrets, least-
-privilege DB roles, operational monitoring, recovery procedures, external audit
-retention, provider privacy review and independent security assessment. Current
-loopback binding and a fixed local analyst are a demo boundary, not production IAM.
+A synthetic account-query event records observed access volume. It does not
+establish a transfer destination, copied content, or receipt by an attacker.
+The proper claim is high-volume access plus a gap in transfer evidence. Similarly,
+a device, IP, or simulated location label does not identify a person or country.
+The malware question requires endpoint evidence that this scenario does not have.
 
-## How would multi-tenancy work?
+## What does the expanded benchmark measure?
 
-Tenant identity must be derived from trusted authentication, never a request body.
-Tenant keys must participate in every event/evidence/incident association and
-query. Consider PostgreSQL row-level security as additional enforcement, plus
-tenant-scoped object storage, cache keys, jobs, model budgets and export paths.
-Test both read and write isolation at the API and database layers. V1 does not
-implement these controls and should not be presented as multi-tenant.
+Named obligations execute real projection, schema, claim-support, citation,
+containment, and rendering code using deterministic and adversarial fixture
+providers. Independent expectations are kept outside runtime analyst input. The
+hypothesis ledger's narrow counterevidence checks remain distinct from the analyst's
+factual support checks; the analyst does not receive the ledger's evaluator labels
+as an answer key.
 
-## How would authorization work?
+Each metric defines its denominator. Populations overlap and are not independent
+samples to add together. Read current counts and failures from the executed result
+and [validation record](VALIDATION.md). The original deterministic suite's stored
+history, the new baseline benchmark, and historical live OpenAI results are three
+separate records. Local rule proposals use the regression workbench and do not
+silently alter the baseline analyst benchmark.
 
-A real identity provider establishes the subject. A server policy maps the
-subject to case permissions and capabilities such as read, annotate, assign,
-approve and export. Retrieval applies these permissions before building model
-context. Write routes check them independently. Audit records should distinguish
-the authenticated human requester, system process and provider. A model response
-never grants a permission. V1 instead records a configured human label or system
-label, and provider metadata on analysis records. Its tests cover case membership,
-foreign-case mutation rejection, and read-only provider boundaries; they do not
-establish authenticated user or tenant isolation.
+## How would you evaluate a model change?
 
-## Why not let AI mutate incidents?
+Version the provider/model identifier, prompts, output schema, predicates, and
+fixtures together. Start with deterministic boundary checks, then run separately
+reported credentialed trials with supported/unsupported questions, adversarial
+fields, and human-labeled useful or incomplete answers. Measure sample size,
+rejection rates, grounded coverage, latency, and cost with uncertainty. Passing
+mock-provider tests is not evidence that a new external model is safe or useful.
+The small historical OpenAI record is evidence for its named completed scenarios,
+not validation of every future model or release.
 
-A plausible recommendation is not an authorized action. Keeping the provider
-read-only removes a large class of prompt-injection consequences and makes
-auditability clearer. Analyst changes use separate validated requests with
-explicit save/approve actions. Any future automation needs narrowly scoped
-capabilities, idempotency, approval and rollback design of its own.
+## Why not let AI mutate incidents or author the final report?
 
-## Why not a graph database?
+A plausible recommendation is not an authorized action. The provider cannot save
+findings, accept hypotheses, change a case, or approve a report. Separate human
+requests perform validated writes and record audit events.
 
-The incident graph is a small evidence-backed relational projection. SQL joins
-are enough to connect a user to sessions, devices, IPs and accessed resources.
-A graph database might help deep cross-case traversals later, but V1 has no
-measured workload that warrants the extra storage and synchronization system.
+Reports use deterministic templates over current case evidence, entities, approved
+findings, and current accepted hypotheses. Case/review changes invalidate approval.
+The database retains one current report and lifecycle audit events rather than
+signed historical report versions. A human finding's valid citations do not prove
+its free-form narrative. Future automation would require its own narrow capabilities,
+idempotency, approval policy, and rollback design.
 
-## How would streaming ingestion work later?
+## What does a verified evidence bundle establish?
 
-Keep adapters and canonical validation independent from transport. Introduce an
-authenticated ingestion boundary and durable queue; define idempotency keys,
-event-time watermarks, late arrival handling, ordering assumptions and replay
-semantics before adding streaming rule evaluation. Persist observations before
-deriving alerts. Test equivalent results between replay and live processing.
+The exporter reads a bounded committed snapshot in a dedicated consistent read
+transaction. It verifies case references and rejects excess rather than truncating
+silently. It does not write an export record or invoke a provider. Public exports
+omit local human artifacts; local exports include bounded committed review material.
+The JSON container holds logical UTF-8 file contents, with no archive extraction.
 
-## How would you evaluate model changes?
+Browser Web Crypto and the offline CLI compare file membership, byte lengths, and
+SHA-256 hashes. VALID means agreement with the supplied manifest. Content changes,
+missing files, and unexpected files can be identified. Someone who replaces both
+content and the unsigned manifest can produce another valid bundle. Metadata is
+also unsigned. This is not proof of authenticity, telemetry truth, authorship,
+privileged-database integrity, or legal chain of custody.
 
-Version the provider/model identifier, prompts, output schema, claim predicates
-and dataset together. Run deterministic boundary tests first, then a separately
-reported live-provider suite with repeated trials, false-premise prompts,
-adversarial source fields and human-labeled useful/incomplete answers. Measure
-rejections, valid grounded claims, useful coverage, latency and cost. Report
-sample sizes and uncertainty. Passing mock tests is not evidence that a new
-external model is safe or useful.
+## Are events and audit records tamper-proof?
 
-## How do you distinguish high data volume from exfiltration?
+No. ORM hooks and migrated database triggers reject ordinary event/audit updates
+and deletes; there are no event edit/delete routes. Immutable rule, regression,
+and review records also have database protections. A privileged owner can disable
+triggers or alter schema, and the explicit disposable reset recreates demo data.
 
-The synthetic application event records access volume. It does not establish
-destination, actual records exported, or a data transfer to an attacker. The
-report should state observed access and the missing transfer/content evidence.
-Likewise, an IP or simulated location label does not establish a person's country.
+Stronger production guarantees need least-privilege application roles, independent
+retained evidence/audits, delivery-gap monitoring, and tested recovery. Signed or
+chained records need independently protected checkpoints and keys. Neither a
+trigger nor a replaceable export manifest proves original source truth.
 
-## Why is the report generated from a template?
+## How would authentication and multi-tenancy work?
 
-The report needs stable evidence references and a visible review lifecycle. V1
-uses a deterministic template over current-case evidence, entities, workflow
-state, and analyst-approved findings. The model does not author or approve it.
-Case changes invalidate the report, clear approval metadata, and block renewed
-approval until regeneration and review. The database holds one current report
-plus lifecycle audit events, not historical signed report snapshots. Human
-findings remain subject to human judgment; valid citations alone do not prove
-their free-form narrative.
+A trusted identity provider establishes the subject and tenant. Server policy maps
+that subject to capabilities such as read, annotate, review, approve, and export.
+Retrieval must apply permissions before model context is built; write routes check
+them independently. Model text never grants authority.
 
-## Are events and audits tamper-proof?
+Tenant identity must not come from an untrusted request body. Tenant keys would
+participate in associations, queries, cache keys, jobs, provider budgets, and export
+paths. PostgreSQL row-level security could provide additional enforcement. Tests
+would cover API and database read/write isolation. Current local actor labels,
+loopback restrictions, and the public read-only mode are demo controls, not this
+production IAM design.
 
-No. Source-event edits and deletes are blocked by ORM hooks, and there are no event
-or audit edit routes. Migrations also install PostgreSQL/SQLite triggers that
-reject ordinary event and audit UPDATE/DELETE statements. Those controls do not
-stop a privileged owner from disabling triggers or changing schema. The explicit
-CLI reset intentionally drops and recreates the demo tables. Production requires
-restricted roles, independent retained copies, and verified backups. This is
-enforced append-only behavior for ordinary operations, not cryptographic integrity
-or proof that the original telemetry is true.
+## How would streaming and reprocessing work later?
 
-## Why not Kafka?
+The current finite corpus replay establishes deterministic causal behavior, not a
+production streaming system. Production ingestion would need an authenticated
+boundary, durable buffering where required, stable idempotency keys, event-time
+watermarks, late-arrival handling, and defined ordering semantics.
 
-V1 processes a finite synthetic dataset synchronously. There is no measured delivery
-or throughput requirement that needs a broker. Durable buffering, backpressure,
-replay, and independent consumers would be reasons to consider Kafka or another
-log service later. Adding a broker alone does not define correct idempotency,
-ordering, late-event handling, or alert generation. Those semantics come first.
+Persist source observations before deriving alerts. Reprocessing should name its
+schema/rule revisions, write separate derived outputs, compare outcomes, and
+preserve historical case associations and human review. The implemented local
+rule workflow deliberately preserves the canonical case; it is not a distributed
+rollout or arbitrary historical-data reprocessing service.
 
-## Why are detections and correlation separate?
+## Why not Kafka? How would this scale?
 
-Detection says that an observation or sequence satisfies a rule and emits an alert
-with evidence. Correlation decides whether several alerts deserve one investigation.
-An unfamiliar login can remain a weak signal while related privilege and access
-activity creates a case. Rule changes and grouping changes can be tested separately.
-The default case has ten alerts from nine distinct rules across five families over
-22 minutes. The catalog has ten rules; repeated authentication failure does not fire
-in that case. Alert count and distinct-rule count are different quantities.
+A finite synchronous demo has no measured need for a broker. Durable buffering,
+backpressure, replay retention, and independent consumers could justify one later;
+adding it would not solve idempotency or event-time semantics automatically.
 
-## How is cross-case leakage prevented today?
+Measure ingestion rate and bursts, tenant skew, retention, incident size, query
+selectivity, latency targets, and recovery needs first. Likely tools include
+batched ingestion, partitions, indexes, bounded-state workers, and separate source
+retention. PostgreSQL could remain the transactional case store without retaining
+all raw telemetry indefinitely. Load tests and failure exercises should drive
+infrastructure choices. No production throughput benchmark is claimed here.
 
-Retrieval selects evidence for the current incident before invoking the provider.
-The analyst boundary independently verifies incident membership, allowed incident
-IDs, unique evidence IDs, and context limits. The provider gets no retrieval tool
-or database connection. Output citations must be members of the exact request
-context, not merely records that exist somewhere in the database. This enforces
-case membership; it does not supply missing authenticated subject-to-case access.
+## What remains before a production service?
 
-## What happens if the model cites nonexistent evidence?
-
-The entire proposed answer is rejected and no findings render. The same applies to
-a real ID from another case, or a current-case ID omitted from bounded context.
-A valid citation also needs an exact evidence set supporting the proposed claim.
-Safe error codes identify the failure without logging raw drafts or credentials.
-An upstream HTTP failure yields provider-unavailable, not a grounded answer and
-not an insufficient-evidence conclusion.
-
-## What does the malicious-telemetry evaluation prove?
-
-The fixture puts instruction-like content in untrusted raw/metadata/annotation
-fields. Projection removes these fields before provider execution. Verifying that
-removal and unchanged case state tests application enforcement. It does not prove
-a live model resisted text it never received. A live request that returns an HTTP
-error is not a passed injection test. Consult the separate recorded live results;
-never present deterministic fixtures as external-model performance.
-
-## How would the audit trail become append-only in production?
-
-Migrated V1 tables already reject ordinary audit UPDATE/DELETE statements. The
-database owner can remove those triggers, and disposable-demo reset intentionally
-recreates the tables. Stronger production guarantees need separate application
-and audit-admin roles, independent append-only/WORM retention, delivery-gap
-monitoring, and tested backup/restore. Signed or chained records need independently
-protected checkpoints and keys to detect the intended class of changes. A database
-trigger alone is not cryptographic tamper-proof storage.
-
-## How would events be reprocessed?
-
-Keep immutable source observations with explicit adapter/schema versions. Run a
-named replay against chosen normalization and rule revisions, using stable
-idempotency keys and separate derived outputs. Compare results before replacing
-active materializations. Preserve historical case associations and human review;
-reprocessing must not silently rewrite evidence cited by an approved report. V1
-offers deterministic reseeding of disposable data, not a production replay system.
-
-## How would detection rules be versioned?
-
-The JSON rules are versioned in Git and checked with fixtures today. Production
-alerts should also retain the exact rule revision/hash, effective configuration,
-schema version, and evidence references. Review changes with positive/negative
-fixtures, temporal boundary cases, shadow runs, and rollout/rollback policies.
-Git history alone does not make an alert retain its historical rule semantics.
-
-## How would false positives be tuned?
-
-Collect analyst labels with reasons and confirmed outcomes. Measure alert volume,
-review burden, cohort behavior, and precision/recall only where labels support it.
-Tune thresholds and windows using held-out data, then test correlation effects so
-suppressing one signal does not hide a meaningful sequence. Time-bound exceptions
-and monitor drift. One synthetic incident cannot establish detection quality.
-
-## What are the current V1 limitations?
-
-Fixed local identity, no tenant isolation, synchronous finite ingestion, synthetic
-thresholds, bounded case and model context, a narrow claim vocabulary, no autonomous
-response, no production replay or streaming, no retained report versions, and
-privileged-owner bypass of event/audit triggers. Source observations can be false,
-supported claims can be incomplete, and provider availability is independent of
-deterministic test success. These boundaries are explicit in the UI and documents.
+Authenticated identities and case permissions; tenant isolation; authenticated
+ingestion; shared multi-instance budgets and rule rollout; least-privilege database
+roles; independent retention; backup/recovery; operational monitoring; provider
+privacy review; and broader repeated model evaluation. Cases, context, replay,
+review history, and bundles have deliberate bounds. There is no autonomous
+remediation, general malware attribution, production streaming, calibrated
+confidence, or enterprise-readiness guarantee.

@@ -6,6 +6,13 @@ PostgreSQL. Both application services use `APP_MODE=public_demo`: synthetic data
 read-only investigation, curated deterministic analyst questions, and ephemeral
 answers. The public analyst requires no OpenAI key and incurs no OpenAI spend.
 
+The current source also supports bounded scenario replay, baseline rule comparisons,
+hypothesis inspection, the deterministic benchmark, and evidence bundle export and
+local verification. This runbook documents their rollout requirements; it does
+not establish that a particular commit has already reached the hosted services.
+See [current V2 validation](V2_VALIDATION.md#hosted-verification) for observed
+CI, rollout, and hosted smoke results.
+
 This runbook describes the required configuration and operating procedures.
 Hosting-dashboard settings, backups, billing limits, and platform logs must be
 checked by the operator; the public URL alone does not verify those settings.
@@ -28,7 +35,8 @@ authorization. The entire initialized synthetic case is intentionally readable.
 ## Modes and boundaries
 
 `APP_MODE=local` is the default and retains the interview workflow: annotations,
-findings, report approval, deterministic analysis, and optional OpenAI analysis.
+findings, report approval, rule proposal/regression/review, hypothesis review,
+deterministic analysis, and optional OpenAI analysis.
 Use the [local setup](SETUP.md) for that workflow. Never publish the local mode.
 
 Set **`APP_MODE=public_demo` on both services**. The backend:
@@ -37,7 +45,8 @@ Set **`APP_MODE=public_demo` on both services**. The backend:
   skipped. Nothing needs an OpenAI key.
 - Denies all non-read methods except the bounded analyst POST and CORS preflight.
   This includes incident edits/assignment, evidence changes/deletion, findings,
-  notes, reports/approvals, evaluation reruns, detections, and unknown future write
+  notes, reports/approvals, persisted evaluation reruns, detections, rule proposals
+  and approvals, hypothesis reviews, and unknown future write
   paths. There is no web seed/reset/admin endpoint. Denials return intentional 403s.
 - Forces the deterministic provider even if `AI_PROVIDER=openai` was mistakenly
   supplied. Analyst answers and audit entries are **not persisted** in this mode.
@@ -46,6 +55,13 @@ Set **`APP_MODE=public_demo` on both services**. The backend:
   insufficient evidence. This is not a model-backed public interaction. The
   separately recorded [OpenAI validation](evaluations/LIVE_VALIDATION.md) remains
   available, with its measured scope and limitations.
+
+Known scenarios expose two corresponding fixed deterministic analyst GET examples
+using completed scenario evidence. They share the case analyst request/concurrency
+budget and do not save a case or answer. Public rule reads always use the repository
+baseline, and only three fixed regression examples are available. Replay cursors,
+benchmark results, hypothesis inspection, and exports create no visitor workflow
+rows. Bundle verification of a selected local file stays entirely in the browser.
 
 The frontend checks the backend's public/read-only/deterministic runtime contract
 before serving application data. A mismatched local backend fails closed. Its
@@ -59,6 +75,12 @@ inspection, entity relationships, evaluations, and architecture remain available
 Controls that save or approve work are absent in public mode. Reports remain a
 local review workflow.
 
+New navigation is gated by exact version-1 capabilities returned by `/api/runtime`.
+An older compatible public backend without these capabilities keeps the original
+routes usable and hides unavailable features. Unknown capability versions are not
+assumed compatible. Capabilities are availability hints; the backend's centralized
+method denial and service checks remain authoritative.
+
 ## Environment configuration
 
 Maintain these values in the hosting dashboards. The table specifies required
@@ -66,17 +88,17 @@ configuration, not an export of verified dashboard settings. API-host placeholde
 below are not usable configuration and contain no secrets. Do not upload a
 workstation `.env`.
 
-| Service | Variable | Value or source |
-|---|---|---|
-| Railway API | `APP_MODE` | `public_demo` |
-| Railway API | `AEGISGRAPH_LOAD_ENV` | `false` |
-| Railway API | `DATABASE_URL` | Reference the Railway PostgreSQL service's private `DATABASE_URL` |
-| Railway API | `AI_PROVIDER` | `deterministic` (also enforced by public mode) |
-| Railway API | `ALLOWED_ORIGINS` | Exact hosted frontend origin: `https://aegisgraph.farhan-shafee.com` |
-| Railway API | `ALLOWED_HOSTS` | Exact API hostname and `healthcheck.railway.app`, comma separated |
-| Railway API | `PORT` | Supplied by Railway; do not hard-code 8000 |
-| Vercel web | `APP_MODE` | `public_demo`, at build and runtime |
-| Vercel web | `API_INTERNAL_URL` | API HTTPS origin, e.g. `https://api.example.com` |
+| Service     | Variable              | Value or source                                                      |
+| ----------- | --------------------- | -------------------------------------------------------------------- |
+| Railway API | `APP_MODE`            | `public_demo`                                                        |
+| Railway API | `AEGISGRAPH_LOAD_ENV` | `false`                                                              |
+| Railway API | `DATABASE_URL`        | Reference the Railway PostgreSQL service's private `DATABASE_URL`    |
+| Railway API | `AI_PROVIDER`         | `deterministic` (also enforced by public mode)                       |
+| Railway API | `ALLOWED_ORIGINS`     | Exact hosted frontend origin: `https://aegisgraph.farhan-shafee.com` |
+| Railway API | `ALLOWED_HOSTS`       | Exact API hostname and `healthcheck.railway.app`, comma separated    |
+| Railway API | `PORT`                | Supplied by Railway; do not hard-code 8000                           |
+| Vercel web  | `APP_MODE`            | `public_demo`, at build and runtime                                  |
+| Vercel web  | `API_INTERNAL_URL`    | API HTTPS origin, e.g. `https://api.example.com`                     |
 
 The standard Railway `postgresql://` URL is normalized to the installed psycopg 3
 driver. Do not put database credentials in Vercel. Supply neither `OPENAI_API_KEY`
@@ -103,16 +125,16 @@ No new `railway.toml` is included because Railway's
 [Config as Code documentation](https://docs.railway.com/config-as-code/reference)
 now marks that mechanism deprecated. Configure these service settings directly:
 
-| Setting | Value |
-|---|---|
-| Root directory / build context | Repository root |
-| Builder | Dockerfile |
-| Start command | Image CMD, or `python -m aegisgraph.cli public-serve` |
-| Pre-deploy command, first initialization only | `python -m aegisgraph.cli public-init --seed` |
-| Pre-deploy command, subsequent deployments | `python -m aegisgraph.cli public-init` |
-| Healthcheck path | `/ready` |
-| Healthcheck timeout | 120 seconds |
-| Replicas / regions | One replica in one region |
+| Setting                                       | Value                                                 |
+| --------------------------------------------- | ----------------------------------------------------- |
+| Root directory / build context                | Repository root                                       |
+| Builder                                       | Dockerfile                                            |
+| Start command                                 | Image CMD, or `python -m aegisgraph.cli public-serve` |
+| Pre-deploy command, first initialization only | `python -m aegisgraph.cli public-init --seed`         |
+| Pre-deploy command, subsequent deployments    | `python -m aegisgraph.cli public-init`                |
+| Healthcheck path                              | `/ready`                                              |
+| Healthcheck timeout                           | 120 seconds                                           |
+| Replicas / regions                            | One replica in one region                             |
 
 `public-serve` requires Railway's `PORT`, binds `0.0.0.0`, and runs one worker.
 It disables Uvicorn access logs and forwarded-IP trust. Hosting terminates HTTPS.
@@ -150,8 +172,9 @@ fixture presence, not cryptographic evidence integrity.
 `public-init` without `--seed` migrates and checks readiness; an empty/incomplete
 database exits nonzero. This is the normal later pre-deploy command. `public-check`
 is read-only and exits nonzero when the dataset is not ready. CLI errors omit
-connection details. All local seed/reset/evaluation/serve commands are refused in
-public mode. Destructive recovery belongs to a deliberate hosting/database-admin
+connection details. Local seed/reset/persisted-evaluation/serve commands are refused
+in public mode. The database-free `evaluate-benchmark` and local `verify-bundle`
+commands are separate deterministic operations. Destructive recovery belongs to a deliberate hosting/database-admin
 workflow with a backup or a fresh replacement database; there is no automatic reset.
 
 ## Vercel project
@@ -159,15 +182,15 @@ workflow with a backup or a fresh replacement database; there is no automatic re
 The hosted frontend is a separate **Next.js** project. Use these settings when
 maintaining it or creating a replacement project:
 
-| Setting | Value |
-|---|---|
-| Root Directory | `apps/web` |
-| Framework preset | Next.js |
-| Node.js | 24.x |
-| Install command | `npm ci` |
-| Build command | `npm run build` |
-| Output directory | Next.js default; do not set `out` |
-| Environment | `APP_MODE=public_demo`, `API_INTERNAL_URL=https://<actual-api-host>` |
+| Setting          | Value                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Root Directory   | `apps/web`                                                           |
+| Framework preset | Next.js                                                              |
+| Node.js          | 24.x                                                                 |
+| Install command  | `npm ci`                                                             |
+| Build command    | `npm run build`                                                      |
+| Output directory | Next.js default; do not set `out`                                    |
+| Environment      | `APP_MODE=public_demo`, `API_INTERNAL_URL=https://<actual-api-host>` |
 
 The web package has its own lockfile and needs no Python backend or external
 workspace package in its Vercel build. FastAPI remains exclusively on Railway.
@@ -181,20 +204,31 @@ so rebuild/redeploy after changing the mode or API origin.
 The API uses fixed-size, process-wide token buckets; it does not trust spoofable
 forwarded IPs or allocate a limiter entry per visitor. Current budgets are:
 
-| Work | Sustained budget / burst |
-|---|---|
-| All requests combined | 300/minute / 100 |
-| Reads | 240/minute / 60 |
-| Event search | 60/minute / 20 |
-| Analyst | 12/minute / 4 |
-| Health/readiness | 60/minute / 10 |
+| Work                  | Sustained budget / burst |
+| --------------------- | ------------------------ |
+| All requests combined | 300/minute / 100         |
+| Reads                 | 240/minute / 60          |
+| Event search          | 60/minute / 20           |
+| Analyst               | 12/minute / 4            |
+| Health/readiness      | 60/minute / 10           |
 
 There are at most eight in-flight API requests, including at most two analyst
-requests. A public request body is capped at 8 KiB with a five-second read timeout;
+requests. Both the curated case POST and fixed scenario analyst GETs consume that
+analyst budget. Replay, fixed rule comparisons, benchmark, and export consume the
+shared read/global budgets. A public request body is capped at 8 KiB with a five-second read timeout;
 path, query, and header sizes are bounded. Pagination is bounded. Throttled calls
 return 429 with retry guidance. The Next proxy also bounds input and upstream time.
 Public docs/OpenAPI endpoints are disabled. Public validation/error responses do
 not echo inputs, and application request logs omit paths, headers, and payloads.
+
+Replay has a finite eight-scenario cache and caps each projection at 5,000 events,
+80 playback events, 600 frames, and 1 MiB. Three fixed regression comparisons and
+one baseline benchmark are serialized finite caches with serialized cold execution;
+responses are fresh decoded objects. Export uses a read-only repeatable-read
+PostgreSQL snapshot and rejects over-capacity cases. Its JSON container is limited
+to 2 MiB, 100 logical files, and 256 KiB per file; it does not create an archive or
+upload storage. The manifest is unsigned: matching hashes establish consistency
+with that supplied manifest, not source authenticity or chain of custody.
 
 These are small-demo resource bounds, not DDoS protection or per-user fairness.
 Visitors share the budget, restarts reset it, and additional workers/replicas would
@@ -219,6 +253,29 @@ update as complete. Check the actual platform deployment results separately from
 local and CI validation. Do not reset, reseed, or recreate the hosted database to
 work around a failed migration or readiness check.
 
+For the V2 update, apply additive migrations `004_rule_workflow` and
+`005_hypothesis_workflow` through that same pre-deploy command. They add empty local
+workflow tables and append-only guards without changing canonical fixture rows.
+Public readiness requires these local-work tables to stay empty. The existing
+4,026 events, ten alerts, incident ID, evidence associations, and saved legacy
+evaluation remain the public baseline; extra scenarios are code-owned projections.
+
+Deploy the API first, require `/ready`, and inspect `/api/runtime` for the six
+version-1 capabilities: `scenarios`, `replay`, `rule_workbench`, `hypotheses`,
+`analyst_benchmark`, and `evidence_bundle`. Then deploy the frontend and verify the
+hosted routes. Capability gating also supports a temporary new-frontend/old-backend
+pair, provided the existing public-mode contract matches. An incompatible mode
+must fail closed. Do not weaken that check to make a rollout appear successful.
+
+Hosted checks should include scenario playback/reset, completed-scenario provenance,
+all three fixed regression outcomes, a hypothesis ledger, benchmark denominators,
+and an explicit bundle download plus local verification. Confirm case and scenario
+analyst answers are deterministic, persistent controls are absent, harmless write
+probes return 403, and database snapshots are unchanged by public reads. A valid
+download should verify as VALID; changed content without a changed hash should
+report MODIFIED. Record platform deployment IDs and actual hosted results separately
+from CI results before declaring the rollout complete.
+
 ## Initial deployment or deliberate replacement
 
 The following sequence documents reproducible setup of a new deployment. It does
@@ -238,7 +295,7 @@ not imply that the current hosted services still need to be created.
 5. Create/configure the Vercel project with the exact settings above and deploy it
    manually. Confirm its final HTTPS origin exactly matches `ALLOWED_ORIGINS`;
    apply a backend configuration deployment if the chosen domain differs.
-6. On the hosted site, inspect all eight routes, the flagship's source evidence,
+6. On the hosted site, inspect every advertised route, the flagship's source evidence,
    both curated analyst answers, and evaluation counts. Verify persistent controls
    are absent, a harmless incident PATCH returns 403, and an analyst request from
    an untrusted Origin returns 403. Confirm public docs return 404.
@@ -274,3 +331,15 @@ loopback services and generates temporary HTTPS certificates under ignored
 in the child Node process and browser test context. It never disables server TLS
 verification globally. This tests production Next.js behavior and the API over
 HTTPS locally, not Vercel/Railway infrastructure, certificates, or networking.
+
+The backend CI job also creates a separate empty PostgreSQL database named
+`aegisgraph_upgrade_validation` and runs
+[validate_populated_upgrade.py](../scripts/validate_populated_upgrade.py). That
+script installs the V1 schema, seeds synthetic data and analyst work, upgrades to
+head, compares old rows, repeats the upgrade, and exercises the new workflow and
+read-only export transaction. It refuses nonempty databases and names without the
+`_upgrade_validation` suffix and does not reset or drop a database. Never point
+this rehearsal at the hosted database. Scenario, regression, and export boundary
+tests run under pytest; `python -m aegisgraph.cli evaluate-benchmark` explicitly
+executes the deterministic scenario-based benchmark. Public CI supplies no live
+OpenAI credentials.

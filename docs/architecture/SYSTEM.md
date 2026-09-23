@@ -28,6 +28,23 @@ The explicit analyst write path describes local/interview mode. In
 `APP_MODE=public_demo`, the same investigation data is explorable, but persistent
 API writes are denied and the two curated deterministic answers are not saved.
 
+V2 adds a finite scenario corpus, causal replay, typed rule regression, a hypothesis
+ledger, a deterministic analyst benchmark, and portable evidence bundles. They
+reuse this API, database, detector, correlation engine, and analyst boundary.
+There is no additional service or public writable workspace.
+
+## Code map
+
+| Concern                              | Implementation and design                                                                                                                                                                                                           |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Detection and correlation            | [detection.py](../../apps/api/aegisgraph/detection.py), [correlation.py](../../apps/api/aegisgraph/correlation.py), [rule definitions](../../packages/detections/rules.json)                                                        |
+| Scenario corpus and evaluator labels | [scenarios.py](../../apps/api/aegisgraph/scenarios.py), [scenario_ground_truth.py](../../apps/api/aegisgraph/scenario_ground_truth.py), [ADR-010](../adr/ADR-010.md)                                                                |
+| Replay projection and playback       | [replay.py](../../apps/api/aegisgraph/replay.py), [scenario-replay.tsx](../../apps/web/src/components/scenario-replay.tsx), [ADR-011](../adr/ADR-011.md)                                                                            |
+| Typed rules and review gates         | [rule_specs.py](../../apps/api/aegisgraph/rule_specs.py), [regressions.py](../../apps/api/aegisgraph/regressions.py), [rule_workflow.py](../../apps/api/aegisgraph/rule_workflow.py), [ADR-012](../adr/ADR-012.md)                  |
+| Grounding and hypothesis review      | [analyst.py](../../apps/api/aegisgraph/analyst.py), [hypotheses.py](../../apps/api/aegisgraph/hypotheses.py), [hypothesis_workflow.py](../../apps/api/aegisgraph/hypothesis_workflow.py), [ADR-013](../adr/ADR-013.md)              |
+| Benchmark obligations                | [analyst_benchmark.py](../../apps/api/aegisgraph/analyst_benchmark.py), [fixture](../../tests/fixtures/analyst_benchmark.json)                                                                                                      |
+| Export and local verification        | [evidence_export.py](../../apps/api/aegisgraph/evidence_export.py), [evidence_bundle.py](../../apps/api/aegisgraph/evidence_bundle.py), [browser verifier](../../apps/web/src/lib/evidence-bundle.ts), [ADR-014](../adr/ADR-014.md) |
+
 ## Ingestion and detection
 
 Identity, API gateway, endpoint, and Atlas application adapters translate source
@@ -76,6 +93,42 @@ Incident severity is an explicit V1 policy: high when the cluster contains both
 IAM and APP families, otherwise medium. It is not a learned risk score or a
 calibrated estimate of impact.
 
+## Scenarios, replay, and rule evolution
+
+Eight code-owned scenarios cover suspicious, benign, ambiguous, mixed, and
+insufficient-evidence observations. Atlas remains the persisted canonical fixture;
+the other scenarios are ephemeral projections and do not create database cases.
+The scenario generators do not import evaluator answer keys. Required/forbidden
+detections, expected correlation, and claim/question expectations are separate
+authored labels used by regression and benchmark execution. Neither labels nor
+catalog descriptions enter the analyst provider context.
+
+Replay orders events by timestamp and ID, evaluates detection once, and releases
+each signal at its final supporting event. Correlation sees only the observed
+prefix. Atlas explicitly folds its 4,000 earlier normal events into initialization
+after checking they generated no alerts, then plays the 26 investigation events.
+Bounds are 5,000 source events, 80 playback/evidence events, 600 frames, and 1 MiB
+per projection. The browser owns its playback cursor; no visitor session is stored
+on the server. The full projection is delivered up front, so playback is a causal
+presentation, not a mechanism to hide future data. Completed-scenario inspection
+is labeled separately from the currently displayed prefix.
+
+Public replay uses repository rules. Its cache has eight serialized entries and
+one cold computation at a time; each caller receives freshly decoded objects.
+The three fixed public regression examples and one baseline benchmark use the
+same bounded, serialized-cache approach. Local replay resolves approved rule
+snapshots separately and cannot replace public baseline cache contents.
+
+Rule edits accept only the declared integer parameters of fixed rule identities
+and kinds. There is no executable rule language. A full-corpus comparison returns
+PASS, WARN, or BLOCK with individual reasons and explicit synthetic denominators.
+Local approval independently recomputes the comparison, verifies the selected
+prior run and corpus/ruleset digests, and checks the whole-ruleset generation
+under a transaction lock. BLOCK cannot be approved; every human decision requires
+a reason. Approved changes affect subsequent local replay and rule comparison
+without rewriting stored Atlas alerts or evidence. Public visitors see only baseline rules and fixed
+comparisons; browsing never initializes rule workflow rows.
+
 ## Relational evidence and graph
 
 Events, alerts, incidents, incident evidence, findings, entity links, analyses,
@@ -89,6 +142,15 @@ The derived incident graph uses that same bounded detail set. Indexed timestamps
 identities, sessions, event types, and association keys support V1 queries.
 SQLite is a convenience for local execution and isolated tests. PostgreSQL is the
 intended persisted database and the database used by the CI integration job.
+
+Additive migrations [004](../../apps/api/migrations/versions/004_rule_workflow.py)
+and [005](../../apps/api/migrations/versions/005_hypothesis_workflow.py) create empty
+local rule/hypothesis workflow tables. They do not reseed or rewrite existing
+events, alerts, evidence, notes, reports, or evaluations. Rule versions, regression
+runs, rule reviews, and hypothesis revisions receive append-only database guards;
+their current-head records are mutable transactionally. Those guards still trust
+the database owner. CI exercises both fresh public initialization and an upgrade
+from a populated V1 schema with repeat-upgrade and ordinary SQL-mutation checks.
 
 ## Analyst trust boundaries
 
@@ -137,17 +199,34 @@ missing malware, transfer, personal-data-field, identity, or location evidence.
 The guard is not a general natural-language entailment test. Independent claim
 validation still prevents novel question wording from adding arbitrary facts.
 
+The hypothesis ledger derives four fixed propositions from validated observations
+and narrowly matched recorded approval/job context. It separates supporting and
+contradicting evidence, evidence-derived status, missing evidence, and human review.
+Account compromise remains at most partially supported by this telemetry. A
+recorded approval can contradict a proposition about that approval's scope; it
+does not establish an account owner's identity or innocence. Local review binds
+to the current evidence/annotation/finding digest and expected revision. A shared
+incident lock serializes relevant case mutations. Changed context makes a review
+stale, while human acceptance never upgrades its evidence-derived status. Public
+ledgers omit persisted local review and finding state. Scenario analyst examples
+always use the deterministic provider and one of two fixed questions.
+
 ## Reports and human review
 
 Reports are deterministic templates assembled from case evidence, entities,
-status, and approved analyst findings. They are not model-written narratives.
+status, approved analyst findings, and current accepted hypotheses. Hypotheses
+retain their evidence-derived status, citations, and gaps. Reports are not
+model-written narratives.
 Creating or approving a finding is a separate human API action; the provider
 cannot invoke it. Report generation creates a draft. Case edits, evidence
-annotations, findings, finding review, and notes invalidate an existing report,
+annotations, findings, finding review, notes, and hypothesis reviews invalidate an existing report,
 clear approval metadata, and append a `report_invalidated` audit entry when its
 status first changes to stale. Stale approval returns a conflict until the analyst
 regenerates and reviews the report. Only the current report is stored; audit
 records record lifecycle actions rather than complete historical report versions.
+
+Local author/reviewer labels are unauthenticated provenance labels. They do not
+establish who performed a decision or create multi-user authorization.
 
 ```mermaid
 stateDiagram-v2
@@ -190,6 +269,14 @@ The [September 17 preparation record](../PUBLIC_DEMO_VALIDATION.md) preserves th
 earlier local validation evidence; it is not a statement of current hosting status
 or independent verification of hosting-dashboard settings.
 
+The runtime response advertises additive version-1 capabilities for scenarios,
+replay, the rule workbench, hypotheses, the analyst benchmark, and evidence bundles.
+The [frontend capability parser](../../apps/web/src/lib/capabilities.ts) accepts
+only known exact versions. Missing or unknown capabilities hide the corresponding
+navigation and prevent feature fetches against an older backend. The existing
+public-mode contract remains mandatory and fails closed on a mode mismatch.
+Capabilities describe availability; API method and service checks enforce access.
+
 The optional model provider is a separate data boundary. Only synthetic bounded
 case context is sent; provider retention, data residency, and organizational
 approval must be resolved before any future real-data use.
@@ -226,6 +313,33 @@ demo readiness, not production availability or source authenticity.
 
 ## Operational limits
 
+### Evidence bundles
+
+An explicit incident export takes a committed snapshot using a separate read-only
+repeatable-read PostgreSQL transaction. It writes no audit/export row. Collection
+counts and SQL payload sizes are checked before materializing large values; the
+builder rejects out-of-scope event, evidence, finding, hypothesis, and audit
+references. Public exports omit owner, evidence notes, findings, notes, audit,
+and human review state and identify that projection explicitly. Local exports
+include bounded committed human material. Over-capacity cases fail instead of
+silently truncating evidence.
+
+The [bundle format](../EVIDENCE_BUNDLES.md) is one JSON container, limited to 2 MiB,
+100 logical files, and 256 KiB per file. Python and browser verification require
+strict UTF-8, reject duplicate keys, lone surrogates, nonfinite numbers, excessive
+depth/nodes, unknown schema fields, unsafe paths, and duplicate/colliding paths.
+Fixed logical filenames are never extracted or opened. Exact UTF-8 content is
+hashed without Unicode or newline normalization. A selected browser file stays
+on the user's device and is never uploaded.
+
+VALID means the files match the supplied SHA-256 hashes and byte lengths. The
+manifest is unsigned and replaceable: changing content and its hash together
+can still pass. Case, timestamp, projection, and application metadata are also
+unauthenticated. Verification does not establish source truth, authorship,
+privileged-database integrity, or chain of custody.
+
+### Execution and evaluation
+
 Ingestion and correlation are synchronous for a bounded demonstration dataset.
 There is no streaming ingestion, durable task queue, distributed rule scheduler,
 or exactly-once event transport. Request IDs and structured request logs support
@@ -241,3 +355,13 @@ boundary tests do not establish live-model prompt-injection resistance.
 an explicit not-run state. Neither read endpoint performs evaluation calls. Live
 results label external calls separately from application-boundary checks; only
 the opt-in live evaluation runner can initiate those measured calls.
+
+`GET /api/evaluations/benchmark` is a separate deterministic application benchmark:
+its first request computes the bounded repository-owned obligations, then reads a
+single serialized cache entry. `python -m aegisgraph.cli evaluate-benchmark`
+executes it directly and exits nonzero on failed obligations. It compares authored
+synthetic expectations and deliberately invalid provider drafts with actual
+outcomes. It does not measure live-model accuracy or a population-level attack
+success rate. Public scenario analyst GETs share the existing analyst request and
+concurrency budgets; replay, regression examples, benchmark, and export use the
+shared read budget. No public path selects a live provider.

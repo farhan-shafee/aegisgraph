@@ -1,13 +1,14 @@
 # AegisGraph: seven-minute interview walkthrough
 
-The aim is to show an investigation, then explain the engineering decisions that
-make its evidence and AI boundaries inspectable. All observations are synthetic.
-Keep the [interview notes](INTERVIEW_NOTES.md) available for follow-up questions.
+The story is one loop: replay observations, investigate the evidence, assess a
+hypothesis, compare a detection change, and export a verifiable snapshot. All
+bundled observations are synthetic. Keep [interview notes](INTERVIEW_NOTES.md)
+open for follow-up questions.
 
-## Prepare once
+## Prepare and rehearse
 
-Install dependencies using the [README](../README.md). Stop an existing demo API
-before resetting its data. From the repository root, with the virtual environment
+Use the [setup guide](SETUP.md). For a fresh disposable local demo, stop its API,
+then run these commands from the repository root with the virtual environment
 active:
 
 ```sh
@@ -15,174 +16,190 @@ python -m aegisgraph.cli demo-reset
 python -m aegisgraph.cli demo-api
 ```
 
-In a second terminal:
+Start `npm run dev --prefix apps/web` in another terminal and open
+[localhost:3000](http://127.0.0.1:3000). Run
+`python -m aegisgraph.cli demo-health` from an activated API terminal. The default
+provider is explicitly deterministic; no external API key is needed.
+
+`demo-reset` deletes edits and saved runs only in the reserved disposable demo
+database. Its matching PostgreSQL option is documented in [setup](SETUP.md).
+Do not reset a database containing work you intend to keep. Optional live OpenAI
+execution is a separate, explicitly configured exercise; it is not required for
+this script.
+
+Before presenting:
+
+- Confirm the canonical Atlas fixture has 4,026 events, ten alerts, and 26 evidence
+  items, and that local APP-002 is at its shipped 1,000-record threshold.
+- Rehearse Replay at 20× once. Idle gaps are visibly compressed, so this is an
+  explanatory playback rather than a wall-clock attack simulation.
+- Open Replay, the Atlas case, APP-002, and Evaluations in convenient tabs. A
+  second case tab on Export avoids navigating back at the end.
+- For the hosted alternative, check the [verified deployment record](DEPLOYMENT.md)
+  and visible capabilities first. Use the public comparison path below; public
+  visitors cannot save rule or case reviews.
+
+## 00:00–00:30 — Frame the problem
+
+Open Overview and point out the original Atlas investigation.
+
+> AegisGraph is an evidence-grounded security investigation application for a
+> simulated fintech environment. I wanted the reasoning to be inspectable: which
+> observations produced a signal, why signals became a case, which claims the
+> evidence supports, and what remains unknown.
+
+> The hosted path is a Vercel Next.js frontend, Railway FastAPI, and PostgreSQL.
+> Public mode is read-only and deterministic. Local mode adds explicit human
+> review and optional OpenAI analysis.
+
+## 00:30–01:35 — Replay Atlas at 20×
+
+Open **Replay**, select **Atlas account investigation**, set **Playback speed**
+to **20×**, and click **Start**. Briefly use **Pause**, **Step**, and **Resume**.
+
+> The 4,000 normal background records are initialized before playback. The 26
+> investigation observations then pass through telemetry, normalization,
+> detections, alerts, and correlation. The cursor only exposes reached state;
+> the completed investigation is withheld until playback finishes.
+
+Point out the first incident at 14:03 UTC and later changes as privileged access
+and application activity arrive. Source-time gaps are capped and disclosed; do
+not describe the playback speed as a throughput measurement.
+
+> Correlation requires one principal, at least three distinct rules across two
+> families, and a 30-minute window. A weak anomaly can remain an alert instead of
+> automatically becoming an incident.
+
+At completion, use **Open canonical Atlas case**. The replay is an ephemeral
+projection; this link opens the separate persisted investigation.
+
+## 01:35–02:20 — Follow evidence and relationships
+
+Open one timeline observation and inspect its evidence ID, timestamp, actor,
+source/device/session, and canonical event. Close the drawer, open **Entities**,
+select the unfamiliar device, and follow its evidence relationship.
+
+> The graph is derived from relational evidence associations. A relationship
+> helps inspect the sequence; it does not establish the person behind an account.
+> An annotation is separate from the source event. Ordinary event edits are
+> blocked, but a privileged database owner remains outside that guarantee.
+
+Return to **Timeline** and leave the analyst visible. The canonical fixture and
+its evidence IDs are preserved across replay and rule tuning.
+
+## 02:20–03:15 — Ask two different questions
+
+Ask exactly **What most likely happened?** Inspect one finding and open its
+citation. Name the visible provider: the ordinary demo is **deterministic**.
+
+> The provider selects typed claims and supporting evidence IDs. The application
+> validates their schema, current-case membership, inclusion in the actual
+> bounded context, and claim support outside the model. Accepted prose comes
+> from server templates; a real citation is not a license for arbitrary claims.
+
+Then ask **What malware family was used?** Show the insufficient-evidence result.
+
+> Identity and access observations do not establish malware execution or a
+> malware family. This is a deliberate evidence limit. High access volume also
+> does not establish exfiltration.
+
+Provider unavailability is a different outcome. Do not present a failed external
+request as a successful insufficient-evidence test.
+
+## 03:15–04:00 — Inspect a working hypothesis
+
+Open **Hypotheses**. Inspect **Account activity reflects unauthorized control**,
+its supporting citation, and **What would confirm or reject this?** Show the
+missing account-control and session evidence.
+
+> Evidence-derived status is separate from human acceptance. Unfamiliar activity
+> can partially support unauthorized control; it cannot confirm identity or
+> intent. Accepting a working hypothesis records a review without upgrading the
+> evidence status. Changed context makes old reviews stale.
+
+Supporting and contradicting evidence have separate places in the ledger; do not
+imply Atlas contains a contradiction where that list is empty. Approved
+administration and scheduled reconciliation provide useful follow-up examples of
+narrow counterevidence.
+
+## 04:00–05:35 — Test a detection tradeoff
+
+Open **Detections → APP-002**.
+
+**Local path:** change **Threshold** from **1000** to **1500**. Enter the proposal
+reason `Compare benign reconciliation against required access signals.` Click
+**Save proposal**, then **Run corpus comparison**. Inspect the computed **PASS**
+gate, parameter diff, the bulk-automation row, and the service-access row.
+
+> This removes the benign reconciliation signal while retaining the two required
+> volume detections. TP/FN count required scenarios; FP/TN count explicitly benign
+> scenarios. Other scenarios still participate in the regression gates. These
+> are synthetic fixture measurements, not production precision or recall.
+
+Enter **Review reason**: `Reviewed all scenario obligations and the correlation outcomes.`
+Click **Approve revision**. Explain that approval independently recomputes the
+comparison and checks the current baseline. Reload to show the saved review.
+
+> Approved local rules affect subsequent replays. They do not rewrite the
+> original Atlas alerts or evidence. A blocking result cannot be approved; WARN
+> requires deliberate review and does not establish improvement.
+
+**Public alternative:** choose **1,500 records** to inspect the same shipped-rule
+comparison. Then choose **2,200 records** and show **BLOCK**: the service-principal
+volume signal and its correlated incident are lost. No editable fields or approval
+actions are available publicly. The **1,100 records** example demonstrates WARN
+with unchanged fixture outcomes if there is time.
+
+## 05:35–06:10 — Inspect measured obligations
+
+Open **Evaluations → V2 analyst benchmark**. Read the executed counts from the
+screen, select a citation or false-premise category, and expand one obligation's
+**Expected behavior** and **Observed result**. Point to its metric definition and
+denominator.
+
+> These are named application-boundary obligations executed against synthetic
+> fixtures. Their populations overlap, so I do not add the denominators together.
+> The original boundary suite and historical live OpenAI record are separate.
+> Passing these cases is not a model accuracy or universal injection-resistance
+> claim.
+
+Use [current validation](VALIDATION.md) for the actual test and CI results rather
+than memorizing a count that may change.
+
+## 06:10–07:00 — Export, verify, and state the limit
+
+Return to the canonical Atlas case's **Export** tab. Click **Download evidence
+bundle**. Show **VALID**, then expand **Inspect declared files and SHA-256 hashes**.
+Select that download with **Verify a local bundle** to repeat verification in the
+browser. The selected file is not uploaded or extracted.
+
+> This captures a bounded committed snapshot with exact UTF-8 content hashes.
+> Public exports omit local human annotations, findings, notes, audit records,
+> and saved reviews. Local exports include bounded committed review material.
+
+> VALID means the contents match this manifest. The manifest is unsigned and can
+> be replaced along with the files; hashes do not prove authorship, source truth,
+> or legal chain of custody. Authentication, tenant isolation, independent
+> retention, and measured production operations remain future work.
+
+The same downloaded file can be checked offline with:
 
 ```sh
-npm run dev --prefix apps/web
+python -m aegisgraph.cli verify-bundle bundle.json
 ```
 
-In a third terminal, with the virtual environment active:
+Use the actual downloaded filename in place of `bundle.json`. After a local
+rehearsal, a disposable reset restores the original rule baseline and removes the
+saved demo actions. Stop the demo API before that reset.
 
-```sh
-python -m aegisgraph.cli demo-health
-```
+## Follow-up paths and recovery
 
-Reset is destructive **only to the reserved disposable demo database**. It applies
-migrations, regenerates deterministic telemetry, detections and correlation, and
-runs deterministic evaluations. It ignores an arbitrary `DATABASE_URL`. The default
-is the reserved SQLite demo file. The reset/API commands also support
-`--postgres-port 55432` for a pre-created local PostgreSQL `aegisgraph_demo` database;
-use the same selection for both commands. This does not target the original
-`aegisgraph` database or an arbitrary database name.
+For more time, compare the approved-administration and mixed-context scenarios,
+record a local hypothesis review, demonstrate report-approval invalidation, or
+inspect a deliberately modified copy of an export. Keep original and modified
+files distinct; changing content without its manifest should show **MODIFIED**.
 
-The default demo API explicitly uses the deterministic provider even when `.env`
-selects OpenAI. For a live session, start `demo-api --provider openai` instead.
-This reads the existing server-only configuration and may incur API charges.
-Run the explicit live evaluation command documented in
-[evaluations](evaluations/README.md) before relying on external availability.
-Never show `.env`, authorization headers, or terminal environment dumps on screen.
-
-Open [AegisGraph](http://127.0.0.1:3000), choose the intended theme, and confirm
-4,026 events, ten alerts, and one incident. Use a fresh reset for a clean approval
-and annotation history. Dates in the case belong to the synthetic dataset;
-they are not a live feed.
-
-## 00:00–00:30 — Explain the product
-
-Open Operations.
-
-> AegisGraph is an evidence-grounded investigation application for a simulated
-> fintech environment. It takes telemetry through normalization, detection,
-> correlation, evidence review, and a bounded AI analyst. The evidence scope
-> exists before the model runs.
-
-Point out persisted counts and the primary incident. Do not claim customer usage,
-measured response-time reduction, or production detection coverage.
-
-## 00:30–01:15 — Inspect telemetry and the canonical model
-
-Open Security events, filter a source, and inspect a normal observation. Show
-timestamp, actor, device, session, target, and source reference.
-
-> Four adapters normalize identity, gateway, endpoint, and Atlas application
-> observations. The source record stays unchanged; a relevance decision is a
-> separate case annotation. A well-formed event is not necessarily true.
-
-Explain the 4,000 baseline observations and 26 scenario observations. Not every
-event is suspicious; baseline context makes later activity interpretable.
-
-## 01:15–02:00 — Connect detection-as-code to alerts
-
-Open Detections, inspect the endpoint enumeration rule, then open Alerts.
-
-> The rule requires twelve distinct internal endpoints within five minutes for
-> one user/session. A detection emits an alert with source evidence. Ten rules
-> are defined; nine distinct rules fire in this case and produce ten alerts.
-
-Show a weak authentication signal next to a stronger privilege/access signal.
-Thresholds are explicit synthetic policy, not calibrated detection performance.
-
-## 02:00–02:45 — Explain why one incident exists
-
-Open the primary incident and its correlation explanation.
-
-> These alerts share one principal over 22 minutes. The grouping policy requires
-> at least three distinct rules across two families within 30 minutes anchored
-> at the first alert. This case has nine rules across five families. Shared
-> device, session, and IP relationships help investigate; they do not independently
-> decide which alerts enter the case.
-
-Point out severity, status, owner, event-time range, and the summary. High severity
-is an explicit policy based on the rule mix, not a learned compromise probability.
-
-## 02:45–03:45 — Follow the chronology and evidence
-
-Walk the sequence in UTC:
-
-1. 13:57 — familiar baseline authentication.
-2. 14:02 — unfamiliar source/device.
-3. 14:03 — MFA accepted.
-4. 14:07 — privileged role assigned.
-5. 14:11 — repeated internal endpoint requests.
-6. 14:14 — sensitive account resource accessed.
-7. 14:17 — elevated record volume.
-8. 14:21 — another unfamiliar device/session.
-9. 14:24 — privileged role reverted.
-
-Open source evidence. Show its ID, normalized fields, source reference, and
-separate annotation. Open Entities and select the principal or unusual device;
-follow a linked observation back to evidence.
-
-> Relationships explain which observations connect. They do not prove who
-> operated the account. Database triggers reject ordinary event edits/deletes;
-> a privileged owner can remove those protections.
-
-## 03:45–04:45 — Ask the Evidence Analyst
-
-Ask exactly: **What most likely happened?**
-
-Read the summary, one structured finding, and the missing evidence. Click a
-citation and verify that it opens the corresponding observation. Name the visible
-provider: deterministic or OpenAI. Never imply a deterministic answer came from
-an external model.
-
-> The provider chooses typed observations and exact supporting evidence sets.
-> The server checks schema, current-case scope, inclusion in the actual bounded
-> context, and claim support before rendering factual statements. A real citation
-> alone would not justify arbitrary prose. The confidence label is qualitative,
-> not a calibrated probability. Account misuse remains a hypothesis.
-
-If useful, select Review as finding to demonstrate that saving and approving
-require explicit human actions. The model cannot perform those actions.
-
-## 04:45–05:20 — Show intentional insufficient evidence
-
-Ask exactly: **What malware family was used?**
-
-Show the insufficient-evidence outcome and missing endpoint evidence.
-
-> Suspicious identity and access activity does not establish malware execution
-> or a malware family. This is a successful evidence-boundary outcome, not an
-> application error. High access volume also does not prove exfiltration.
-
-## 05:20–06:00 — Inspect executed evaluations
-
-Open Evaluations. Show deterministic case totals, one prompt-injection case,
-and its expected versus actual behavior. Inspect the separate live-provider record
-and its actual attempts/outcomes, if present.
-
-> Deterministic fixtures test application enforcement. The malicious telemetry
-> fixture is filtered by the context projection before it reaches a provider.
-> That does not measure a model resisting text it never saw. Live calls are
-> reported separately, including failures; a small successful sample is not a
-> universal prompt-injection resistance score.
-
-Running the ordinary evaluation suite never initiates paid external calls.
-
-## 06:00–07:00 — Finish at the trust boundaries
-
-Open Architecture. Trace telemetry → normalization → detection → alerts →
-correlation → incident → bounded retrieval → provider → schema/citation/support
-validation → human review.
-
-> The database is the system of record. Telemetry is untrusted, scope is
-> deterministic, and citations are validated outside the model. The provider
-> has no database handle, retrieval tool, or incident mutation authority.
-
-Explain that reports are deterministic templates with explicit approval; later
-case changes mark them stale and require regeneration. The current report and
-audit actions are stored, not immutable historical report versions.
-
-> Production would require authenticated identities and case entitlements,
-> tenant isolation, independently retained evidence/audits, authenticated
-> ingestion, and measured operational scaling. This release demonstrates the
-> investigation and evidence boundary, with those limits stated explicitly.
-
-## If a dependency fails during the interview
-
-Run `demo-health` and use visible request IDs to diagnose local failures.
-Provider-unavailable is different from insufficient evidence. An HTTP/provider
-failure is not a successful live test. Restart the API without `--provider openai`
-for an explicitly labeled deterministic walkthrough; do not silently impersonate
-a working live provider. Recorded screenshots are useful portfolio artifacts,
-not a substitute for claiming an unavailable screen is live.
+If a dependency is unavailable, use `demo-health`, the visible request ID, and
+[setup](SETUP.md). Continue with the explicitly deterministic local demo when
+appropriate. [Reviewed screenshots](screenshots/README.md) document recorded
+views; label them as recordings rather than pretending they are a live session.

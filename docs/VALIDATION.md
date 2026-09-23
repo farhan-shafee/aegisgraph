@@ -1,5 +1,9 @@
 # Validation record
 
+Current V2 verification is recorded in [V2_VALIDATION.md](V2_VALIDATION.md).
+The dated V1 results below are retained as historical evidence; they are not
+current test counts or a statement about the hosted revision.
+
 Local hardening validation date: 2026-09-17 UTC. Dataset date: 2026-09-15 UTC.
 Results here describe this implementation run, not continuous operational metrics.
 The later public-demo implementation has a separate

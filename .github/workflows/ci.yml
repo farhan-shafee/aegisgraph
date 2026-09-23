@@ -15,12 +15,12 @@ concurrency:
 # Public CI never loads workstation configuration or calls a live model.
 # OPENAI_API_KEY and OPENAI_MODEL are intentionally not supplied to any job.
 env:
-  AEGISGRAPH_LOAD_ENV: 'false'
+  AEGISGRAPH_LOAD_ENV: "false"
   APP_MODE: local
   AI_PROVIDER: deterministic
 
 jobs:
-  # API/AI boundaries, PostgreSQL migrations and seed, smoke, dependency audit.
+  # API/AI boundaries, scenario/replay/regression/export tests, PostgreSQL, audits.
   backend:
     runs-on: ubuntu-latest
     services:
@@ -41,18 +41,35 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
           cache: pip
           cache-dependency-path: requirements.lock
       - run: pip install -r requirements.lock
       - run: pip install -e . --no-deps
       - run: ruff check apps/api tests/backend scripts
       - run: ruff format --check apps/api tests/backend scripts
-      - run: pytest -q
+      - name: Backend tests, including scenario, regression, and bundle boundaries
+        run: pytest -q
+      - name: Create dedicated populated-upgrade validation database
+        run: |
+          python - <<'PY'
+          import os
+          from sqlalchemy import create_engine
+
+          engine = create_engine(os.environ["DATABASE_URL"], isolation_level="AUTOCOMMIT")
+          with engine.connect() as connection:
+              connection.exec_driver_sql("CREATE DATABASE aegisgraph_upgrade_validation")
+          engine.dispose()
+          PY
+      - name: Preserve populated V1 data through additive V2 migrations
+        run: python scripts/validate_populated_upgrade.py
+        env:
+          DATABASE_URL: postgresql+psycopg://aegisgraph:demo-local-only@127.0.0.1:5432/aegisgraph_upgrade_validation
       - run: alembic upgrade head
       - run: python -m aegisgraph.cli seed
       - run: python -m aegisgraph.cli evaluate
-      - run: python -m aegisgraph.cli evaluate-benchmark
+      - name: Deterministic analyst benchmark against the versioned scenario corpus
+        run: python -m aegisgraph.cli evaluate-benchmark
       - run: python scripts/smoke.py
       - run: pip-audit -r requirements.lock
       - name: Build Railway image and check seeded PostgreSQL from the container
@@ -74,7 +91,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "24"
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
@@ -103,10 +120,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "24"
       - run: pip install -r requirements.lock
       - run: pip install -e . --no-deps
       - run: npm ci --prefix apps/web
