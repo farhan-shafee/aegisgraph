@@ -30,7 +30,7 @@ KINDS = frozenset(
 )
 MAX_REVISIONS = 20
 MAX_EVIDENCE = 80
-MAX_FINDINGS = 50
+MAX_FINDINGS = svc.MAX_INCIDENT_FINDINGS
 FindingId = Annotated[str, Field(pattern=r"^[A-Za-z0-9-]{1,80}$")]
 
 

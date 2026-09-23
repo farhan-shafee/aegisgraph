@@ -40,6 +40,13 @@ existing report's approval.
 There is no authenticated analyst identity. The fixed local actor label is
 provenance for the demo workflow. Review capacity is 20 revisions per proposition.
 
+Each local incident supports up to 50 findings. Finding creation checks that cap
+under the incident lock, preserving a usable ledger and report at the boundary.
+An additive upgrade preserves older cases with more findings: their ledger reports
+the capacity limit. Reports still include existing approved findings and explicitly
+omit unavailable hypothesis review entries; no historical findings are truncated
+or deleted.
+
 ## Public and replay inspection
 
 Public case views derive an ephemeral ledger and omit saved local history and

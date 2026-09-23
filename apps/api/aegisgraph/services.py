@@ -14,6 +14,8 @@ from .detection import evaluate, load_rules
 from .generator import generate_events
 from .public_security import PUBLIC_QUESTIONS
 
+MAX_INCIDENT_FINDINGS = 50
+
 
 def identifier(prefix: str) -> str:
     return f"{prefix}-{uuid4().hex[:16]}"
@@ -335,6 +337,13 @@ def patch_evidence(db: Session, incident_id: str, evidence_id: str, changes: dic
 
 def create_finding(db: Session, incident_id: str, payload) -> dict:
     incident = lock_incident(db, incident_id)
+    if (
+        db.scalar(
+            select(func.count()).select_from(m.Finding).where(m.Finding.incident_id == incident_id)
+        )
+        >= MAX_INCIDENT_FINDINGS
+    ):
+        raise HTTPException(409, "Local finding capacity reached for this incident")
     ids = set(payload.evidence_ids)
     allowed = set(db.scalars(select(m.Evidence.id).where(m.Evidence.incident_id == incident_id)))
     if not ids.issubset(allowed):
@@ -532,8 +541,21 @@ def generate_report(db: Session, incident_id: str) -> dict:
     from . import config
     from .hypothesis_workflow import get_ledger
 
-    hypotheses = get_ledger(db, incident_id, public_demo=config.settings.public_demo)
-    reviewed = [item for item in hypotheses["items"] if item["review"]["status"] == "accepted"]
+    # Additive upgrades preserve larger V1 cases. Keep their existing report
+    # workflow available without silently truncating hypothesis review context.
+    over_hypothesis_capacity = (
+        not config.settings.public_demo and len(case["findings"]) > MAX_INCIDENT_FINDINGS
+    )
+    hypotheses = (
+        None
+        if over_hypothesis_capacity
+        else get_ledger(db, incident_id, public_demo=config.settings.public_demo)
+    )
+    reviewed = (
+        [item for item in hypotheses["items"] if item["review"]["status"] == "accepted"]
+        if hypotheses is not None
+        else []
+    )
     lines.extend(
         [
             "",
@@ -541,7 +563,11 @@ def generate_report(db: Session, incident_id: str) -> dict:
             "Human acceptance records review of a proposition; it does not confirm the proposition or change its evidence-derived status.",
         ]
     )
-    if not reviewed:
+    if over_hypothesis_capacity:
+        lines.append(
+            f"Hypothesis review unavailable: this legacy incident exceeds the {MAX_INCIDENT_FINDINGS}-finding context limit. Existing findings are retained; hypothesis review entries are omitted."
+        )
+    elif not reviewed:
         lines.append("No current accepted hypothesis reviews are available.")
     for hypothesis in reviewed:
         lines.append(
