@@ -20,7 +20,7 @@ const stages = [
   [
     "03",
     "Detection rules",
-    "Versioned rules identify individual signals and temporal sequences.",
+    "Typed, versioned parameters identify signals and temporal sequences.",
   ],
   [
     "04",
@@ -207,9 +207,10 @@ export default function ArchitecturePage() {
         <Panel title="Production work remains" action={<Network size={17} />}>
           <div className="panel-body architecture-copy">
             <p>
-              This is a local single-analyst application. Production identity
-              and authorization, tenant isolation, durable tamper-resistant
-              audit storage, retention controls, distributed ingestion, and
+              The hosted demonstration is anonymous and read-only; local mode
+              supports a single-analyst workflow. Production identity and
+              authorization, tenant isolation, durable tamper-resistant audit
+              storage, retention controls, distributed ingestion, and
               workload-specific scaling require additional engineering.
             </p>
             <h3>Evaluation limits</h3>
@@ -222,6 +223,55 @@ export default function ArchitecturePage() {
           </div>
         </Panel>
       </div>
+      <Panel
+        title="The inspection and improvement loop"
+        className="mt-6"
+        subtitle="Finite synthetic scenarios, explicit decisions, and reproducible comparisons"
+      >
+        <div className="panel-body architecture-copy">
+          <p>
+            Scenario → telemetry → detection → correlation → evidence →
+            hypothesis → validated analysis → human review → typed rule proposal
+            → replay and regression gate.
+          </p>
+          <h3>Replay without persistent public state</h3>
+          <p>
+            The API computes a bounded sequence of causal frames. The browser
+            owns the playback cursor; starting, pausing, stepping, or resetting
+            never edits the canonical database. A completed replay exposes its
+            own scoped evidence. Stored Atlas records remain inspectable
+            separately.
+          </p>
+          <h3>Review without an opaque score</h3>
+          <p>
+            Evidence-derived hypothesis status is separate from local human
+            review. Fixed gap categories describe what further evidence could
+            help. Proposed detection parameters are compared across independent,
+            labeled synthetic fixtures. PASS, WARN, and BLOCK gates list their
+            reasons. These measurements do not estimate production detection
+            accuracy.
+          </p>
+          <h3>Verify exported bytes</h3>
+          <p>
+            Evidence exports contain fixed logical files and SHA-256 hashes.
+            Local browser verification checks exact bytes and membership without
+            uploading or extracting a file. The unsigned manifest does not prove
+            authenticity, source telemetry truth, or privileged database
+            integrity.
+          </p>
+          <div className="inline-meta">
+            <a href="https://github.com/farhan-shafee/aegisgraph/blob/main/docs/architecture/SYSTEM.md">
+              System design
+            </a>
+            <a href="https://github.com/farhan-shafee/aegisgraph/blob/main/docs/threat-model/THREAT_MODEL.md">
+              Threat model
+            </a>
+            <a href="https://github.com/farhan-shafee/aegisgraph/tree/main/docs/adr">
+              Architecture decisions
+            </a>
+          </div>
+        </div>
+      </Panel>
     </>
   );
 }

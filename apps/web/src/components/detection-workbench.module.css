@@ -1,0 +1,236 @@
+.workbench {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.workbench > * {
+  min-width: 0;
+}
+.body {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.muted,
+.field small,
+.block {
+  color: var(--muted);
+}
+.status {
+  color: var(--muted);
+  font-size: 13px;
+}
+.status:empty {
+  display: none;
+}
+.parameters,
+.populations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+}
+.parameters dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+.parameters dd {
+  margin: 0;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.populations {
+  padding: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  border-radius: 5px;
+}
+.populations span,
+.block {
+  display: block;
+  font-size: 12px;
+}
+.changes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.changes p {
+  display: grid;
+  gap: 4px;
+}
+.changes span {
+  font-size: 20px;
+}
+.reasons {
+  margin: 0;
+  padding-left: 20px;
+}
+.reasons li + li {
+  margin-top: 8px;
+}
+.tableRegion {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+.metricTable {
+  min-width: 340px;
+}
+.metricTable th:first-child {
+  text-align: left;
+}
+.scenarioTable {
+  min-width: 690px;
+}
+.scenarioTable th:first-child {
+  min-width: 170px;
+  text-align: left;
+}
+.scenarioTable td:last-child {
+  min-width: 260px;
+}
+.metricTable caption,
+.scenarioTable caption {
+  padding: 12px;
+  text-align: left;
+  color: var(--muted);
+  font-size: 12px;
+}
+.details {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  font-size: 12px;
+}
+.details summary {
+  cursor: pointer;
+  padding: 4px 0;
+  color: var(--teal);
+}
+.details p,
+.details dl {
+  margin-top: 10px;
+}
+.digests {
+  display: grid;
+  gap: 5px;
+}
+.digests dt {
+  color: var(--muted);
+}
+.digests dd,
+.digest {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  gap: 16px;
+}
+.field {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  min-width: 0;
+}
+.field input,
+.field select {
+  min-height: 44px;
+}
+.field textarea {
+  resize: vertical;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.actions button {
+  min-height: 44px;
+  white-space: normal;
+}
+.exampleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+}
+.example,
+.historyItem {
+  display: grid;
+  gap: 6px;
+  padding: 15px;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.example span,
+.historyItem span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.example[aria-pressed="true"],
+.historyItem[aria-pressed="true"] {
+  border-color: var(--teal);
+}
+.example:hover,
+.historyItem:hover {
+  background: var(--surface);
+}
+.history {
+  display: grid;
+  gap: 8px;
+  padding: 16px 20px;
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+}
+.reviewRecord {
+  display: grid;
+  gap: 6px;
+  padding-left: 12px;
+  border-left: 2px solid var(--teal);
+}
+.reviewRecord small {
+  color: var(--muted);
+}
+.warning {
+  color: var(--amber);
+}
+.danger {
+  color: var(--red);
+}
+.acknowledge {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+}
+.acknowledge input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin-top: 2px;
+}
+@media (max-width: 480px) {
+  .body {
+    padding: 16px;
+  }
+  .history {
+    padding: 16px;
+  }
+  .actions button {
+    flex: 1 1 100%;
+  }
+}

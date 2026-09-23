@@ -2906,6 +2906,147 @@ td small,
   border-color: #5c4526;
   color: var(--amber);
 }
+.overview-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 0 0 24px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--teal);
+  border-radius: 8px;
+}
+.overview-next p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 70ch;
+}
+.overview-next .button {
+  flex-shrink: 0;
+}
+.hypothesis-ledger {
+  min-width: 0;
+}
+.benchmark-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+.benchmark-metrics h3 {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+.benchmark-metrics strong {
+  font-size: 23px;
+}
+.benchmark-metrics p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.benchmark-provenance {
+  margin: 24px 0;
+}
+.benchmark-output {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.benchmark-provenance dd {
+  margin: 8px 0 20px;
+  overflow-wrap: anywhere;
+}
+.hypothesis-ledger > h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+.hypothesis-card {
+  margin-top: 24px;
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  overflow-wrap: anywhere;
+}
+.hypothesis-card h3 {
+  margin: 12px 0 20px;
+  font-size: 18px;
+}
+.hypothesis-card h4 {
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+.hypothesis-evidence {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.citation-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.citation-list .evidence-citation {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.hypothesis-gaps {
+  margin: 20px 0;
+  font-size: 14px;
+}
+.hypothesis-gaps summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.hypothesis-gaps ul {
+  padding-left: 20px;
+}
+.hypothesis-gaps li {
+  margin: 14px 0;
+}
+.hypothesis-gaps li p {
+  margin: 5px 0;
+  line-height: 1.6;
+}
+.hypothesis-review {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+.hypothesis-review fieldset {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px;
+  font-size: 13px;
+}
+.finding-choice {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin: 8px 0;
+}
+.finding-choice input {
+  width: auto;
+}
+.hypothesis-card blockquote {
+  margin: 16px 0;
+  border-left: 2px solid var(--teal);
+  padding-left: 14px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+@media (max-width: 600px) {
+  .overview-next {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .hypothesis-evidence {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .report-content .evidence-citation {
   display: inline;
   white-space: normal;

@@ -176,6 +176,8 @@ def _load(value):
             raise BundleInputError("invalid_utf8") from exc
     if type(value) is not str:
         _fail("invalid_container")
+    if len(value) > MAX_BUNDLE_BYTES:
+        _fail("bundle_bytes_exceeded")
     try:
         if len(value.encode("utf-8")) > MAX_BUNDLE_BYTES:
             _fail("bundle_bytes_exceeded")

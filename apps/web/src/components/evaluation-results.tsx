@@ -7,19 +7,27 @@ import { dateTime, humanize } from "@/lib/format";
 import { Badge, Empty, ErrorNotice, PageHeading, Panel } from "./ui";
 import { LiveEvaluationResults } from "./live-evaluation-results";
 import { usePublicDemo } from "./demo-mode";
+import { BenchmarkResults } from "./benchmark-results";
+import type { AnalystBenchmark } from "@/lib/benchmark-types";
 export function EvaluationResults({
   initial,
   live,
+  benchmark,
+  benchmarkError,
 }: {
   initial: EvaluationRun | null;
   live?: LiveEvaluationRun | null;
+  benchmark?: AnalystBenchmark | null;
+  benchmarkError?: string;
 }) {
   const publicDemo = usePublicDemo();
   const [run, setRun] = useState(initial),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null),
     [category, setCategory] = useState("");
-  const [view, setView] = useState<"deterministic" | "live">("deterministic");
+  const [view, setView] = useState<"deterministic" | "live" | "benchmark">(
+    benchmark || benchmarkError ? "benchmark" : "deterministic",
+  );
   async function execute() {
     setBusy(true);
     setError(null);
@@ -57,6 +65,14 @@ export function EvaluationResults({
         }
       />
       <div className="evaluation-views" aria-label="Evaluation result sources">
+        {(benchmark || benchmarkError) && (
+          <button
+            aria-pressed={view === "benchmark"}
+            onClick={() => setView("benchmark")}
+          >
+            V2 analyst benchmark
+          </button>
+        )}
         <button
           aria-pressed={view === "deterministic"}
           onClick={() => setView("deterministic")}
@@ -64,7 +80,7 @@ export function EvaluationResults({
           Deterministic boundary suite
         </button>
         <button aria-pressed={view === "live"} onClick={() => setView("live")}>
-          Live OpenAI validation{" "}
+          Recorded live OpenAI validation{" "}
           {live?.status && live.status !== "not_run" && (
             <Badge value={live.status} />
           )}
@@ -84,7 +100,19 @@ export function EvaluationResults({
       <div style={{ marginTop: error ? 15 : 0 }}>
         <ErrorNotice message={error} />
       </div>
-      {view === "live" ? (
+      {view === "benchmark" ? (
+        benchmark ? (
+          <BenchmarkResults run={benchmark} />
+        ) : (
+          <Panel className="mt-6">
+            <div className="panel-body">
+              <ErrorNotice
+                message={benchmarkError || "Benchmark results are unavailable."}
+              />
+            </div>
+          </Panel>
+        )
+      ) : view === "live" ? (
         <LiveEvaluationResults run={live} />
       ) : run ? (
         <>

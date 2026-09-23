@@ -146,6 +146,9 @@ test("server filters and paginates canonical events", async ({ page }) => {
 
 test("evaluation results come from an executed suite", async ({ page }) => {
   await page.goto("/evaluations");
+  await page
+    .getByRole("button", { name: "Deterministic boundary suite" })
+    .click();
   const result = page.waitForResponse(
     (response) =>
       response.url().endsWith("/api/evaluations/run") &&
@@ -178,6 +181,8 @@ for (const width of [320, 375, 430, 768, 1280, 1440, 1920]) {
       "/",
       "/events",
       "/detections",
+      "/detections/APP-002",
+      "/replay",
       "/alerts",
       "/incidents",
       `/incidents/${incidentId}`,
@@ -201,7 +206,7 @@ for (const width of [320, 375, 430, 768, 1280, 1440, 1920]) {
         `${route}: page overflow at ${width}`,
       ).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
     }
-    // Exercise the non-default graph and report surfaces at every target width.
+    // Exercise the non-default investigation surfaces at every target width.
     await page.goto(`/incidents/${incidentId}`);
     await page.getByRole("tab", { name: "Entities", exact: true }).click();
     expect(
@@ -211,6 +216,23 @@ for (const width of [320, 375, 430, 768, 1280, 1440, 1920]) {
           document.documentElement.clientWidth + 1,
       ),
     ).toBeTruthy();
+    for (const tab of ["Hypotheses", "Export"]) {
+      await page.getByRole("tab", { name: tab, exact: true }).click();
+      await expect(
+        page.getByRole("heading", {
+          name: tab === "Hypotheses" ? "Hypothesis ledger" : "Evidence bundle",
+          exact: true,
+        }),
+      ).toBeVisible();
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth + 1,
+        ),
+        tab,
+      ).toBeTruthy();
+    }
   });
 }
 
@@ -231,6 +253,8 @@ for (const width of [390, 768, 1440]) {
       "/",
       "/events",
       "/detections",
+      "/detections/APP-002",
+      "/replay",
       "/alerts",
       "/incidents",
       `/incidents/${incidentId}`,

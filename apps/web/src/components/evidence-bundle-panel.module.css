@@ -1,0 +1,163 @@
+.body {
+  padding: 0 20px 20px;
+  min-width: 0;
+}
+.intro {
+  margin: 0 0 18px;
+  color: var(--muted);
+  max-width: 78ch;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+}
+.controls > button {
+  max-width: 100%;
+  white-space: normal;
+}
+.fileInput {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 260px;
+}
+.fileInput label {
+  font-weight: 600;
+}
+.fileInput input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px;
+  background: var(--bg);
+}
+.fileInput input::file-selector-button {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 9px;
+  margin-right: 8px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.fileInput span,
+.note,
+.source {
+  color: var(--muted);
+  font-size: 12px;
+}
+.status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 0;
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.status strong {
+  font-family: var(--font-mono);
+}
+.status span {
+  color: var(--muted);
+}
+.source {
+  overflow-wrap: anywhere;
+  margin-top: 0;
+}
+.result {
+  min-width: 0;
+}
+.metadata {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: 14px;
+  padding: 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+.metadata div {
+  min-width: 0;
+}
+.metadata dt {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.metadata dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+}
+.findings {
+  padding-left: 18px;
+}
+.findings li {
+  padding: 7px 0;
+  overflow-wrap: anywhere;
+}
+.findings strong,
+.findings code,
+.findings span {
+  display: block;
+}
+.findings span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.files {
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+  padding-top: 12px;
+}
+.files summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.files ul {
+  list-style: none;
+  padding: 0;
+}
+.files li {
+  display: grid;
+  gap: 5px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.files strong,
+.files code {
+  overflow-wrap: anywhere;
+}
+.files span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.files code {
+  font-size: 11px;
+}
+.limitations {
+  margin: 20px 0 0;
+  padding: 14px 14px 14px 30px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+.limitations li + li {
+  margin-top: 7px;
+}
+@media (max-width: 420px) {
+  .body {
+    padding: 0 14px 16px;
+  }
+  .controls {
+    gap: 16px;
+  }
+}

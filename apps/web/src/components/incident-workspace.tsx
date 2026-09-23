@@ -20,26 +20,38 @@ import { EvidenceAnalyst, type FindingDraft } from "./evidence-analyst";
 import { Findings, NotesAndAudit, ReportPanel } from "./incident-records";
 import { CorrelationSummary } from "./correlation-summary";
 import { EvidenceTimeline } from "./evidence-timeline";
-import { ReadOnlyNotice, usePublicDemo } from "./demo-mode";
+import { ReadOnlyNotice, useCapability, usePublicDemo } from "./demo-mode";
+import { HypothesisLedger } from "./hypothesis-ledger";
+import { EvidenceBundlePanel } from "./evidence-bundle-panel";
 const tabs = [
   "Timeline",
   "Entities",
   "Alerts",
+  "Hypotheses",
   "Findings",
   "Notes & audit",
   "Report",
+  "Export",
 ] as const;
 type Tab = (typeof tabs)[number];
 const tabIds: Record<Tab, string> = {
   Timeline: "tab-timeline",
   Entities: "tab-entities",
   Alerts: "tab-alerts",
+  Hypotheses: "tab-hypotheses",
   Findings: "tab-findings",
   "Notes & audit": "tab-notes-audit",
   Report: "tab-report",
+  Export: "tab-export",
 };
 export function IncidentWorkspace({ initial }: { initial: Incident }) {
   const publicDemo = usePublicDemo();
+  const hypotheses = useCapability("hypotheses");
+  const bundles = useCapability("evidence_bundle");
+  const availableTabs = tabs.filter(
+    (tab) =>
+      (tab !== "Hypotheses" || hypotheses) && (tab !== "Export" || bundles),
+  );
   const [incident, setIncident] = useState(initial);
   const [active, setActive] = useState<Tab>("Timeline");
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>(
@@ -214,7 +226,7 @@ export function IncidentWorkspace({ initial }: { initial: Incident }) {
       <div className="investigation-grid">
         <Panel>
           <div className="tabs" role="tablist" aria-label="Investigation views">
-            {tabs.map((tab) => (
+            {availableTabs.map((tab) => (
               <button
                 role="tab"
                 key={tab}
@@ -224,17 +236,21 @@ export function IncidentWorkspace({ initial }: { initial: Incident }) {
                 tabIndex={active === tab ? 0 : -1}
                 onClick={() => setActive(tab)}
                 onKeyDown={(e) => {
-                  const index = tabs.indexOf(tab);
+                  const index = availableTabs.indexOf(tab);
                   let next: number | undefined;
-                  if (e.key === "ArrowRight") next = (index + 1) % tabs.length;
+                  if (e.key === "ArrowRight")
+                    next = (index + 1) % availableTabs.length;
                   if (e.key === "ArrowLeft")
-                    next = (index + tabs.length - 1) % tabs.length;
+                    next =
+                      (index + availableTabs.length - 1) % availableTabs.length;
                   if (e.key === "Home") next = 0;
-                  if (e.key === "End") next = tabs.length - 1;
+                  if (e.key === "End") next = availableTabs.length - 1;
                   if (next !== undefined) {
                     e.preventDefault();
-                    setActive(tabs[next]);
-                    document.getElementById(tabIds[tabs[next]])?.focus();
+                    setActive(availableTabs[next]);
+                    document
+                      .getElementById(tabIds[availableTabs[next]])
+                      ?.focus();
                   }
                 }}
               >
@@ -286,6 +302,19 @@ export function IncidentWorkspace({ initial }: { initial: Incident }) {
                 onEvidence={openEvidence}
                 refresh={refresh}
               />
+            )}
+            {active === "Hypotheses" && hypotheses && (
+              <HypothesisLedger
+                key={incident.updated_at}
+                endpoint={`${endpoint}/hypotheses`}
+                incidentId={incident.id}
+                findings={incident.findings}
+                onEvidence={openEvidence}
+                onChanged={refresh}
+              />
+            )}
+            {active === "Export" && bundles && (
+              <EvidenceBundlePanel incidentId={incident.id} />
             )}
             {active === "Notes & audit" && (
               <NotesAndAudit incident={incident} refresh={refresh} />

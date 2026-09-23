@@ -12,6 +12,7 @@ beforeEach(() => {
   check.mockResolvedValue({
     publicDemo: true,
     apiOrigin: "https://api.example.test",
+    capabilities: {},
   });
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -102,6 +103,7 @@ it("retains local writes while refusing path traversal and upstream redirects", 
   check.mockResolvedValue({
     publicDemo: false,
     apiOrigin: "http://127.0.0.1:8000",
+    capabilities: {},
   });
   fetcher.mockResolvedValue(Response.json({ status: "investigating" }));
   const response = await PATCH(

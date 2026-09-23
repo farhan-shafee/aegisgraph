@@ -11,13 +11,16 @@ export function EvidenceDrawer({
   onClose,
   onSave,
   alerts = [],
+  readOnly = false,
 }: {
   evidence: Evidence;
   onClose: () => void;
-  onSave: (id: string, relevance: string, note: string) => Promise<void>;
+  onSave?: (id: string, relevance: string, note: string) => Promise<void>;
   alerts?: Alert[];
+  readOnly?: boolean;
 }) {
   const publicDemo = usePublicDemo();
+  const isReadOnly = publicDemo || readOnly || !onSave;
   const [relevance, setRelevance] = useState(evidence.relevance),
     [note, setNote] = useState(evidence.note || ""),
     [busy, setBusy] = useState(false),
@@ -58,6 +61,7 @@ export function EvidenceDrawer({
   const event = evidence.event;
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (isReadOnly || !onSave) return;
     setBusy(true);
     setError(null);
     setSaved(false);
@@ -175,14 +179,21 @@ export function EvidenceDrawer({
             </ul>
           </section>
         )}
-        {publicDemo ? (
+        {isReadOnly ? (
           <section className="evidence-editor">
             <h3>Analyst assessment</h3>
             <p>
               {humanize(evidence.relevance)}
               {evidence.note ? ` · ${evidence.note}` : ""}
             </p>
-            <ReadOnlyNotice />
+            {publicDemo ? (
+              <ReadOnlyNotice />
+            ) : (
+              <p className="read-only-note">
+                Read-only replay evidence. This view does not persist case
+                annotations.
+              </p>
+            )}
           </section>
         ) : (
           <form className="evidence-editor" onSubmit={submit}>

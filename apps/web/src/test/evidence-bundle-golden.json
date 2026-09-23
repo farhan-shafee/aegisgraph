@@ -1,0 +1,105 @@
+{
+  "format_version": "1",
+  "manifest": {
+    "format_version": "1",
+    "incident_id": "INC-golden",
+    "scenario_id": null,
+    "projection": "public_synthetic",
+    "generated_at": "2026-09-23T12:00:00.123456+00:00",
+    "evidence_ids": [],
+    "files": [
+      {
+        "path": "README.txt",
+        "sha256": "cb008cbf9ba36613872ecf806eaf1dbc4f0122048375ec1a3c9f63b4dbcf9d62",
+        "bytes": 1042
+      },
+      {
+        "path": "alerts.json",
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "bytes": 3
+      },
+      {
+        "path": "audit.json",
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "bytes": 3
+      },
+      {
+        "path": "entities.json",
+        "sha256": "62d62aaa45fff34cc4f641f2fb61ab888b7ca5903b51f46a5e7ea87d4a62aded",
+        "bytes": 24
+      },
+      {
+        "path": "findings.json",
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "bytes": 3
+      },
+      {
+        "path": "hypotheses.json",
+        "sha256": "911ef8463d263b628427cea2dbf9966c0239bb85cfb71241261dfd56cd385bc4",
+        "bytes": 37
+      },
+      {
+        "path": "incident.json",
+        "sha256": "93223c756414c0ebf113e1a38d9e7c26155cef449ee1ec85d3eae10c10d1bf10",
+        "bytes": 71
+      },
+      {
+        "path": "notes.json",
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "bytes": 3
+      },
+      {
+        "path": "timeline.json",
+        "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+        "bytes": 3
+      }
+    ],
+    "application": {
+      "name": "AegisGraph",
+      "version": "0.1.0"
+    },
+    "limitations": [
+      "VALID means the supplied logical files match the supplied manifest's SHA-256 hashes and byte lengths.",
+      "The manifest is unsigned and replaceable: replacing both content and its recorded hash cannot be detected here. Case, time, application, and projection metadata are not authenticated.",
+      "Verification does not prove source telemetry truth, privileged-database integrity, authorship, or chain of custody."
+    ]
+  },
+  "files": [
+    {
+      "path": "README.txt",
+      "content": "AegisGraph hash-verifiable synthetic investigation export\n\nThis JSON container stores logical files as exact UTF-8 content strings. No paths need extraction. Hash the content string's UTF-8 bytes without normalizing Unicode or newlines. All telemetry is synthetic demo material.\n\nProjection: public_synthetic. Public projections omit owner, evidence annotations, findings, notes, audit entries, and human hypothesis review state. Empty public collections describe that projection, not an assertion that no local actions exist. Local projections contain bounded committed case material; human actor labels are not authenticated identities.\n\nVALID means the supplied logical files match the supplied manifest's SHA-256 hashes and byte lengths.\nThe manifest is unsigned and replaceable: replacing both content and its recorded hash cannot be detected here. Case, time, application, and projection metadata are not authenticated.\nVerification does not prove source telemetry truth, privileged-database integrity, authorship, or chain of custody.\n"
+    },
+    {
+      "path": "alerts.json",
+      "content": "[]\n"
+    },
+    {
+      "path": "audit.json",
+      "content": "[]\n"
+    },
+    {
+      "path": "entities.json",
+      "content": "{\"edges\":[],\"nodes\":[]}\n"
+    },
+    {
+      "path": "findings.json",
+      "content": "[]\n"
+    },
+    {
+      "path": "hypotheses.json",
+      "content": "{\"items\":[],\"scope_id\":\"INC-golden\"}\n"
+    },
+    {
+      "path": "incident.json",
+      "content": "{\"id\":\"INC-golden\",\"title\":\"Synthetic café / café / 東京 / 🔎\"}\n"
+    },
+    {
+      "path": "notes.json",
+      "content": "[]\n"
+    },
+    {
+      "path": "timeline.json",
+      "content": "[]\n"
+    }
+  ]
+}

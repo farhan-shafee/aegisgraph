@@ -109,6 +109,9 @@ test("all eight primary public routes remain explorable", async ({ page }) => {
     await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
   }
   await page.goto("/evaluations");
+  await page
+    .getByRole("button", { name: "Deterministic boundary suite" })
+    .click();
   await expect(
     page.getByRole("button", { name: "Run deterministic suite" }),
   ).toHaveCount(0);

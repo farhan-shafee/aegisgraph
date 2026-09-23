@@ -1,15 +1,28 @@
 "use client";
 import { createContext, useContext } from "react";
+import type { Capabilities, Capability } from "@/lib/capabilities";
 
 const DemoMode = createContext(false);
+const RuntimeCapabilities = createContext<Capabilities>({});
 export function DemoModeProvider({
   publicDemo,
+  capabilities = {},
   children,
 }: {
   publicDemo: boolean;
+  capabilities?: Capabilities;
   children: React.ReactNode;
 }) {
-  return <DemoMode.Provider value={publicDemo}>{children}</DemoMode.Provider>;
+  return (
+    <DemoMode.Provider value={publicDemo}>
+      <RuntimeCapabilities.Provider value={capabilities}>
+        {children}
+      </RuntimeCapabilities.Provider>
+    </DemoMode.Provider>
+  );
+}
+export function useCapability(name: Capability) {
+  return useContext(RuntimeCapabilities)[name] === 1;
 }
 export function usePublicDemo() {
   return useContext(DemoMode);

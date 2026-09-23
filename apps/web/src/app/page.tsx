@@ -11,6 +11,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { serverApi } from "@/lib/server-api";
+import { checkedFrontendConfig } from "@/lib/server-runtime";
 import type { Overview } from "@/lib/types";
 import {
   Badge,
@@ -24,6 +25,7 @@ import { AlertTable } from "@/components/data-tables";
 import { count, eventLabel, humanize, time } from "@/lib/format";
 export const dynamic = "force-dynamic";
 export default async function OverviewPage() {
+  const { capabilities } = await checkedFrontendConfig();
   let data: Overview;
   try {
     data = await serverApi<Overview>("/overview");
@@ -66,7 +68,7 @@ export default async function OverviewPage() {
       <PageHeading
         eyebrow="SECURITY OPERATIONS"
         title="Operations overview"
-        description="Investigate connected signals. Follow the evidence."
+        description="Atlas Trading Platform · Stored synthetic investigation. Follow connected signals back to their evidence."
         action={
           data.recent_events[0] && (
             <div className="date-chip">
@@ -77,6 +79,20 @@ export default async function OverviewPage() {
           )
         }
       />
+      {capabilities.replay === 1 && (
+        <section className="overview-next" aria-label="Investigation loop">
+          <div>
+            <strong>Every conclusion must survive inspection.</strong>
+            <p>
+              Replay a scenario, inspect evidence and hypotheses, then compare a
+              typed rule revision against the labeled corpus.
+            </p>
+          </div>
+          <Link className="button secondary" href="/replay">
+            Browse scenarios <ArrowRight size={14} />
+          </Link>
+        </section>
+      )}
       <div className="metrics">
         {metrics.map(({ title, value, note, icon: Icon, accent }) => (
           <div

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
-  Bell,
+  Play,
   Blocks,
   ChevronRight,
   CircleDot,
@@ -17,21 +17,25 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "./theme-toggle";
-import { usePublicDemo } from "./demo-mode";
+import { useCapability, usePublicDemo } from "./demo-mode";
 const navigation = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/incidents", label: "Incidents", icon: FileSearch },
-  { href: "/alerts", label: "Alerts", icon: Bell },
-  { href: "/events", label: "Security events", icon: Activity },
+  { href: "/incidents", label: "Investigate", icon: FileSearch },
+  { href: "/replay", label: "Replay", icon: Play },
+  { href: "/events", label: "Events", icon: Activity },
   { href: "/detections", label: "Detections", icon: GitBranch },
-  { href: "/evaluations", label: "AI evaluations", icon: ShieldCheck },
+  { href: "/evaluations", label: "Evaluations", icon: ShieldCheck },
   { href: "/architecture", label: "Architecture", icon: Blocks },
 ];
 export function Shell({ children }: { children: React.ReactNode }) {
   const publicDemo = usePublicDemo();
+  const replay = useCapability("replay");
+  const visibleNavigation = navigation.filter(
+    (item) => item.href !== "/replay" || replay,
+  );
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
-  const active = navigation.find((item) =>
+  const active = visibleNavigation.find((item) =>
     item.href === "/" ? pathname === "/" : pathname.startsWith(item.href),
   );
   return (
@@ -58,9 +62,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </div>
         <nav aria-label="Main navigation">
           <p className="nav-group">WORKSPACE</p>
-          {navigation.map(({ href, label, icon: Icon }, i) => (
+          {visibleNavigation.map(({ href, label, icon: Icon }) => (
             <div key={href}>
-              {i === 5 && (
+              {href === "/evaluations" && (
                 <p className="nav-group secondary-group">SYSTEM ASSURANCE</p>
               )}
               <Link

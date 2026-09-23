@@ -17,11 +17,11 @@ export const metadata: Metadata = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const { publicDemo } = await checkedFrontendConfig();
+  const { publicDemo, capabilities } = await checkedFrontendConfig();
   return (
     <html lang="en">
       <body>
-        <DemoModeProvider publicDemo={publicDemo}>
+        <DemoModeProvider publicDemo={publicDemo} capabilities={capabilities}>
           <Shell>{children}</Shell>
         </DemoModeProvider>
       </body>

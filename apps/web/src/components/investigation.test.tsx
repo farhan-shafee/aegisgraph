@@ -18,6 +18,17 @@ beforeEach(() => {
 });
 
 describe("investigation evidence workflow", () => {
+  it("keeps ephemeral replay evidence read-only in local mode", () => {
+    render(<EvidenceDrawer evidence={evidence} onClose={vi.fn()} readOnly />);
+    expect(screen.getByRole("dialog")).toBeVisible();
+    expect(screen.getByText(/Read-only replay evidence/)).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Save assessment" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Evidence annotation"),
+    ).not.toBeInTheDocument();
+  });
   it("keeps keyboard-selected tab panels named by valid stable IDs", async () => {
     const user = userEvent.setup();
     render(<IncidentWorkspace initial={incident} />);
