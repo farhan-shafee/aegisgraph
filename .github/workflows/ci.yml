@@ -52,6 +52,7 @@ jobs:
       - run: alembic upgrade head
       - run: python -m aegisgraph.cli seed
       - run: python -m aegisgraph.cli evaluate
+      - run: python -m aegisgraph.cli evaluate-benchmark
       - run: python scripts/smoke.py
       - run: pip-audit -r requirements.lock
       - name: Build Railway image and check seeded PostgreSQL from the container

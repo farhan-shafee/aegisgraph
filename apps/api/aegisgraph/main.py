@@ -4,7 +4,7 @@ import logging
 import time
 from uuid import uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -252,7 +252,13 @@ def runtime():
         "read_only": settings.public_demo,
         "analyst_provider": "deterministic" if settings.public_demo else "configured",
         "questions": list(PUBLIC_QUESTIONS),
-        "capabilities": {"scenarios": 1, "replay": 1, "rule_workbench": 1, "hypotheses": 1},
+        "capabilities": {
+            "scenarios": 1,
+            "replay": 1,
+            "rule_workbench": 1,
+            "hypotheses": 1,
+            "analyst_benchmark": 1,
+        },
     }
 
 
@@ -492,6 +498,15 @@ def evaluations(db: Session = Depends(get_db)):
             "live_model_tested": False,
         }
     )
+
+
+@app.get("/api/evaluations/benchmark")
+def analyst_benchmark(request: Request):
+    if request.query_params:
+        raise HTTPException(422, "This benchmark does not accept query parameters")
+    from .analyst_benchmark import get_benchmark
+
+    return get_benchmark()
 
 
 @app.get("/api/evaluations/live")

@@ -1,6 +1,11 @@
 # Evidence Analyst evaluation
 
-Evaluation has two separate tracks: the credential-free deterministic boundary suite and an explicitly invoked live OpenAI runner. Their results are displayed separately. [Live validation](LIVE_VALIDATION.md) records the executed live scenarios, earlier HTTP 429 failures, and separately local scope/citation checks.
+Evaluation separates the current [V2 analyst benchmark](BENCHMARK.md), the historical
+28-case deterministic boundary suite, and an explicitly invoked live OpenAI runner.
+Their results are never combined into one accuracy score. [Live validation](LIVE_VALIDATION.md)
+records the executed live scenarios, earlier HTTP 429 failures, and separately local
+scope/citation checks. The rest of this page describes the original boundary suite
+and the shared analyst validation contract.
 
 The deterministic suite executes synthetic, isolated fixtures through the same projection, structured-output parser, citation validator, support predicates, and renderer used by Evidence Analyst. It never reads or changes incidents in the application database. Results include an execution ID, timestamps, the fixture version, each case's outcome, and totals calculated from those outcomes.
 

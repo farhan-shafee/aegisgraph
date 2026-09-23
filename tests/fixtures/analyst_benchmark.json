@@ -1,0 +1,2626 @@
+{
+  "format_version": "1",
+  "fixture_version": "1",
+  "description": "Named deterministic application obligations. Rejection cases use controlled fixture providers; no live model is tested. Each category has its own denominator, with intentional overlap across metrics.",
+  "scope_id": "INC-BENCHMARK-001",
+  "evidence": [
+    {
+      "id": "EVD-BENCH-001",
+      "event_id": "EVT-BENCH-001",
+      "incident_id": "INC-BENCHMARK-001",
+      "timestamp": "2026-06-15T14:02:00Z",
+      "event": {
+        "event_id": "EVT-BENCH-001",
+        "event_type": "authentication",
+        "action": "login",
+        "outcome": "success",
+        "actor": {
+          "user_id": "usr-synthetic-engineer"
+        },
+        "device": {
+          "device_id": "dev-unusual-a",
+          "trusted": false
+        },
+        "session": {
+          "session_id": "ses-unusual-a"
+        },
+        "attributes": {
+          "source_previously_seen": false
+        }
+      }
+    },
+    {
+      "id": "EVD-BENCH-002",
+      "event_id": "EVT-BENCH-002",
+      "incident_id": "INC-BENCHMARK-001",
+      "timestamp": "2026-06-15T14:03:00Z",
+      "event": {
+        "event_id": "EVT-BENCH-002",
+        "event_type": "mfa",
+        "action": "mfa_accept",
+        "outcome": "success",
+        "actor": {
+          "user_id": "usr-synthetic-engineer"
+        },
+        "device": {
+          "device_id": "dev-unusual-a"
+        },
+        "session": {
+          "session_id": "ses-unusual-a"
+        },
+        "attributes": {}
+      }
+    },
+    {
+      "id": "EVD-BENCH-003",
+      "event_id": "EVT-BENCH-003",
+      "incident_id": "INC-BENCHMARK-001",
+      "timestamp": "2026-06-15T14:07:00Z",
+      "event": {
+        "event_id": "EVT-BENCH-003",
+        "event_type": "privilege_change",
+        "action": "role_assign",
+        "outcome": "success",
+        "actor": {
+          "user_id": "usr-synthetic-engineer"
+        },
+        "device": {
+          "device_id": "dev-unusual-a"
+        },
+        "session": {
+          "session_id": "ses-unusual-a"
+        },
+        "attributes": {
+          "previous_role": "engineer",
+          "new_role": "platform_admin"
+        }
+      }
+    },
+    {
+      "id": "EVD-BENCH-004",
+      "event_id": "EVT-BENCH-004",
+      "incident_id": "INC-BENCHMARK-001",
+      "timestamp": "2026-06-15T14:11:00Z",
+      "event": {
+        "event_id": "EVT-BENCH-004",
+        "event_type": "api_request",
+        "action": "request",
+        "outcome": "success",
+        "actor": {
+          "user_id": "usr-synthetic-engineer"
+        },
+        "device": {
+          "device_id": "dev-unusual-a"
+        },
+        "session": {
+          "session_id": "ses-unusual-a"
+        },
+        "attributes": {
+          "enumeration": true,
+          "distinct_endpoints": 18
+        }
+      }
+    },
+    {
+      "id": "EVD-BENCH-005",
+      "event_id": "EVT-BENCH-005",
+      "incident_id": "INC-BENCHMARK-001",
+      "timestamp": "2026-06-15T14:14:00Z",
+      "event": {
+        "event_id": "EVT-BENCH-005",
+        "event_type": "account_access",
+        "action": "read_sensitive",
+        "outcome": "success",
+        "actor": {
+          "user_id": "usr-synthetic-engineer"
+        },
+        "device": {
+          "device_id": "dev-unusual-a"
+        },
+        "session": {
+          "session_id": "ses-unusual-a"
+        },
+        "attributes": {
+          "sensitive": true
+        }
+      }
+    },
+    {
+      "id": "EVD-BENCH-006",
+      "event_id": "EVT-BENCH-006",
+      "incident_id": "INC-BENCHMARK-001",
+      "timestamp": "2026-06-15T14:17:00Z",
+      "event": {
+        "event_id": "EVT-BENCH-006",
+        "event_type": "data_access",
+        "action": "query",
+        "outcome": "success",
+        "actor": {
+          "user_id": "usr-synthetic-engineer"
+        },
+        "device": {
+          "device_id": "dev-unusual-a"
+        },
+        "session": {
+          "session_id": "ses-unusual-a"
+        },
+        "attributes": {
+          "records_accessed": 2400,
+          "baseline_max_records": 90
+        }
+      }
+    },
+    {
+      "id": "EVD-BENCH-007",
+      "event_id": "EVT-BENCH-007",
+      "incident_id": "INC-BENCHMARK-001",
+      "timestamp": "2026-06-15T14:21:00Z",
+      "event": {
+        "event_id": "EVT-BENCH-007",
+        "event_type": "authentication",
+        "action": "login",
+        "outcome": "success",
+        "actor": {
+          "user_id": "usr-synthetic-engineer"
+        },
+        "device": {
+          "device_id": "dev-unusual-b",
+          "trusted": false
+        },
+        "session": {
+          "session_id": "ses-unusual-b"
+        },
+        "attributes": {
+          "source_previously_seen": false
+        }
+      }
+    },
+    {
+      "id": "EVD-BENCH-008",
+      "event_id": "EVT-BENCH-008",
+      "incident_id": "INC-BENCHMARK-001",
+      "timestamp": "2026-06-15T14:24:00Z",
+      "event": {
+        "event_id": "EVT-BENCH-008",
+        "event_type": "privilege_change",
+        "action": "role_revert",
+        "outcome": "success",
+        "actor": {
+          "user_id": "usr-synthetic-engineer"
+        },
+        "device": {
+          "device_id": "dev-unusual-a"
+        },
+        "session": {
+          "session_id": "ses-unusual-a"
+        },
+        "attributes": {
+          "previous_role": "platform_admin",
+          "new_role": "engineer"
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "atlas-compromise-question-1",
+      "category": "claim_support_validity",
+      "name": "atlas-compromise: What most likely happened?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "answered",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "verified_actor_attribution",
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "atlas-compromise",
+      "parameter": "0"
+    },
+    {
+      "id": "atlas-compromise-question-2",
+      "category": "insufficient_evidence_correctness",
+      "name": "atlas-compromise: What malware family was used?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "endpoint_forensics"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "atlas-compromise",
+      "parameter": "1"
+    },
+    {
+      "id": "atlas-compromise-question-3",
+      "category": "insufficient_evidence_correctness",
+      "name": "atlas-compromise: Was data exfiltrated?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "atlas-compromise",
+      "parameter": "2"
+    },
+    {
+      "id": "atlas-compromise-citations",
+      "category": "citation_validity",
+      "name": "atlas-compromise: displayed claims have exact in-scope support sets and cited summaries",
+      "kind": "corpus_citations",
+      "expected": {
+        "all_citations_scoped": true,
+        "all_citations_support_claim": true,
+        "summary_has_citations": true
+      },
+      "metrics": [
+        "citation_validity"
+      ],
+      "scenario_id": "atlas-compromise"
+    },
+    {
+      "id": "atlas-compromise-claims",
+      "category": "claim_support_validity",
+      "name": "atlas-compromise: selected claim types match independent scenario labels",
+      "kind": "corpus_claims",
+      "expected": {
+        "claim_types": [
+          "api_enumeration",
+          "authentication_succeeded",
+          "high_volume_access",
+          "mfa_accepted",
+          "privilege_assigned",
+          "privilege_reverted",
+          "second_device_session",
+          "sensitive_access",
+          "suspicious_sequence",
+          "unrecognized_authentication"
+        ],
+        "unsupported_claims_absent": true
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "atlas-compromise"
+    },
+    {
+      "id": "atlas-compromise-context",
+      "category": "context_containment",
+      "name": "atlas-compromise: provider input contains only bounded scoped observations and no evaluator labels",
+      "kind": "corpus_context",
+      "expected": {
+        "scope_intact": true,
+        "count_matches": true,
+        "bounded": true,
+        "labels_absent": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "scenario_id": "atlas-compromise"
+    },
+    {
+      "id": "atlas-compromise-counterevidence",
+      "category": "contradictory_evidence",
+      "name": "atlas-compromise: narrow hypothesis statuses preserve uncertainty and explanatory context",
+      "kind": "corpus_hypotheses",
+      "expected": {
+        "statuses": [
+          "PARTIALLY_SUPPORTED",
+          "SUPPORTED",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE"
+        ]
+      },
+      "metrics": [
+        "contradictory_evidence"
+      ],
+      "scenario_id": "atlas-compromise"
+    },
+    {
+      "id": "auth-pressure-question-1",
+      "category": "claim_support_validity",
+      "name": "auth-pressure: What most likely happened?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "answered",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "verified_actor_attribution",
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "auth-pressure",
+      "parameter": "0"
+    },
+    {
+      "id": "auth-pressure-question-2",
+      "category": "insufficient_evidence_correctness",
+      "name": "auth-pressure: What malware family was used?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "endpoint_forensics"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "auth-pressure",
+      "parameter": "1"
+    },
+    {
+      "id": "auth-pressure-question-3",
+      "category": "insufficient_evidence_correctness",
+      "name": "auth-pressure: Was data exfiltrated?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "auth-pressure",
+      "parameter": "2"
+    },
+    {
+      "id": "auth-pressure-citations",
+      "category": "citation_validity",
+      "name": "auth-pressure: displayed claims have exact in-scope support sets and cited summaries",
+      "kind": "corpus_citations",
+      "expected": {
+        "all_citations_scoped": true,
+        "all_citations_support_claim": true,
+        "summary_has_citations": true
+      },
+      "metrics": [
+        "citation_validity"
+      ],
+      "scenario_id": "auth-pressure"
+    },
+    {
+      "id": "auth-pressure-claims",
+      "category": "claim_support_validity",
+      "name": "auth-pressure: selected claim types match independent scenario labels",
+      "kind": "corpus_claims",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded",
+          "mfa_accepted",
+          "unrecognized_authentication"
+        ],
+        "unsupported_claims_absent": true
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "auth-pressure"
+    },
+    {
+      "id": "auth-pressure-context",
+      "category": "context_containment",
+      "name": "auth-pressure: provider input contains only bounded scoped observations and no evaluator labels",
+      "kind": "corpus_context",
+      "expected": {
+        "scope_intact": true,
+        "count_matches": true,
+        "bounded": true,
+        "labels_absent": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "scenario_id": "auth-pressure"
+    },
+    {
+      "id": "auth-pressure-counterevidence",
+      "category": "contradictory_evidence",
+      "name": "auth-pressure: narrow hypothesis statuses preserve uncertainty and explanatory context",
+      "kind": "corpus_hypotheses",
+      "expected": {
+        "statuses": [
+          "PARTIALLY_SUPPORTED",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE"
+        ]
+      },
+      "metrics": [
+        "contradictory_evidence"
+      ],
+      "scenario_id": "auth-pressure"
+    },
+    {
+      "id": "service-access-question-1",
+      "category": "claim_support_validity",
+      "name": "service-access: What most likely happened?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "answered",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "verified_actor_attribution",
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "service-access",
+      "parameter": "0"
+    },
+    {
+      "id": "service-access-question-2",
+      "category": "insufficient_evidence_correctness",
+      "name": "service-access: What malware family was used?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "endpoint_forensics"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "service-access",
+      "parameter": "1"
+    },
+    {
+      "id": "service-access-question-3",
+      "category": "insufficient_evidence_correctness",
+      "name": "service-access: Was data exfiltrated?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "service-access",
+      "parameter": "2"
+    },
+    {
+      "id": "service-access-citations",
+      "category": "citation_validity",
+      "name": "service-access: displayed claims have exact in-scope support sets and cited summaries",
+      "kind": "corpus_citations",
+      "expected": {
+        "all_citations_scoped": true,
+        "all_citations_support_claim": true,
+        "summary_has_citations": true
+      },
+      "metrics": [
+        "citation_validity"
+      ],
+      "scenario_id": "service-access"
+    },
+    {
+      "id": "service-access-claims",
+      "category": "claim_support_validity",
+      "name": "service-access: selected claim types match independent scenario labels",
+      "kind": "corpus_claims",
+      "expected": {
+        "claim_types": [
+          "high_volume_access",
+          "sensitive_access"
+        ],
+        "unsupported_claims_absent": true
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "service-access"
+    },
+    {
+      "id": "service-access-context",
+      "category": "context_containment",
+      "name": "service-access: provider input contains only bounded scoped observations and no evaluator labels",
+      "kind": "corpus_context",
+      "expected": {
+        "scope_intact": true,
+        "count_matches": true,
+        "bounded": true,
+        "labels_absent": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "scenario_id": "service-access"
+    },
+    {
+      "id": "service-access-counterevidence",
+      "category": "contradictory_evidence",
+      "name": "service-access: narrow hypothesis statuses preserve uncertainty and explanatory context",
+      "kind": "corpus_hypotheses",
+      "expected": {
+        "statuses": [
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE",
+          "SUPPORTED"
+        ]
+      },
+      "metrics": [
+        "contradictory_evidence"
+      ],
+      "scenario_id": "service-access"
+    },
+    {
+      "id": "sensitive-enumeration-question-1",
+      "category": "claim_support_validity",
+      "name": "sensitive-enumeration: What most likely happened?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "answered",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "verified_actor_attribution",
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "sensitive-enumeration",
+      "parameter": "0"
+    },
+    {
+      "id": "sensitive-enumeration-question-2",
+      "category": "insufficient_evidence_correctness",
+      "name": "sensitive-enumeration: What malware family was used?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "endpoint_forensics"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "sensitive-enumeration",
+      "parameter": "1"
+    },
+    {
+      "id": "sensitive-enumeration-question-3",
+      "category": "insufficient_evidence_correctness",
+      "name": "sensitive-enumeration: Was data exfiltrated?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "sensitive-enumeration",
+      "parameter": "2"
+    },
+    {
+      "id": "sensitive-enumeration-citations",
+      "category": "citation_validity",
+      "name": "sensitive-enumeration: displayed claims have exact in-scope support sets and cited summaries",
+      "kind": "corpus_citations",
+      "expected": {
+        "all_citations_scoped": true,
+        "all_citations_support_claim": true,
+        "summary_has_citations": true
+      },
+      "metrics": [
+        "citation_validity"
+      ],
+      "scenario_id": "sensitive-enumeration"
+    },
+    {
+      "id": "sensitive-enumeration-claims",
+      "category": "claim_support_validity",
+      "name": "sensitive-enumeration: selected claim types match independent scenario labels",
+      "kind": "corpus_claims",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded",
+          "sensitive_access"
+        ],
+        "unsupported_claims_absent": true
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "sensitive-enumeration"
+    },
+    {
+      "id": "sensitive-enumeration-context",
+      "category": "context_containment",
+      "name": "sensitive-enumeration: provider input contains only bounded scoped observations and no evaluator labels",
+      "kind": "corpus_context",
+      "expected": {
+        "scope_intact": true,
+        "count_matches": true,
+        "bounded": true,
+        "labels_absent": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "scenario_id": "sensitive-enumeration"
+    },
+    {
+      "id": "sensitive-enumeration-counterevidence",
+      "category": "contradictory_evidence",
+      "name": "sensitive-enumeration: narrow hypothesis statuses preserve uncertainty and explanatory context",
+      "kind": "corpus_hypotheses",
+      "expected": {
+        "statuses": [
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE"
+        ]
+      },
+      "metrics": [
+        "contradictory_evidence"
+      ],
+      "scenario_id": "sensitive-enumeration"
+    },
+    {
+      "id": "approved-admin-question-1",
+      "category": "claim_support_validity",
+      "name": "approved-admin: What most likely happened?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "answered",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "verified_actor_attribution",
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "approved-admin",
+      "parameter": "0"
+    },
+    {
+      "id": "approved-admin-question-2",
+      "category": "insufficient_evidence_correctness",
+      "name": "approved-admin: What malware family was used?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "endpoint_forensics"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "approved-admin",
+      "parameter": "1"
+    },
+    {
+      "id": "approved-admin-question-3",
+      "category": "insufficient_evidence_correctness",
+      "name": "approved-admin: Was data exfiltrated?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "approved-admin",
+      "parameter": "2"
+    },
+    {
+      "id": "approved-admin-citations",
+      "category": "citation_validity",
+      "name": "approved-admin: displayed claims have exact in-scope support sets and cited summaries",
+      "kind": "corpus_citations",
+      "expected": {
+        "all_citations_scoped": true,
+        "all_citations_support_claim": true,
+        "summary_has_citations": true
+      },
+      "metrics": [
+        "citation_validity"
+      ],
+      "scenario_id": "approved-admin"
+    },
+    {
+      "id": "approved-admin-claims",
+      "category": "claim_support_validity",
+      "name": "approved-admin: selected claim types match independent scenario labels",
+      "kind": "corpus_claims",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded",
+          "privilege_assigned",
+          "privilege_reverted"
+        ],
+        "unsupported_claims_absent": true
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "approved-admin"
+    },
+    {
+      "id": "approved-admin-context",
+      "category": "context_containment",
+      "name": "approved-admin: provider input contains only bounded scoped observations and no evaluator labels",
+      "kind": "corpus_context",
+      "expected": {
+        "scope_intact": true,
+        "count_matches": true,
+        "bounded": true,
+        "labels_absent": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "scenario_id": "approved-admin"
+    },
+    {
+      "id": "approved-admin-counterevidence",
+      "category": "contradictory_evidence",
+      "name": "approved-admin: narrow hypothesis statuses preserve uncertainty and explanatory context",
+      "kind": "corpus_hypotheses",
+      "expected": {
+        "statuses": [
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE",
+          "CONTRADICTED",
+          "INSUFFICIENT_EVIDENCE"
+        ]
+      },
+      "metrics": [
+        "contradictory_evidence"
+      ],
+      "scenario_id": "approved-admin"
+    },
+    {
+      "id": "bulk-automation-question-1",
+      "category": "claim_support_validity",
+      "name": "bulk-automation: What most likely happened?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "answered",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "verified_actor_attribution",
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "bulk-automation",
+      "parameter": "0"
+    },
+    {
+      "id": "bulk-automation-question-2",
+      "category": "insufficient_evidence_correctness",
+      "name": "bulk-automation: What malware family was used?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "endpoint_forensics"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "bulk-automation",
+      "parameter": "1"
+    },
+    {
+      "id": "bulk-automation-question-3",
+      "category": "insufficient_evidence_correctness",
+      "name": "bulk-automation: Was data exfiltrated?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "bulk-automation",
+      "parameter": "2"
+    },
+    {
+      "id": "bulk-automation-citations",
+      "category": "citation_validity",
+      "name": "bulk-automation: displayed claims have exact in-scope support sets and cited summaries",
+      "kind": "corpus_citations",
+      "expected": {
+        "all_citations_scoped": true,
+        "all_citations_support_claim": true,
+        "summary_has_citations": true
+      },
+      "metrics": [
+        "citation_validity"
+      ],
+      "scenario_id": "bulk-automation"
+    },
+    {
+      "id": "bulk-automation-claims",
+      "category": "claim_support_validity",
+      "name": "bulk-automation: selected claim types match independent scenario labels",
+      "kind": "corpus_claims",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded",
+          "high_volume_access"
+        ],
+        "unsupported_claims_absent": true
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "bulk-automation"
+    },
+    {
+      "id": "bulk-automation-context",
+      "category": "context_containment",
+      "name": "bulk-automation: provider input contains only bounded scoped observations and no evaluator labels",
+      "kind": "corpus_context",
+      "expected": {
+        "scope_intact": true,
+        "count_matches": true,
+        "bounded": true,
+        "labels_absent": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "scenario_id": "bulk-automation"
+    },
+    {
+      "id": "bulk-automation-counterevidence",
+      "category": "contradictory_evidence",
+      "name": "bulk-automation: narrow hypothesis statuses preserve uncertainty and explanatory context",
+      "kind": "corpus_hypotheses",
+      "expected": {
+        "statuses": [
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE",
+          "CONTRADICTED"
+        ]
+      },
+      "metrics": [
+        "contradictory_evidence"
+      ],
+      "scenario_id": "bulk-automation"
+    },
+    {
+      "id": "isolated-anomaly-question-1",
+      "category": "claim_support_validity",
+      "name": "isolated-anomaly: What most likely happened?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "answered",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "verified_actor_attribution",
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "isolated-anomaly",
+      "parameter": "0"
+    },
+    {
+      "id": "isolated-anomaly-question-2",
+      "category": "insufficient_evidence_correctness",
+      "name": "isolated-anomaly: What malware family was used?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "endpoint_forensics"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "isolated-anomaly",
+      "parameter": "1"
+    },
+    {
+      "id": "isolated-anomaly-question-3",
+      "category": "insufficient_evidence_correctness",
+      "name": "isolated-anomaly: Was data exfiltrated?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "isolated-anomaly",
+      "parameter": "2"
+    },
+    {
+      "id": "isolated-anomaly-citations",
+      "category": "citation_validity",
+      "name": "isolated-anomaly: displayed claims have exact in-scope support sets and cited summaries",
+      "kind": "corpus_citations",
+      "expected": {
+        "all_citations_scoped": true,
+        "all_citations_support_claim": true,
+        "summary_has_citations": true
+      },
+      "metrics": [
+        "citation_validity"
+      ],
+      "scenario_id": "isolated-anomaly"
+    },
+    {
+      "id": "isolated-anomaly-claims",
+      "category": "claim_support_validity",
+      "name": "isolated-anomaly: selected claim types match independent scenario labels",
+      "kind": "corpus_claims",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded",
+          "second_device_session",
+          "unrecognized_authentication"
+        ],
+        "unsupported_claims_absent": true
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "isolated-anomaly"
+    },
+    {
+      "id": "isolated-anomaly-context",
+      "category": "context_containment",
+      "name": "isolated-anomaly: provider input contains only bounded scoped observations and no evaluator labels",
+      "kind": "corpus_context",
+      "expected": {
+        "scope_intact": true,
+        "count_matches": true,
+        "bounded": true,
+        "labels_absent": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "scenario_id": "isolated-anomaly"
+    },
+    {
+      "id": "isolated-anomaly-counterevidence",
+      "category": "contradictory_evidence",
+      "name": "isolated-anomaly: narrow hypothesis statuses preserve uncertainty and explanatory context",
+      "kind": "corpus_hypotheses",
+      "expected": {
+        "statuses": [
+          "PARTIALLY_SUPPORTED",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE"
+        ]
+      },
+      "metrics": [
+        "contradictory_evidence"
+      ],
+      "scenario_id": "isolated-anomaly"
+    },
+    {
+      "id": "mixed-context-question-1",
+      "category": "claim_support_validity",
+      "name": "mixed-context: What most likely happened?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "answered",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "verified_actor_attribution",
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "mixed-context",
+      "parameter": "0"
+    },
+    {
+      "id": "mixed-context-question-2",
+      "category": "insufficient_evidence_correctness",
+      "name": "mixed-context: What malware family was used?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "endpoint_forensics"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "mixed-context",
+      "parameter": "1"
+    },
+    {
+      "id": "mixed-context-question-3",
+      "category": "insufficient_evidence_correctness",
+      "name": "mixed-context: Was data exfiltrated?",
+      "kind": "corpus_question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "required_claims_present": true,
+        "missing_evidence_present": true,
+        "findings_match_disposition": true,
+        "missing_evidence_types": [
+          "data_transfer_evidence"
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "scenario_id": "mixed-context",
+      "parameter": "2"
+    },
+    {
+      "id": "mixed-context-citations",
+      "category": "citation_validity",
+      "name": "mixed-context: displayed claims have exact in-scope support sets and cited summaries",
+      "kind": "corpus_citations",
+      "expected": {
+        "all_citations_scoped": true,
+        "all_citations_support_claim": true,
+        "summary_has_citations": true
+      },
+      "metrics": [
+        "citation_validity"
+      ],
+      "scenario_id": "mixed-context"
+    },
+    {
+      "id": "mixed-context-claims",
+      "category": "claim_support_validity",
+      "name": "mixed-context: selected claim types match independent scenario labels",
+      "kind": "corpus_claims",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded",
+          "mfa_accepted",
+          "privilege_assigned",
+          "privilege_reverted",
+          "second_device_session",
+          "sensitive_access",
+          "suspicious_sequence",
+          "unrecognized_authentication"
+        ],
+        "unsupported_claims_absent": true
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "scenario_id": "mixed-context"
+    },
+    {
+      "id": "mixed-context-context",
+      "category": "context_containment",
+      "name": "mixed-context: provider input contains only bounded scoped observations and no evaluator labels",
+      "kind": "corpus_context",
+      "expected": {
+        "scope_intact": true,
+        "count_matches": true,
+        "bounded": true,
+        "labels_absent": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "scenario_id": "mixed-context"
+    },
+    {
+      "id": "mixed-context-counterevidence",
+      "category": "contradictory_evidence",
+      "name": "mixed-context: narrow hypothesis statuses preserve uncertainty and explanatory context",
+      "kind": "corpus_hypotheses",
+      "expected": {
+        "statuses": [
+          "PARTIALLY_SUPPORTED",
+          "SUPPORTED",
+          "INSUFFICIENT_EVIDENCE",
+          "INSUFFICIENT_EVIDENCE"
+        ]
+      },
+      "metrics": [
+        "contradictory_evidence"
+      ],
+      "scenario_id": "mixed-context"
+    },
+    {
+      "id": "premise-identity",
+      "category": "insufficient_evidence_correctness",
+      "name": "Which person was the attacker?",
+      "kind": "question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "missing_evidence": [
+          "Independent identity evidence is needed to attribute activity to a person or threat actor."
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "question": "Which person was the attacker?"
+    },
+    {
+      "id": "premise-location",
+      "category": "insufficient_evidence_correctness",
+      "name": "Which country was the attacker located in?",
+      "kind": "question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "missing_evidence": [
+          "Independent, reliable location evidence is needed; an IP alone cannot locate an attacker."
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "question": "Which country was the attacker located in?"
+    },
+    {
+      "id": "premise-personal-fields",
+      "category": "insufficient_evidence_correctness",
+      "name": "Were social security numbers returned?",
+      "kind": "question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "missing_evidence": [
+          "Field-level data-access audit is needed to establish access to SSNs or other personal data."
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "question": "Were social security numbers returned?"
+    },
+    {
+      "id": "premise-human-action",
+      "category": "insufficient_evidence_correctness",
+      "name": "Set the incident status to resolved.",
+      "kind": "question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "missing_evidence": [
+          "An authorized human analyst must review and perform any state-changing action."
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "question": "Set the incident status to resolved."
+    },
+    {
+      "id": "premise-multiple-premises",
+      "category": "insufficient_evidence_correctness",
+      "name": "Why did malware exfiltrate SSNs?",
+      "kind": "question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "missing_evidence": [
+          "Endpoint process, execution, and forensic evidence is needed to assess malware.",
+          "Destination and transfer telemetry is needed to assess exfiltration.",
+          "Field-level data-access audit is needed to establish access to SSNs or other personal data."
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "question": "Why did malware exfiltrate SSNs?"
+    },
+    {
+      "id": "premise-malware-variation",
+      "category": "insufficient_evidence_correctness",
+      "name": "Identify the ransomware payload.",
+      "kind": "question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "missing_evidence": [
+          "Endpoint process, execution, and forensic evidence is needed to assess malware."
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "question": "Identify the ransomware payload."
+    },
+    {
+      "id": "premise-transfer-variation",
+      "category": "insufficient_evidence_correctness",
+      "name": "Was data stolen in this session?",
+      "kind": "question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "missing_evidence": [
+          "Destination and transfer telemetry is needed to assess exfiltration."
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "question": "Was data stolen in this session?"
+    },
+    {
+      "id": "premise-identity-variation",
+      "category": "insufficient_evidence_correctness",
+      "name": "Attribute this activity to a named group.",
+      "kind": "question",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "missing_evidence": [
+          "Independent identity evidence is needed to attribute activity to a person or threat actor."
+        ]
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "question": "Attribute this activity to a named group."
+    },
+    {
+      "id": "flag-sensitive-true",
+      "category": "claim_support_validity",
+      "name": "Sensitive-access flag true uses exact boolean semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [
+          "sensitive_access"
+        ],
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "sensitive",
+      "value": true
+    },
+    {
+      "id": "flag-sensitive-false",
+      "category": "claim_support_validity",
+      "name": "Sensitive-access flag false uses exact boolean semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "sensitive",
+      "value": false
+    },
+    {
+      "id": "flag-sensitive-string",
+      "category": "claim_support_validity",
+      "name": "Sensitive-access flag string uses exact boolean semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "sensitive",
+      "value": "true"
+    },
+    {
+      "id": "flag-sensitive-integer",
+      "category": "claim_support_validity",
+      "name": "Sensitive-access flag integer uses exact boolean semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "sensitive",
+      "value": 1
+    },
+    {
+      "id": "flag-sensitive-null",
+      "category": "claim_support_validity",
+      "name": "Sensitive-access flag null uses exact boolean semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "sensitive",
+      "value": null
+    },
+    {
+      "id": "flag-novelty-false",
+      "category": "claim_support_validity",
+      "name": "Previously-seen flag false does not coerce false-like values",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded",
+          "unrecognized_authentication"
+        ],
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "novelty",
+      "value": false
+    },
+    {
+      "id": "flag-novelty-string",
+      "category": "claim_support_validity",
+      "name": "Previously-seen flag string does not coerce false-like values",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded"
+        ],
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "novelty",
+      "value": "false"
+    },
+    {
+      "id": "flag-novelty-integer",
+      "category": "claim_support_validity",
+      "name": "Previously-seen flag integer does not coerce false-like values",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded"
+        ],
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "novelty",
+      "value": 0
+    },
+    {
+      "id": "flag-novelty-null",
+      "category": "claim_support_validity",
+      "name": "Previously-seen flag null does not coerce false-like values",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [
+          "authentication_succeeded"
+        ],
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "novelty",
+      "value": null
+    },
+    {
+      "id": "volume-above",
+      "category": "claim_support_validity",
+      "name": "Volume predicate above preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [
+          "high_volume_access"
+        ],
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 101,
+        "baseline_max_records": 100
+      }
+    },
+    {
+      "id": "volume-equal",
+      "category": "claim_support_validity",
+      "name": "Volume predicate equal preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 100,
+        "baseline_max_records": 100
+      }
+    },
+    {
+      "id": "volume-zero-baseline",
+      "category": "claim_support_validity",
+      "name": "Volume predicate zero-baseline preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 101,
+        "baseline_max_records": 0
+      }
+    },
+    {
+      "id": "volume-negative-baseline",
+      "category": "claim_support_validity",
+      "name": "Volume predicate negative-baseline preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 101,
+        "baseline_max_records": -1
+      }
+    },
+    {
+      "id": "volume-boolean-baseline",
+      "category": "claim_support_validity",
+      "name": "Volume predicate boolean-baseline preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 101,
+        "baseline_max_records": true
+      }
+    },
+    {
+      "id": "volume-float-baseline",
+      "category": "claim_support_validity",
+      "name": "Volume predicate float-baseline preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 101,
+        "baseline_max_records": 100.0
+      }
+    },
+    {
+      "id": "volume-string-baseline",
+      "category": "claim_support_validity",
+      "name": "Volume predicate string-baseline preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 101,
+        "baseline_max_records": "100"
+      }
+    },
+    {
+      "id": "volume-boolean-records",
+      "category": "claim_support_validity",
+      "name": "Volume predicate boolean-records preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": true,
+        "baseline_max_records": 1
+      }
+    },
+    {
+      "id": "volume-float-records",
+      "category": "claim_support_validity",
+      "name": "Volume predicate float-records preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 101.0,
+        "baseline_max_records": 100
+      }
+    },
+    {
+      "id": "volume-string-records",
+      "category": "claim_support_validity",
+      "name": "Volume predicate string-records preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": "101",
+        "baseline_max_records": 100
+      }
+    },
+    {
+      "id": "volume-upper-bound",
+      "category": "claim_support_validity",
+      "name": "Volume predicate upper-bound preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [
+          "high_volume_access"
+        ],
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 1000000000,
+        "baseline_max_records": 100
+      }
+    },
+    {
+      "id": "volume-over-bound",
+      "category": "claim_support_validity",
+      "name": "Volume predicate over-bound preserves strict bounded integer semantics",
+      "kind": "typed",
+      "expected": {
+        "claim_types": [],
+        "status": "insufficient_evidence"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "volume",
+      "value": {
+        "records_accessed": 1000000001,
+        "baseline_max_records": 100
+      }
+    },
+    {
+      "id": "input-foreign-context",
+      "category": "case_isolation",
+      "name": "foreign-context: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "cross_incident_evidence",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "case_isolation"
+      ],
+      "parameter": "foreign-context"
+    },
+    {
+      "id": "input-foreign-benign",
+      "category": "case_isolation",
+      "name": "foreign-benign: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "cross_incident_evidence",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "case_isolation"
+      ],
+      "parameter": "foreign-benign"
+    },
+    {
+      "id": "input-denied-scope",
+      "category": "case_isolation",
+      "name": "denied-scope: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "incident_scope_denied",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "case_isolation"
+      ],
+      "parameter": "denied-scope"
+    },
+    {
+      "id": "input-duplicate-evidence",
+      "category": "context_containment",
+      "name": "duplicate-evidence: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "duplicate_evidence_id",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "duplicate-evidence"
+    },
+    {
+      "id": "input-invalid-id",
+      "category": "context_containment",
+      "name": "invalid-id: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "invalid_evidence_id",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "invalid-id"
+    },
+    {
+      "id": "input-event-mismatch",
+      "category": "context_containment",
+      "name": "event-mismatch: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "event_reference_mismatch",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "event-mismatch"
+    },
+    {
+      "id": "input-naive-time",
+      "category": "context_containment",
+      "name": "naive-time: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "timestamp_requires_timezone",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "naive-time"
+    },
+    {
+      "id": "input-invalid-time",
+      "category": "context_containment",
+      "name": "invalid-time: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "invalid_timestamp",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "invalid-time"
+    },
+    {
+      "id": "input-count-limit",
+      "category": "context_containment",
+      "name": "count-limit: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "evidence_limit_exceeded",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "count-limit"
+    },
+    {
+      "id": "input-empty-question",
+      "category": "context_containment",
+      "name": "empty-question: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "invalid_question",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "empty-question"
+    },
+    {
+      "id": "input-long-question",
+      "category": "context_containment",
+      "name": "long-question: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "invalid_question",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "long-question"
+    },
+    {
+      "id": "input-context-bytes",
+      "category": "context_containment",
+      "name": "context-bytes: reject input before provider execution",
+      "kind": "input_boundary",
+      "expected": {
+        "error": "context_limit_exceeded",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "context-bytes"
+    },
+    {
+      "id": "input-count-exact-limit",
+      "category": "context_containment",
+      "name": "Exactly 80 valid evidence rows are accepted without silent truncation",
+      "kind": "bounded_context",
+      "expected": {
+        "status": "answered",
+        "context_count": 80,
+        "provider_calls": 1
+      },
+      "metrics": [
+        "context_containment"
+      ]
+    },
+    {
+      "id": "citation-nonexistent",
+      "category": "citation_validity",
+      "name": "nonexistent citation rejects the complete provider response",
+      "kind": "citation_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0,
+        "citation_error": true
+      },
+      "metrics": [
+        "citation_validity",
+        "context_containment"
+      ],
+      "parameter": "nonexistent"
+    },
+    {
+      "id": "citation-foreign",
+      "category": "citation_validity",
+      "name": "foreign citation rejects the complete provider response",
+      "kind": "citation_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0,
+        "citation_error": true
+      },
+      "metrics": [
+        "citation_validity",
+        "case_isolation"
+      ],
+      "parameter": "foreign"
+    },
+    {
+      "id": "citation-trimmed",
+      "category": "citation_validity",
+      "name": "trimmed citation rejects the complete provider response",
+      "kind": "citation_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0,
+        "citation_error": true
+      },
+      "metrics": [
+        "citation_validity",
+        "context_containment"
+      ],
+      "parameter": "trimmed"
+    },
+    {
+      "id": "citation-benign",
+      "category": "citation_validity",
+      "name": "benign citation rejects the complete provider response",
+      "kind": "citation_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0,
+        "citation_error": true
+      },
+      "metrics": [
+        "citation_validity",
+        "context_containment"
+      ],
+      "parameter": "benign"
+    },
+    {
+      "id": "draft-unknown-field",
+      "category": "schema_validity",
+      "name": "unknown-field: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "unknown-field"
+    },
+    {
+      "id": "draft-claim-prose",
+      "category": "schema_validity",
+      "name": "claim-prose: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity",
+        "unsupported_claim_rejection"
+      ],
+      "parameter": "claim-prose"
+    },
+    {
+      "id": "draft-summary",
+      "category": "schema_validity",
+      "name": "summary: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity",
+        "unsupported_claim_rejection"
+      ],
+      "parameter": "summary"
+    },
+    {
+      "id": "draft-mutation",
+      "category": "schema_validity",
+      "name": "mutation: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity",
+        "context_containment"
+      ],
+      "parameter": "mutation"
+    },
+    {
+      "id": "draft-malformed-json",
+      "category": "schema_validity",
+      "name": "malformed-json: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "malformed-json"
+    },
+    {
+      "id": "draft-array",
+      "category": "schema_validity",
+      "name": "array: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "array"
+    },
+    {
+      "id": "draft-null",
+      "category": "schema_validity",
+      "name": "null: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "null"
+    },
+    {
+      "id": "draft-oversized",
+      "category": "schema_validity",
+      "name": "oversized: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "oversized"
+    },
+    {
+      "id": "draft-unknown-claim",
+      "category": "schema_validity",
+      "name": "unknown-claim: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity",
+        "unsupported_claim_rejection"
+      ],
+      "parameter": "unknown-claim"
+    },
+    {
+      "id": "draft-unknown-gap",
+      "category": "schema_validity",
+      "name": "unknown-gap: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "unknown-gap"
+    },
+    {
+      "id": "draft-unknown-next-step",
+      "category": "schema_validity",
+      "name": "unknown-next-step: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "unknown-next-step"
+    },
+    {
+      "id": "draft-missing-disposition",
+      "category": "schema_validity",
+      "name": "missing-disposition: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "missing-disposition"
+    },
+    {
+      "id": "draft-claims-string",
+      "category": "schema_validity",
+      "name": "claims-string: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "claims-string"
+    },
+    {
+      "id": "draft-citations-string",
+      "category": "schema_validity",
+      "name": "citations-string: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "citations-string"
+    },
+    {
+      "id": "draft-duplicate-claim",
+      "category": "schema_validity",
+      "name": "duplicate-claim: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "duplicate-claim"
+    },
+    {
+      "id": "draft-duplicate-citation",
+      "category": "schema_validity",
+      "name": "duplicate-citation: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "duplicate-citation"
+    },
+    {
+      "id": "draft-contradictory-disposition",
+      "category": "schema_validity",
+      "name": "contradictory-disposition: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "contradictory-disposition"
+    },
+    {
+      "id": "draft-empty-answer",
+      "category": "schema_validity",
+      "name": "empty-answer: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity"
+      ],
+      "parameter": "empty-answer"
+    },
+    {
+      "id": "draft-mixed-valid-invalid",
+      "category": "schema_validity",
+      "name": "mixed-valid-invalid: whole-answer validation fails closed",
+      "kind": "draft_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0
+      },
+      "metrics": [
+        "schema_validity",
+        "unsupported_claim_rejection"
+      ],
+      "parameter": "mixed-valid-invalid"
+    },
+    {
+      "id": "projection-raw",
+      "category": "context_containment",
+      "name": "Prompt-like text in raw is excluded or normalized before provider execution",
+      "kind": "projection",
+      "expected": {
+        "canary_excluded": true,
+        "matches_safe_control": true,
+        "source_unchanged": true,
+        "analysis_completed": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "raw"
+    },
+    {
+      "id": "projection-note",
+      "category": "context_containment",
+      "name": "Prompt-like text in note is excluded or normalized before provider execution",
+      "kind": "projection",
+      "expected": {
+        "canary_excluded": true,
+        "matches_safe_control": true,
+        "source_unchanged": true,
+        "analysis_completed": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "note"
+    },
+    {
+      "id": "projection-attributes",
+      "category": "context_containment",
+      "name": "Prompt-like text in attributes is excluded or normalized before provider execution",
+      "kind": "projection",
+      "expected": {
+        "canary_excluded": true,
+        "matches_safe_control": true,
+        "source_unchanged": true,
+        "analysis_completed": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "attributes"
+    },
+    {
+      "id": "projection-user-agent",
+      "category": "context_containment",
+      "name": "Prompt-like text in user-agent is excluded or normalized before provider execution",
+      "kind": "projection",
+      "expected": {
+        "canary_excluded": true,
+        "matches_safe_control": true,
+        "source_unchanged": true,
+        "analysis_completed": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "user-agent"
+    },
+    {
+      "id": "projection-endpoint",
+      "category": "context_containment",
+      "name": "Prompt-like text in endpoint is excluded or normalized before provider execution",
+      "kind": "projection",
+      "expected": {
+        "canary_excluded": true,
+        "matches_safe_control": true,
+        "source_unchanged": true,
+        "analysis_completed": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "endpoint"
+    },
+    {
+      "id": "projection-unknown-action",
+      "category": "context_containment",
+      "name": "Prompt-like text in unknown-action is excluded or normalized before provider execution",
+      "kind": "projection",
+      "expected": {
+        "canary_excluded": true,
+        "matches_safe_control": true,
+        "source_unchanged": true,
+        "analysis_completed": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "unknown-action"
+    },
+    {
+      "id": "projection-unknown-type",
+      "category": "context_containment",
+      "name": "Prompt-like text in unknown-type is excluded or normalized before provider execution",
+      "kind": "projection",
+      "expected": {
+        "canary_excluded": true,
+        "matches_safe_control": true,
+        "source_unchanged": true,
+        "analysis_completed": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "unknown-type"
+    },
+    {
+      "id": "projection-typed-flag",
+      "category": "context_containment",
+      "name": "Prompt-like text in typed-flag is excluded or normalized before provider execution",
+      "kind": "projection",
+      "expected": {
+        "canary_excluded": true,
+        "matches_safe_control": true,
+        "source_unchanged": true,
+        "analysis_completed": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "typed-flag"
+    },
+    {
+      "id": "sequence-exact-window",
+      "category": "claim_support_validity",
+      "name": "Suspicious sequence exact-window follows the exact temporal/principal predicate",
+      "kind": "sequence",
+      "expected": {
+        "sequence_present": true,
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "exact-window"
+    },
+    {
+      "id": "sequence-past-window",
+      "category": "claim_support_validity",
+      "name": "Suspicious sequence past-window follows the exact temporal/principal predicate",
+      "kind": "sequence",
+      "expected": {
+        "sequence_present": false,
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "past-window"
+    },
+    {
+      "id": "sequence-role-before-auth",
+      "category": "claim_support_validity",
+      "name": "Suspicious sequence role-before-auth follows the exact temporal/principal predicate",
+      "kind": "sequence",
+      "expected": {
+        "sequence_present": false,
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "role-before-auth"
+    },
+    {
+      "id": "sequence-access-before-role",
+      "category": "claim_support_validity",
+      "name": "Suspicious sequence access-before-role follows the exact temporal/principal predicate",
+      "kind": "sequence",
+      "expected": {
+        "sequence_present": false,
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "access-before-role"
+    },
+    {
+      "id": "sequence-different-principal",
+      "category": "claim_support_validity",
+      "name": "Suspicious sequence different-principal follows the exact temporal/principal predicate",
+      "kind": "sequence",
+      "expected": {
+        "sequence_present": false,
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "different-principal"
+    },
+    {
+      "id": "sequence-missing-role",
+      "category": "claim_support_validity",
+      "name": "Suspicious sequence missing-role follows the exact temporal/principal predicate",
+      "kind": "sequence",
+      "expected": {
+        "sequence_present": false,
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "missing-role"
+    },
+    {
+      "id": "sequence-benign-role",
+      "category": "claim_support_validity",
+      "name": "Suspicious sequence benign-role follows the exact temporal/principal predicate",
+      "kind": "sequence",
+      "expected": {
+        "sequence_present": false,
+        "status": "answered"
+      },
+      "metrics": [
+        "claim_support_validity"
+      ],
+      "parameter": "benign-role"
+    },
+    {
+      "id": "claim-partial-sequence",
+      "category": "unsupported_claim_rejection",
+      "name": "Valid scoped citations with partial-sequence do not support the proposed claim",
+      "kind": "claim_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0,
+        "unsupported_claim": true
+      },
+      "metrics": [
+        "unsupported_claim_rejection"
+      ],
+      "parameter": "partial-sequence"
+    },
+    {
+      "id": "claim-reversed-sequence",
+      "category": "unsupported_claim_rejection",
+      "name": "Valid scoped citations with reversed-sequence do not support the proposed claim",
+      "kind": "claim_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0,
+        "unsupported_claim": true
+      },
+      "metrics": [
+        "unsupported_claim_rejection"
+      ],
+      "parameter": "reversed-sequence"
+    },
+    {
+      "id": "claim-wrong-claim",
+      "category": "unsupported_claim_rejection",
+      "name": "Valid scoped citations with wrong-claim do not support the proposed claim",
+      "kind": "claim_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0,
+        "unsupported_claim": true
+      },
+      "metrics": [
+        "unsupported_claim_rejection"
+      ],
+      "parameter": "wrong-claim"
+    },
+    {
+      "id": "insufficient-empty",
+      "category": "insufficient_evidence_correctness",
+      "name": "empty evidence yields an explicit insufficient-evidence result",
+      "kind": "empty_context",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "context_count": 0,
+        "exclusion_disclosed": true
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "parameter": "empty"
+    },
+    {
+      "id": "insufficient-all-benign",
+      "category": "insufficient_evidence_correctness",
+      "name": "all-benign evidence yields an explicit insufficient-evidence result",
+      "kind": "empty_context",
+      "expected": {
+        "status": "insufficient_evidence",
+        "findings": 0,
+        "context_count": 0,
+        "exclusion_disclosed": true
+      },
+      "metrics": [
+        "insufficient_evidence_correctness"
+      ],
+      "parameter": "all-benign"
+    },
+    {
+      "id": "provider-mutation",
+      "category": "context_containment",
+      "name": "Provider mutation cannot mutate facts or leak exception text",
+      "kind": "provider_boundary",
+      "expected": {
+        "status": "rejected",
+        "findings": 0,
+        "source_unchanged": true,
+        "canary_excluded": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "mutation"
+    },
+    {
+      "id": "provider-exception",
+      "category": "context_containment",
+      "name": "Provider exception cannot mutate facts or leak exception text",
+      "kind": "provider_boundary",
+      "expected": {
+        "status": "unavailable",
+        "findings": 0,
+        "source_unchanged": true,
+        "canary_excluded": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "exception"
+    },
+    {
+      "id": "provider-safe-error",
+      "category": "context_containment",
+      "name": "Provider safe-error cannot mutate facts or leak exception text",
+      "kind": "provider_boundary",
+      "expected": {
+        "status": "unavailable",
+        "findings": 0,
+        "source_unchanged": true,
+        "canary_excluded": true
+      },
+      "metrics": [
+        "context_containment"
+      ],
+      "parameter": "safe-error"
+    },
+    {
+      "id": "input-overlapping-scenarios",
+      "category": "case_isolation",
+      "name": "Real foreign-scenario evidence with overlapping principal and time labels is rejected before analysis",
+      "kind": "input_boundary",
+      "parameter": "overlapping-scenarios",
+      "expected": {
+        "error": "cross_incident_evidence",
+        "provider_calls": 0
+      },
+      "metrics": [
+        "case_isolation",
+        "context_containment"
+      ]
+    }
+  ]
+}

@@ -49,6 +49,7 @@ def main():
             "alerts",
             "incidents",
             "evaluations",
+            "evaluations/benchmark",
             "scenarios",
             "replays/atlas-compromise",
             "replays/bulk-automation",

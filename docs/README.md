@@ -19,6 +19,7 @@
 | [Citation and output validator](../apps/api/aegisgraph/analyst.py#L692) | `validate_draft()` checks the schema, exact evidence set, and typed claim support before rendering |
 | [Analysis service and report workflow](../apps/api/aegisgraph/services.py) | `run_analysis()` performs bounded retrieval; report functions implement the separate human review lifecycle |
 | [Evaluation fixtures](../tests/fixtures/ai_cases.json) and [runner](../apps/api/aegisgraph/evaluations.py) | Named positive/negative cases and observed outcomes |
+| [V2 analyst benchmark](evaluations/BENCHMARK.md) | Scenario and adversarial obligations, metric denominators, and separation from historical/live results |
 | [Seven-minute demo](DEMO.md) | Reproduce the investigation and inspect insufficient-evidence behavior |
 | [Public demo deployment](DEPLOYMENT.md) | Hosted Vercel/Railway architecture, public runtime boundary, initialization, updates, and recovery |
 
