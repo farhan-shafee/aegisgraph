@@ -10,8 +10,9 @@ The current source also supports bounded scenario replay, baseline rule comparis
 hypothesis inspection, the deterministic benchmark, and evidence bundle export and
 local verification. This runbook documents their rollout requirements; it does
 not establish that a particular commit has already reached the hosted services.
-See [current V2 validation](V2_VALIDATION.md#hosted-verification) for observed
-CI, rollout, and hosted smoke results.
+See the [latest refinement review](FINAL_EXCELLENCE_REVIEW.md#final-audit-results)
+for its CI and rollout status, and the [V2 validation](V2_VALIDATION.md#hosted-verification)
+for the prior complete hosted smoke.
 
 This runbook describes the required configuration and operating procedures.
 Hosting-dashboard settings, backups, billing limits, and platform logs must be

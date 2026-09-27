@@ -1,6 +1,9 @@
 # Validation record
 
-Current V2 verification is recorded in [V2_VALIDATION.md](V2_VALIDATION.md).
+The latest bounded refinement and its exact checks are recorded in the
+[final excellence review](FINAL_EXCELLENCE_REVIEW.md#final-audit-results), including
+the pending hosted API rollout. The prior complete V2 release verification is
+recorded in [V2_VALIDATION.md](V2_VALIDATION.md).
 The dated V1 results below are retained as historical evidence; they are not
 current test counts or a statement about the hosted revision.
 
