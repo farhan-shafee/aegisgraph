@@ -2926,6 +2926,17 @@ td small,
 .overview-next .button {
   flex-shrink: 0;
 }
+.overview-demo-links {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding-left: 20px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.overview-demo-links .text-link {
+  white-space: normal;
+}
 .hypothesis-ledger {
   min-width: 0;
 }

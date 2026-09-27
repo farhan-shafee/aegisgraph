@@ -150,6 +150,89 @@ beforeEach(() => {
 });
 
 describe("detection workbench", () => {
+  it.each([false, true])(
+    "opens a fixed comparison link read-only with public mode %s",
+    async (publicMode) => {
+      vi.mocked(usePublicDemo).mockReturnValue(publicMode);
+      vi.mocked(api).mockImplementation(async (path) => {
+        if (path !== "/regressions/examples/miss-service-access")
+          throw new Error("Unexpected endpoint");
+        return {
+          ...comparison,
+          gate: {
+            decision: "BLOCK",
+            reasons: [
+              {
+                code: "missed_required_signal",
+                message: "Required service signal lost.",
+              },
+            ],
+          },
+        };
+      });
+      render(
+        <DetectionWorkbench
+          initial={initial}
+          initialComparison="miss-service-access"
+        />,
+      );
+      expect(
+        await screen.findByText("BLOCK", { selector: ".badge" }),
+      ).toBeVisible();
+      expect(screen.getByText("Required service signal lost.")).toBeVisible();
+      expect(
+        screen.getByRole("button", { name: /2,200 records/ }),
+      ).toHaveAttribute("aria-pressed", "true");
+      expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", {
+          name: /Save proposal|Approve revision/,
+        }),
+      ).not.toBeInTheDocument();
+      expect(
+        vi
+          .mocked(api)
+          .mock.calls.every(
+            ([, options]) => !options?.method || options.method === "GET",
+          ),
+      ).toBe(true);
+    },
+  );
+
+  it.each([
+    "2200",
+    "miss-service-access".repeat(100),
+    ["miss-service-access", "miss-service-access"],
+  ])(
+    "ignores a non-catalog or ambiguous comparison selector %s",
+    async (selector) => {
+      vi.mocked(usePublicDemo).mockReturnValue(true);
+      render(
+        <DetectionWorkbench initial={initial} initialComparison={selector} />,
+      );
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: /2,200 records/ }),
+        ).toHaveAttribute("aria-pressed", "false"),
+      );
+      expect(api).not.toHaveBeenCalled();
+    },
+  );
+
+  it("ignores comparison selection on other rules", () => {
+    vi.mocked(usePublicDemo).mockReturnValue(true);
+    render(
+      <DetectionWorkbench
+        initial={{ ...initial, rule: { ...initial.rule, id: "AUTH-002" } }}
+        initialComparison="miss-service-access"
+      />,
+    );
+    expect(
+      screen.getByRole("link", { name: "Inspect APP-002 threshold examples" }),
+    ).toBeVisible();
+    expect(api).not.toHaveBeenCalled();
+  });
+
   it("keeps public examples read-only and labels their actual populations", async () => {
     vi.mocked(usePublicDemo).mockReturnValue(true);
     vi.mocked(api).mockResolvedValue(comparison);

@@ -20,7 +20,7 @@ from .correlation import (
     MINIMUM_FAMILIES,
     MINIMUM_RULES,
     CorrelatedCase,
-    correlate,
+    correlate_with_decisions,
 )
 from .detection import Signal, evaluate, load_rules
 from .scenarios import scenario_definition, scenario_events
@@ -186,7 +186,7 @@ def _build(scenario_id: str, rules: list[dict] | None) -> tuple[dict, dict]:
                 event_id=event.event_id,
                 alert_id=signal.id,
             )
-            current_cases = correlate(emitted, observed)
+            current_cases, decisions = correlate_with_decisions(emitted, observed)
             work["correlation_evaluations"] += 1
             emit(
                 "correlation",
@@ -199,6 +199,7 @@ def _build(scenario_id: str, rules: list[dict] | None) -> tuple[dict, dict]:
                     "window_minutes": CORRELATION_WINDOW_MINUTES,
                     "minimum_rules": MINIMUM_RULES,
                     "minimum_families": MINIMUM_FAMILIES,
+                    "decisions": decisions,
                 },
                 event_id=event.event_id,
                 alert_id=signal.id,

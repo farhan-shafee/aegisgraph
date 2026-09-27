@@ -61,6 +61,14 @@ The original Atlas case has ten alerts from nine distinct rules across five
 families over 22 minutes. Alerts, distinct rules, and rule families are different
 quantities. Severity is a rule-mix policy, not a probability of compromise.
 
+Replay receipts explain both outcomes using that same policy function. Approved
+administration has two distinct rules in one family over nine minutes, so it
+misses both diversity minimums. Its recorded approval is separate hypothesis
+counterevidence, not a suppression rule. Disjoint windows are anchored at their
+first alert; equal-time rules have a stable identity tie-break. No incident does
+not establish an innocent account. The overview links this example, Atlas, and
+the fixed APP-002 BLOCK comparison directly.
+
 ## Why separate detection from correlation?
 
 Detection says an observation or sequence satisfies a rule and emits source-cited

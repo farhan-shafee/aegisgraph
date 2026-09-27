@@ -30,6 +30,31 @@ initialized before playback; the 26 investigation observations play from 13:57 U
 Smaller scenarios play every event. A scenario that never reaches the correlation
 threshold retains an **observation scope**, with no invented incident ID.
 
+The correlation panel includes deterministic **decision receipts** for each
+principal and disjoint window in the reached prefix. A window is anchored at its
+first alert; exactly 30 minutes is included, and a later alert starts a new
+window. Receipts show the actual rules, families, alert span, required minimums,
+unmet conditions, and resulting incident ID when one qualifies. Correlation and
+receipts consume the same decision function. Equal-time alerts are ordered by
+rule ID and signal ID so input permutations do not change incident identity.
+
+Approved administration ends with two distinct rules (`IAM-001`, `IAM-003`), one
+family, and a nine-minute span. It produces no incident because both diversity
+minimums are unmet. Its recorded approval is separately inspectable hypothesis
+counterevidence; it did **not** suppress correlation. A receipt is a policy result,
+not a verdict that an account is innocent or compromised. Historical windows are
+not described as currently active, and no hypothetical attacker action is invented.
+
+Each receipt identifies `principal-window-v1` and its actual configured thresholds.
+The detection ruleset digest identifies detection inputs, not the correlation
+implementation. Receipts add no stored records or model calls and remain inside
+the existing projection bounds. During a staggered deployment, an older backend
+without receipts retains the original aggregate display without inventing them.
+
+Direct links select a catalog scenario, for example
+`/replay?scenario=atlas-compromise` or `/replay?scenario=approved-admin`.
+Selection does not automatically play or expose completed results.
+
 The API bounds replay to 5,000 source events, 80 playback observations, 600 frames
 and a 1 MiB serialized projection. A finite cache stores shipped-rule projections
 as serialized values and returns fresh objects; changed local rules are evaluated

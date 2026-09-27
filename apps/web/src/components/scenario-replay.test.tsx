@@ -3,7 +3,11 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ScenarioReplay } from "./scenario-replay";
 import { api } from "@/lib/api";
 import { analysis, evidence } from "@/test/fixtures";
-import type { ReplayProjection, ScenarioDescription } from "@/lib/replay-types";
+import type {
+  ReplayProjection,
+  ReplayCorrelationDecision,
+  ScenarioDescription,
+} from "@/lib/replay-types";
 
 vi.mock("@/lib/api", async (original) => ({
   ...(await original<typeof import("@/lib/api")>()),
@@ -375,4 +379,138 @@ it("rejects a projection from a different scenario version than the selected cat
   expect(
     screen.queryByRole("button", { name: "Start" }),
   ).not.toBeInTheDocument();
+});
+
+it("shows cluster receipts only when reached, updates their outcome, and clears them on reset", async () => {
+  const data = projection();
+  const decision: ReplayCorrelationDecision = {
+    policy_version: "principal-window-v1",
+    principal_id: "review.principal",
+    alert_ids: ["ALT-1", "ALT-2"],
+    rule_ids: ["IAM-001", "IAM-002"],
+    rule_families: ["IAM"],
+    first_alert_at: "2026-09-15T14:00:00+00:00",
+    last_alert_at: "2026-09-15T14:11:00+00:00",
+    window_end_at: "2026-09-15T14:30:00+00:00",
+    span_minutes: 11,
+    window_minutes: 30,
+    minimum_rules: 3,
+    minimum_families: 2,
+    unmet_conditions: ["distinct_rules", "rule_families"],
+    incident_id: null,
+  };
+  const correlation = {
+    alert_count: 2,
+    incident_count: 0,
+    rule_ids: decision.rule_ids,
+    rule_families: decision.rule_families,
+    window_minutes: 30,
+    minimum_rules: 3,
+    minimum_families: 2,
+    decisions: [decision],
+  };
+  data.frames.push(
+    {
+      seq: 3,
+      timestamp: decision.last_alert_at,
+      stage: "correlation",
+      data: correlation,
+    },
+    {
+      seq: 4,
+      timestamp: "2026-09-15T14:12:00+00:00",
+      stage: "correlation",
+      data: {
+        ...correlation,
+        alert_count: 3,
+        incident_count: 1,
+        rule_ids: ["IAM-001", "IAM-002", "AUTH-002"],
+        rule_families: ["IAM", "AUTH"],
+        decisions: [
+          {
+            ...decision,
+            alert_ids: ["ALT-1", "ALT-2", "ALT-3"],
+            rule_ids: ["IAM-001", "IAM-002", "AUTH-002"],
+            rule_families: ["IAM", "AUTH"],
+            last_alert_at: "2026-09-15T14:12:00+00:00",
+            span_minutes: 12,
+            unmet_conditions: [],
+            incident_id: "INC-reached",
+          },
+        ],
+      },
+    },
+  );
+  data.summary.frame_count = 5;
+  mockedApi.mockResolvedValue(data);
+  render(<ScenarioReplay scenarios={scenarios} hypothesesAvailable />);
+  await ready();
+  complete();
+  expect(
+    screen.queryByRole("region", {
+      name: "Decision receipt for review.principal",
+    }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Step" }));
+  const receipt = screen.getByRole("region", {
+    name: "Decision receipt for review.principal",
+  });
+  expect(receipt).toHaveTextContent("No incident");
+  expect(receipt).toHaveTextContent("Distinct rules: 2 / 3");
+  expect(receipt).toHaveTextContent("Rule families: 1 / 2");
+  expect(receipt).toHaveTextContent("11 min within 30 min");
+  expect(receipt).toHaveTextContent("14:30:00 UTC");
+  expect(
+    within(receipt).getByRole("list", { name: "Unmet conditions" }),
+  ).toHaveTextContent("Distinct rules");
+  expect(
+    screen.queryByRole("link", {
+      name: "Inspect completed hypothesis context",
+    }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Step" }));
+  expect(receipt).toHaveTextContent("Incident formed");
+  expect(receipt).toHaveTextContent("INC-reached");
+  expect(
+    within(receipt).queryByRole("list", { name: "Unmet conditions" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Inspect completed hypothesis context" }),
+  ).toHaveAttribute("href", "#replay-hypothesis-context");
+  expect(
+    document.getElementById("replay-hypothesis-context"),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+  expect(
+    screen.queryByRole("region", {
+      name: "Decision receipt for review.principal",
+    }),
+  ).not.toBeInTheDocument();
+});
+
+it("retains the aggregate policy explanation for older replay responses without receipts", async () => {
+  const data = projection();
+  data.frames[2] = {
+    seq: 2,
+    timestamp: evidence.timestamp,
+    stage: "correlation",
+    data: {
+      alert_count: 1,
+      incident_count: 0,
+      rule_ids: ["AUTH-002"],
+      rule_families: ["AUTH"],
+      window_minutes: 30,
+      minimum_rules: 3,
+      minimum_families: 2,
+    },
+  };
+  mockedApi.mockResolvedValue(data);
+  render(<ScenarioReplay scenarios={scenarios} />);
+  await ready();
+  complete();
+  expect(screen.getByText(/1 distinct rules across 1 families/)).toBeVisible();
+  expect(screen.getByText(/Observed rule totals alone/)).toBeVisible();
+  expect(
+    screen.getByText("No correlated incident at this frame."),
+  ).toBeVisible();
 });

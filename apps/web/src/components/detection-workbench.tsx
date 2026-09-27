@@ -267,13 +267,21 @@ export function RegressionComparison({ result }: { result: RegressionResult }) {
 
 export function DetectionWorkbench({
   initial,
+  initialComparison,
 }: {
   initial: DetectionWorkbenchData;
+  initialComparison?: string | string[];
 }) {
   const capability = useCapability("rule_workbench");
   const publicDemo = usePublicDemo();
   const [workbench, setWorkbench] = useState(initial);
-  const readOnly = publicDemo || workbench.read_only;
+  const comparisonId =
+    initial.rule.id === "APP-002" &&
+    typeof initialComparison === "string" &&
+    initialComparison.length <= 32
+      ? (examples.find((item) => item.id === initialComparison)?.id ?? null)
+      : null;
+  const readOnly = publicDemo || workbench.read_only || comparisonId !== null;
   const [values, setValues] = useState(() => parameterValues(initial));
   const [proposalReason, setProposalReason] = useState("");
   const [reviewReason, setReviewReason] = useState("");
@@ -283,7 +291,9 @@ export function DetectionWorkbench({
   );
   const [detail, setDetail] = useState<RevisionDetail | null>(null);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
-  const [selectedExample, setSelectedExample] = useState<string | null>(null);
+  const [selectedExample, setSelectedExample] = useState<string | null>(
+    comparisonId,
+  );
   const [example, setExample] = useState<RegressionResult | null>(null);
   const [retry, setRetry] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
@@ -565,6 +575,15 @@ export function DetectionWorkbench({
         action={<Badge value={workbench.rule.severity} />}
       />
       <ErrorNotice message={error} />
+      {comparisonId && !publicDemo && !workbench.read_only && (
+        <p className={styles.muted}>
+          Fixed comparison · read-only. This example uses repository baseline
+          rules, independent of local revisions.{" "}
+          <Link className="text-link" href="/detections/APP-002">
+            Return to the local workbench
+          </Link>
+        </p>
+      )}
       <p role="status" aria-live="polite" className={styles.status}>
         {busy ? `${busy}…` : notice}
       </p>
@@ -610,7 +629,7 @@ export function DetectionWorkbench({
       <Panel
         title={`Effective rule · version ${workbench.version}`}
         subtitle={
-          readOnly
+          publicDemo || workbench.read_only
             ? "Repository baseline · read-only public demo"
             : "Local ruleset · human-reviewed revisions"
         }
@@ -652,8 +671,9 @@ export function DetectionWorkbench({
         >
           <div className={styles.body}>
             <p>
-              Public mode cannot save proposals or approve changes. Each example
-              compares the repository baseline against one bounded threshold.
+              These fixed examples cannot save proposals or approve changes.
+              Each example compares the repository baseline against one bounded
+              threshold.
             </p>
             {workbench.rule.id === "APP-002" ? (
               <div className={styles.exampleGrid}>

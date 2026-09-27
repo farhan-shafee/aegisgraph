@@ -11,8 +11,10 @@ export const dynamic = "force-dynamic";
 
 export default async function DetectionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ comparison?: string | string[] }>;
 }) {
   const { id } = await params;
   if (!/^[A-Z]{2,4}-[0-9]{3}$/.test(id)) notFound();
@@ -67,5 +69,16 @@ export default async function DetectionPage({
       </>
     );
   }
-  return <DetectionWorkbench key={id} initial={initial} />;
+  const query = await searchParams;
+  const comparison =
+    typeof query?.comparison === "string" && query.comparison.length <= 32
+      ? query.comparison
+      : undefined;
+  return (
+    <DetectionWorkbench
+      key={`${id}:${comparison ?? "default"}`}
+      initial={initial}
+      initialComparison={comparison}
+    />
+  );
 }

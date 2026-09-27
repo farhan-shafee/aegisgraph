@@ -133,6 +133,40 @@ def test_atlas_incident_changes_only_when_supporting_prefix_is_visible():
 
 
 @pytest.mark.parametrize("scenario_id", SCENARIOS)
+def test_correlation_receipts_describe_only_reached_alerts_and_cases(scenario_id):
+    projection = replay.build_projection(scenario_id)
+    reached_alerts = {}
+    for frame in projection["frames"]:
+        if frame["stage"] == "alert":
+            reached_alerts[frame["alert_id"]] = frame["data"]
+        elif frame["stage"] == "correlation":
+            assert "decisions" in frame["data"], "Replay must expose reached cluster decisions"
+            decisions = frame["data"]["decisions"]
+            assert {alert_id for row in decisions for alert_id in row["alert_ids"]} == set(
+                reached_alerts
+            )
+            for row in decisions:
+                alerts = [reached_alerts[alert_id] for alert_id in row["alert_ids"]]
+                assert {alert["user_id"] for alert in alerts} == {row["principal_id"]}
+                assert {alert["rule_id"] for alert in alerts} == set(row["rule_ids"])
+                assert datetime.fromisoformat(row["last_alert_at"]) <= datetime.fromisoformat(
+                    frame["timestamp"]
+                )
+            assert (
+                sum(row["incident_id"] is not None for row in decisions)
+                == frame["data"]["incident_count"]
+            )
+    last_decisions = next(
+        frame["data"]["decisions"]
+        for frame in reversed(projection["frames"])
+        if frame["stage"] == "correlation"
+    )
+    assert {row["incident_id"] for row in last_decisions if row["incident_id"]} == {
+        case["id"] for case in projection["final_state"]["incidents"]
+    }
+
+
+@pytest.mark.parametrize("scenario_id", SCENARIOS)
 def test_alert_and_incident_frames_never_reference_future_telemetry(scenario_id):
     projection = replay.replay_projection(scenario_id)
     events = scenario_events(scenario_id)

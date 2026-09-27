@@ -89,6 +89,14 @@ fixture has ten alerts from nine distinct rules across five families, spanning
 `context_only` names device/session/IP. The workspace renders these derived facts
 rather than inventing an explanation from a model or graph appearance.
 
+Replay also exposes per-principal/window decision receipts from the same function
+that creates correlated cases. Both qualifying and nonqualifying clusters carry
+their rule/family counts, anchored window, configured minimums, policy identifier,
+and unmet conditions. Disjoint windows do not borrow signals from each other;
+equal-time alerts use rule ID and signal ID as deterministic tie-breaks. Receipts
+are ephemeral derived data, not another authoritative store. Recorded approvals
+remain narrow hypothesis counterevidence and do not act as a correlation veto.
+
 Incident severity is an explicit V1 policy: high when the cluster contains both
 IAM and APP families, otherwise medium. It is not a learned risk score or a
 calibrated estimate of impact.

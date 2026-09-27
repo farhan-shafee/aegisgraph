@@ -247,6 +247,43 @@
   justify-items: start;
   gap: 10px;
 }
+.receipt {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.receipt h3 {
+  font-size: 14px;
+}
+.receiptFacts {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.receiptFacts dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.receiptFacts dd {
+  margin: 0;
+}
+.receipt ul {
+  padding-left: 20px;
+  margin: 8px 0 0;
+}
+.receipt summary {
+  cursor: pointer;
+  color: var(--teal);
+}
+.receipt details p {
+  margin-top: 8px;
+  color: var(--muted);
+}
 .incident p {
   color: var(--muted);
   font-size: 13px;

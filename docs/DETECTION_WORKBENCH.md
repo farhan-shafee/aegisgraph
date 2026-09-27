@@ -72,6 +72,13 @@ These outcomes are computed from telemetry and independent labels by the same
 comparison function used for local review; they are not saved flattering scores.
 Passing them says nothing about unmodeled traffic or a different threat model.
 
+The overview links directly to
+`/detections/APP-002?comparison=miss-service-access` for the 2,200-record BLOCK
+example. The selector accepts only a single fixed catalog ID; invalid, repeated,
+oversized, or other-rule selectors fall back to the ordinary workbench. It never
+becomes a threshold or arbitrary API path. In local mode this link opens a clearly
+labeled read-only baseline comparison, with a link back to the editable workbench.
+
 ## Inspection points
 
 - [Typed rule definitions](../apps/api/aegisgraph/rule_specs.py)

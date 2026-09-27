@@ -2,7 +2,7 @@
 
 import hashlib
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from .detection import Signal
 from .schema import CanonicalEvent
@@ -10,6 +10,7 @@ from .schema import CanonicalEvent
 CORRELATION_WINDOW_MINUTES = 30
 MINIMUM_RULES = 3
 MINIMUM_FAMILIES = 2
+CORRELATION_POLICY_VERSION = "principal-window-v1"
 
 
 @dataclass(frozen=True)
@@ -24,12 +25,25 @@ class CorrelatedCase:
 
 
 def correlate(signals: list[Signal], events: list[CanonicalEvent]) -> list[CorrelatedCase]:
+    cases, _decisions = correlate_with_decisions(signals, events)
+    return cases
+
+
+def correlate_with_decisions(
+    signals: list[Signal], events: list[CanonicalEvent]
+) -> tuple[list[CorrelatedCase], list[dict]]:
+    """Build cases and receipts from one principal/anchored-window qualification.
+
+    Receipts describe observed alert clusters, including those below the minimums.
+    Approval, session, device and IP context never suppresses or joins a cluster.
+    """
     cases = []
+    decisions = []
     users = sorted({signal.user_id for signal in signals})
     for user in users:
         user_signals = sorted(
             (s for s in signals if s.user_id == user),
-            key=lambda s: datetime.fromisoformat(s.timestamp),
+            key=lambda s: (datetime.fromisoformat(s.timestamp), s.rule_id, s.id),
         )
         clusters: list[list[Signal]] = []
         for signal in user_signals:
@@ -40,22 +54,49 @@ def correlate(signals: list[Signal], events: list[CanonicalEvent]) -> list[Corre
             clusters[-1].append(signal)
         for cluster in clusters:
             families = {s.rule_id.split("-")[0] for s in cluster}
-            # A lone signal stays an alert. Incidents require independent identity/access signals.
-            if (
-                len(families) < MINIMUM_FAMILIES
-                or len({s.rule_id for s in cluster}) < MINIMUM_RULES
-            ):
+            rules = {s.rule_id for s in cluster}
+            first = datetime.fromisoformat(cluster[0].timestamp).astimezone(UTC)
+            last = datetime.fromisoformat(cluster[-1].timestamp).astimezone(UTC)
+            unmet_conditions = []
+            if len(rules) < MINIMUM_RULES:
+                unmet_conditions.append("distinct_rules")
+            if len(families) < MINIMUM_FAMILIES:
+                unmet_conditions.append("rule_families")
+            incident_id = None
+            if not unmet_conditions:
+                digest = hashlib.sha256((user + cluster[0].id).encode()).hexdigest()[:12]
+                incident_id = f"INC-{digest}"
+            decisions.append(
+                {
+                    "policy_version": CORRELATION_POLICY_VERSION,
+                    "principal_id": user,
+                    "alert_ids": [signal.id for signal in cluster],
+                    "rule_ids": sorted(rules),
+                    "rule_families": sorted(families),
+                    "first_alert_at": first.isoformat(),
+                    "last_alert_at": last.isoformat(),
+                    "window_end_at": (
+                        first + timedelta(minutes=CORRELATION_WINDOW_MINUTES)
+                    ).isoformat(),
+                    "span_minutes": round((last - first).total_seconds() / 60, 2),
+                    "window_minutes": CORRELATION_WINDOW_MINUTES,
+                    "minimum_rules": MINIMUM_RULES,
+                    "minimum_families": MINIMUM_FAMILIES,
+                    "unmet_conditions": unmet_conditions,
+                    "incident_id": incident_id,
+                }
+            )
+            # A lone signal stays an alert; the same decision gates case creation.
+            if incident_id is None:
                 continue
-            start = datetime.fromisoformat(cluster[0].timestamp) - timedelta(minutes=5)
-            end = datetime.fromisoformat(cluster[-1].timestamp)
+            start = first - timedelta(minutes=5)
+            end = last
             selected = [
                 e for e in events if e.actor.user_id == user and start <= e.timestamp <= end
             ]
             event_ids = set(e.event_id for e in selected)
             event_ids.update(event_id for signal in cluster for event_id in signal.event_ids)
             severity = "high" if "APP" in families and "IAM" in families else "medium"
-            digest = hashlib.sha256((user + cluster[0].id).encode()).hexdigest()[:12]
-            rules = {s.rule_id for s in cluster}
             flagship = {"AUTH-002", "IAM-001", "APP-001"}.issubset(rules)
             summary = (
                 (
@@ -69,7 +110,7 @@ def correlate(signals: list[Signal], events: list[CanonicalEvent]) -> list[Corre
             )
             cases.append(
                 CorrelatedCase(
-                    f"INC-{digest}",
+                    incident_id,
                     "Suspected compromise of Atlas engineer account"
                     if flagship
                     else "Correlated security signals for Atlas principal",
@@ -80,7 +121,7 @@ def correlate(signals: list[Signal], events: list[CanonicalEvent]) -> list[Corre
                     user,
                 )
             )
-    return cases
+    return cases, decisions
 
 
 def explain_correlation(alerts: list[dict]) -> dict:

@@ -148,6 +148,23 @@ constants. They expose actual principal/rule/family counts and measured alert
 span. Device/session/IP relationships are explicitly investigation context, not
 additional grouping predicates or evidence of real-world actor attribution.
 
+Replay receipts share the exact principal/window partition and qualification
+function with incident creation. Tests compare positive and negative decisions,
+separate principals, repeated rules, anchored-window boundaries, time zones, and
+equal-time input permutations. Receipts carry a policy identifier and actual
+thresholds; the detection ruleset digest alone does not identify correlation
+semantics. The browser displays only reached receipts, and older backends retain
+an honest aggregate fallback. Incorrect policy code remains an engineering risk;
+these explanations are neither model judgments nor proof of telemetry truth.
+Change the policy identifier when partition or qualification semantics change.
+
+Guided links select existing read-only views. The APP-002 comparison query is
+checked against a fixed short catalog, rejecting repeated or oversized values
+before any comparison fetch. It cannot become a numeric threshold or arbitrary
+backend path. A local deep link explicitly displays a fixed read-only comparison,
+separate from saved proposals and approvals. The frontend selector is a usability
+boundary; backend allowlists and public write denials remain authoritative.
+
 ## Production gates
 
 Before real-data use or a shared writable service: authenticated identities and

@@ -42,6 +42,9 @@ test("public scenario replay is ephemeral and reveals completed evidence only at
   await expect(
     page.getByRole("heading", { name: "Hypothesis ledger" }),
   ).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: /^Decision receipt for/ }),
+  ).toHaveCount(0);
   expect(projection.frames.length).toBeLessThan(50);
   for (let index = 0; index < projection.frames.length - 1; index++)
     await page.getByRole("button", { name: "Step", exact: true }).click();
@@ -55,6 +58,15 @@ test("public scenario replay is ephemeral and reveals completed evidence only at
   await expect(
     page.getByRole("heading", { name: "Hypothesis ledger" }),
   ).toBeVisible();
+  const receipt = page.getByRole("region", {
+    name: "Decision receipt for USR-isolated-anomaly",
+  });
+  await expect(receipt).toContainText("No incident");
+  await expect(receipt).toContainText("Distinct rules: 1 / 3");
+  await expect(receipt).toContainText("Rule families: 1 / 2");
+  await expect(
+    receipt.getByRole("list", { name: "Unmet conditions" }),
+  ).toContainText("Distinct rules: 1 / 3");
   await expect(
     page.getByRole("button", { name: "Save human review" }),
   ).toHaveCount(0);
@@ -78,6 +90,86 @@ test("public scenario replay is ephemeral and reveals completed evidence only at
   expect(await after.json()).toEqual(before);
   expect(writes).toEqual([]);
   expect(errors).toEqual([]);
+});
+
+test("overview links open the approved near-miss receipt and exact blocked comparison without writes", async ({
+  page,
+  request,
+}) => {
+  const before = await (
+    await request.get(`/api/incidents/${canonicalId}`)
+  ).json();
+  const writes: string[] = [];
+  page.on("request", (item) => {
+    if (
+      new URL(item.url()).pathname.startsWith("/api/") &&
+      item.method() !== "GET"
+    )
+      writes.push(item.url());
+  });
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const guided = page.getByRole("list", { name: "Guided investigation" });
+  await expect(
+    guided.getByRole("link", { name: "Atlas: why an incident forms" }),
+  ).toHaveAttribute("href", "/replay?scenario=atlas-compromise");
+  const loaded = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === "/api/replays/approved-admin",
+  );
+  await guided
+    .getByRole("link", { name: "Approved administration: why none forms" })
+    .click();
+  const projection: ReplayProjection = await (await loaded).json();
+  await expect(page.getByLabel("Scenario", { exact: true })).toHaveValue(
+    "approved-admin",
+  );
+  for (let index = 0; index < projection.frames.length; index++)
+    await page.getByRole("button", { name: "Step", exact: true }).click();
+  const receipt = page.getByRole("region", {
+    name: "Decision receipt for USR-approved-admin",
+  });
+  await expect(receipt).toContainText("No incident");
+  await expect(receipt).toContainText("Distinct rules: 2 / 3");
+  await expect(receipt).toContainText("Rule families: 1 / 2");
+  await expect(receipt).toContainText("9 min within 30 min");
+  await page
+    .getByRole("link", { name: "Inspect completed hypothesis context" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Hypothesis ledger" }),
+  ).toBeInViewport();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.goto("/");
+  await page
+    .getByRole("link", {
+      name: "APP-002: why the 2,200-record change is blocked",
+    })
+    .click();
+  await expect(page).toHaveURL(
+    /\/detections\/APP-002\?comparison=miss-service-access$/,
+  );
+  await expect(page.getByText("BLOCK", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /2,200 records/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("button", { name: /Save proposal|Approve revision/ }),
+  ).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  expect(
+    await (await request.get(`/api/incidents/${canonicalId}`)).json(),
+  ).toEqual(before);
+  expect(writes).toEqual([]);
 });
 
 test("public detection examples and the analyst benchmark show computed fixture measurements without write controls", async ({

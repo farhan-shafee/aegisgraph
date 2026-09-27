@@ -1,7 +1,7 @@
 # AegisGraph: seven-minute interview walkthrough
 
-The story is one loop: replay observations, investigate the evidence, assess a
-hypothesis, compare a detection change, and export a verifiable snapshot. All
+The story is one argument: explain why a case forms, explain why another does not,
+inspect the supporting evidence, and test a change against those obligations. All
 bundled observations are synthetic. Keep [interview notes](INTERVIEW_NOTES.md)
 open for follow-up questions.
 
@@ -41,7 +41,8 @@ Before presenting:
 
 ## 00:00–00:30 — Frame the problem
 
-Open Overview and point out the original Atlas investigation.
+Open Overview and its three inspection links: why an incident forms, why it does
+not, and why a rule change is blocked. Point out the original Atlas investigation.
 
 > AegisGraph is an evidence-grounded security investigation application for a
 > simulated fintech environment. I wanted the reasoning to be inspectable: which
@@ -52,7 +53,7 @@ Open Overview and point out the original Atlas investigation.
 > Public mode is read-only and deterministic. Local mode adds explicit human
 > review and optional OpenAI analysis.
 
-## 00:30–01:35 — Replay Atlas at 20×
+## 00:30–01:45 — Replay Atlas at 20×
 
 Open **Replay**, select **Atlas account investigation**, set **Playback speed**
 to **20×**, and click **Start**. Briefly use **Pause**, **Step**, and **Resume**.
@@ -70,10 +71,26 @@ not describe the playback speed as a throughput measurement.
 > families, and a 30-minute window. A weak anomaly can remain an alert instead of
 > automatically becoming an incident.
 
-At completion, use **Open canonical Atlas case**. The replay is an ephemeral
-projection; this link opens the separate persisted investigation.
+Inspect the reached decision receipt: principal, actual matched rules/families,
+window and minimums. The outcome is derived by the same function that forms the
+incident. Replay is ephemeral; the canonical case is a separate stored record.
 
-## 01:35–02:20 — Follow evidence and relationships
+## 01:45–02:30 — Explain why approved administration stays below the gate
+
+Use the overview's second link or `/replay?scenario=approved-admin`. Run the short
+replay at 50×, then read its final receipt: two distinct rules, one family, and a
+nine-minute span. Three rules across two families are required.
+
+> No incident forms because both diversity minimums are unmet. The recorded change
+> approval is separately cited counterevidence in the completed hypothesis ledger;
+> it did not suppress correlation. No incident is not proof of no compromise.
+
+Open that counterevidence if useful. The observation scope is not a persisted
+incident. This is a comparison of explicit decisions, not a benignness score.
+
+## 02:30–03:15 — Follow evidence and relationships
+
+Open the canonical Atlas case from Investigate.
 
 Open one timeline observation and inspect its evidence ID, timestamp, actor,
 source/device/session, and canonical event. Close the drawer, open **Entities**,
@@ -87,7 +104,7 @@ select the unfamiliar device, and follow its evidence relationship.
 Return to **Timeline** and leave the analyst visible. The canonical fixture and
 its evidence IDs are preserved across replay and rule tuning.
 
-## 02:20–03:15 — Ask two different questions
+## 03:15–04:00 — Ask two different questions
 
 Ask exactly **What most likely happened?** Inspect one finding and open its
 citation. Name the visible provider: the ordinary demo is **deterministic**.
@@ -106,7 +123,7 @@ Then ask **What malware family was used?** Show the insufficient-evidence result
 Provider unavailability is a different outcome. Do not present a failed external
 request as a successful insufficient-evidence test.
 
-## 03:15–04:00 — Inspect a working hypothesis
+## 04:00–04:40 — Inspect a working hypothesis
 
 Open **Hypotheses**. Inspect **Account activity reflects unauthorized control**,
 its supporting citation, and **What would confirm or reject this?** Show the
@@ -122,7 +139,7 @@ imply Atlas contains a contradiction where that list is empty. Approved
 administration and scheduled reconciliation provide useful follow-up examples of
 narrow counterevidence.
 
-## 04:00–05:35 — Test a detection tradeoff
+## 04:40–05:40 — Test a detection tradeoff
 
 Open **Detections → APP-002**.
 
@@ -150,7 +167,12 @@ volume signal and its correlated incident are lost. No editable fields or approv
 actions are available publicly. The **1,100 records** example demonstrates WARN
 with unchanged fixture outcomes if there is time.
 
-## 05:35–06:10 — Inspect measured obligations
+The overview's third link opens the fixed 2,200-record comparison directly at
+`/detections/APP-002?comparison=miss-service-access`. For the seven-minute public
+walkthrough, start with BLOCK and its lost service-access incident; keep the local
+proposal/approval cycle as an optional deeper demonstration.
+
+## 05:40–06:15 — Inspect measured obligations
 
 Open **Evaluations → V2 analyst benchmark**. Read the executed counts from the
 screen, select a citation or false-premise category, and expand one obligation's
@@ -166,7 +188,7 @@ denominator.
 Use [current validation](VALIDATION.md) for the actual test and CI results rather
 than memorizing a count that may change.
 
-## 06:10–07:00 — Export, verify, and state the limit
+## 06:15–07:00 — Export, verify, and state the limit
 
 Return to the canonical Atlas case's **Export** tab. Click **Download evidence
 bundle**. Show **VALID**, then expand **Inspect declared files and SHA-256 hashes**.

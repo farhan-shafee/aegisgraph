@@ -16,7 +16,14 @@ import {
   SkipForward,
 } from "lucide-react";
 import { api, errorMessage } from "@/lib/api";
-import { count, eventContext, eventLabel, humanize, time } from "@/lib/format";
+import {
+  count,
+  dateTime,
+  eventContext,
+  eventLabel,
+  humanize,
+  time,
+} from "@/lib/format";
 import {
   frameDelay,
   replayPrefix,
@@ -25,6 +32,7 @@ import {
 } from "@/lib/replay-playback";
 import type {
   ReplayFrame,
+  ReplayCorrelationDecision,
   ReplayProjection,
   ScenarioAnalysis,
   ScenarioDescription,
@@ -468,20 +476,51 @@ function Playback({
           <div className={styles.inset}>
             {prefix.correlation ? (
               <>
-                <p>
-                  {prefix.correlation.rule_ids.length} distinct rules across{" "}
-                  {prefix.correlation.rule_families.length} families have been
-                  observed.
-                </p>
-                <p className={styles.muted}>
-                  Policy: at least {prefix.correlation.minimum_rules} rules
-                  across {prefix.correlation.minimum_families} families for a
-                  principal within {prefix.correlation.window_minutes} minutes.
-                </p>
-                <p className={styles.muted}>
-                  Observed rule totals alone do not prove one principal meets
-                  the window.
-                </p>
+                {prefix.correlation.decisions ? (
+                  <>
+                    {prefix.correlation.decisions.map((decision) => (
+                      <DecisionReceipt
+                        key={`${decision.principal_id}:${decision.first_alert_at}`}
+                        decision={decision}
+                      />
+                    ))}
+                    {!prefix.correlation.decisions.length && (
+                      <p>No alert clusters to evaluate at this frame.</p>
+                    )}
+                    <p className={styles.muted}>
+                      Correlation uses principal, distinct rules, rule families,
+                      and a window anchored at the first alert. Recorded
+                      approvals and other counterevidence inform hypotheses;
+                      they do not suppress this correlation policy.
+                    </p>
+                    {complete && hypothesesAvailable && (
+                      <a
+                        className="text-link"
+                        href="#replay-hypothesis-context"
+                      >
+                        Inspect completed hypothesis context
+                      </a>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      {prefix.correlation.rule_ids.length} distinct rules across{" "}
+                      {prefix.correlation.rule_families.length} families have
+                      been observed.
+                    </p>
+                    <p className={styles.muted}>
+                      Policy: at least {prefix.correlation.minimum_rules} rules
+                      across {prefix.correlation.minimum_families} families for
+                      a principal within {prefix.correlation.window_minutes}{" "}
+                      minutes.
+                    </p>
+                    <p className={styles.muted}>
+                      Observed rule totals alone do not prove one principal
+                      meets the window.
+                    </p>
+                  </>
+                )}
                 {prefix.incidents.map((incident) => (
                   <div className={styles.incident} key={incident.id}>
                     <Badge value={incident.severity} />
@@ -490,7 +529,7 @@ function Playback({
                     <span className="mono">{incident.id}</span>
                   </div>
                 ))}
-                {!prefix.incidents.length && (
+                {!prefix.incidents.length && !prefix.correlation.decisions && (
                   <p>No correlated incident at this frame.</p>
                 )}
               </>
@@ -584,6 +623,82 @@ function observedEntities(evidence: Evidence[]) {
     }
   }
   return [...entities.values()];
+}
+
+function DecisionReceipt({
+  decision,
+}: {
+  decision: ReplayCorrelationDecision;
+}) {
+  return (
+    <section
+      className={styles.receipt}
+      aria-label={`Decision receipt for ${decision.principal_id}`}
+    >
+      <div className="inline-meta">
+        <h3>Decision receipt</h3>
+        <span className="badge">
+          {decision.incident_id ? "Incident formed" : "No incident"}
+        </span>
+      </div>
+      <dl className={styles.receiptFacts}>
+        <div>
+          <dt>Principal</dt>
+          <dd>{decision.principal_id}</dd>
+        </div>
+        <div>
+          <dt>Observed / required</dt>
+          <dd>
+            Distinct rules: {decision.rule_ids.length} /{" "}
+            {decision.minimum_rules}
+            <br />
+            Rule families: {decision.rule_families.length} /{" "}
+            {decision.minimum_families}
+          </dd>
+        </div>
+        <div>
+          <dt>Alert span</dt>
+          <dd>
+            {decision.span_minutes} min within {decision.window_minutes} min
+            <br />
+            {dateTime(decision.first_alert_at)} –{" "}
+            {dateTime(decision.last_alert_at)}
+          </dd>
+        </div>
+        <div>
+          <dt>Eligible window · anchored at first alert</dt>
+          <dd>
+            {dateTime(decision.first_alert_at)} –{" "}
+            {dateTime(decision.window_end_at)}
+          </dd>
+        </div>
+      </dl>
+      {decision.unmet_conditions.length ? (
+        <div>
+          <strong>Unmet conditions</strong>
+          <ul aria-label="Unmet conditions">
+            {decision.unmet_conditions.map((condition) => (
+              <li key={condition}>
+                {condition === "distinct_rules"
+                  ? `Distinct rules: ${decision.rule_ids.length} / ${decision.minimum_rules}`
+                  : `Rule families: ${decision.rule_families.length} / ${decision.minimum_families}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p>All configured correlation conditions met.</p>
+      )}
+      {decision.incident_id && <p className="mono">{decision.incident_id}</p>}
+      <details>
+        <summary>Inspect policy and matched signals</summary>
+        <p>Policy: {decision.policy_version}</p>
+        <p>Rules: {decision.rule_ids.join(", ")}</p>
+        <p>Families: {decision.rule_families.join(", ")}</p>
+        <p>Alerts: {decision.alert_ids.join(", ")}</p>
+      </details>
+    </section>
+  );
 }
 
 function CompletedInvestigation({
@@ -743,13 +858,15 @@ function CompletedInvestigation({
       </div>
       {hypothesesAvailable ? (
         <>
-          <HypothesisLedger
-            endpoint={`/scenarios/${encodeURIComponent(scenario.id)}/hypotheses`}
-            readOnly
-            onEvidence={setSelectedEvidenceId}
-            expectedProvenance={projection.provenance}
-            expectedScopeId={investigation.id}
-          />
+          <div id="replay-hypothesis-context" tabIndex={-1}>
+            <HypothesisLedger
+              endpoint={`/scenarios/${encodeURIComponent(scenario.id)}/hypotheses`}
+              readOnly
+              onEvidence={setSelectedEvidenceId}
+              expectedProvenance={projection.provenance}
+              expectedScopeId={investigation.id}
+            />
+          </div>
           <ScenarioAnalyst
             projection={projection}
             onEvidence={setSelectedEvidenceId}

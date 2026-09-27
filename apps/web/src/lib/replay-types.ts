@@ -35,6 +35,22 @@ export interface ReplayIncident {
   event_ids: string[];
   evidence_ids: string[];
 }
+export interface ReplayCorrelationDecision {
+  policy_version: "principal-window-v1";
+  principal_id: string;
+  alert_ids: string[];
+  rule_ids: string[];
+  rule_families: string[];
+  first_alert_at: string;
+  last_alert_at: string;
+  window_end_at: string;
+  span_minutes: number;
+  window_minutes: number;
+  minimum_rules: number;
+  minimum_families: number;
+  unmet_conditions: ("distinct_rules" | "rule_families")[];
+  incident_id: string | null;
+}
 export interface ReplayCorrelation {
   alert_count: number;
   incident_count: number;
@@ -43,6 +59,7 @@ export interface ReplayCorrelation {
   window_minutes: number;
   minimum_rules: number;
   minimum_families: number;
+  decisions?: ReplayCorrelationDecision[];
 }
 interface FrameBase {
   seq: number;

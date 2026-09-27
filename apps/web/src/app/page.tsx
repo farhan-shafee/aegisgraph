@@ -84,9 +84,41 @@ export default async function OverviewPage() {
           <div>
             <strong>Every conclusion must survive inspection.</strong>
             <p>
-              Replay a scenario, inspect evidence and hypotheses, then compare a
-              typed rule revision against the labeled corpus.
+              Start with three decisions: why an incident forms, why approved
+              administration stays below the threshold, and why a rule change is
+              blocked.
             </p>
+            <ol
+              className="overview-demo-links"
+              aria-label="Guided investigation"
+            >
+              <li>
+                <Link
+                  className="text-link"
+                  href="/replay?scenario=atlas-compromise"
+                >
+                  Atlas: why an incident forms
+                </Link>
+              </li>
+              <li>
+                <Link
+                  className="text-link"
+                  href="/replay?scenario=approved-admin"
+                >
+                  Approved administration: why none forms
+                </Link>
+              </li>
+              {capabilities.rule_workbench === 1 && (
+                <li>
+                  <Link
+                    className="text-link"
+                    href="/detections/APP-002?comparison=miss-service-access"
+                  >
+                    APP-002: why the 2,200-record change is blocked
+                  </Link>
+                </li>
+              )}
+            </ol>
           </div>
           <Link className="button secondary" href="/replay">
             Browse scenarios <ArrowRight size={14} />
