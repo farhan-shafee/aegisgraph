@@ -1,5 +1,7 @@
 # AegisGraph V2 implementation plan
 
+> **Historical deployment context** - This record retains its original milestone, source revisions, measured results and approval boundaries. Earlier hosting/source-visibility/pending-release statements are dated history. Use [the current production documentation](../DEPLOYMENT.md) for the October 24-25 Railway topology, release state and remaining closeout.
+
 Planned 2026-09-20 against `1670ca4`. This is an engineering work plan, not a
 validation or capability claim. Completed results belong in the V2 validation record.
 

@@ -1,5 +1,7 @@
 # AegisGraph UX audit
 
+> **Historical deployment context** - This record retains its original milestone, source revisions, measured results and approval boundaries. Earlier hosting/source-visibility/pending-release statements are dated history. Use [the current production documentation](DEPLOYMENT.md) for the October 24-25 Railway topology, release state and remaining closeout.
+
 Baseline captured on 2026-09-17 before this hardening pass changed application UI. The running production application at `127.0.0.1:3000` used synthetic Atlas data and the deterministic analyst. Twelve saved screenshots were individually opened and inspected at a 1600 × 1000 viewport. The in-app and connected Chrome tools were unavailable; the installed Playwright library controlled an isolated local Chrome session instead.
 
 ## Scope and decision

@@ -1,5 +1,7 @@
 # AegisGraph V2 release report
 
+> **Historical deployment context** - This record retains its original milestone, source revisions, measured results and approval boundaries. Earlier hosting/source-visibility/pending-release statements are dated history. Use [the current production documentation](DEPLOYMENT.md) for the October 24-25 Railway topology, release state and remaining closeout.
+
 Prepared 2026-09-23. Application implementation, local validation, GitHub CI, and
 the V2 hosted rollout are complete. The
 [validation record](V2_VALIDATION.md) separates observed local results from

@@ -49,7 +49,7 @@ not, and why a rule change is blocked. Point out the original Atlas investigatio
 > observations produced a signal, why signals became a case, which claims the
 > evidence supports, and what remains unknown.
 
-> The hosted path is a Vercel Next.js frontend, Railway FastAPI, and PostgreSQL.
+> The hosted path is a Railway Next.js frontend, Railway FastAPI, and PostgreSQL.
 > Public mode is read-only and deterministic. Local mode adds explicit human
 > review and optional OpenAI analysis.
 

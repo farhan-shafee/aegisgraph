@@ -1,8 +1,8 @@
 # Public demo deployment
 
 AegisGraph is hosted at [aegisgraph.farhan-shafee.com](https://aegisgraph.farhan-shafee.com).
-The current architecture is Browser → Vercel Next.js → Railway FastAPI → Railway
-PostgreSQL. Both application services use `APP_MODE=public_demo`: synthetic data,
+The current architecture is Browser → Railway Next.js → Railway FastAPI → private Railway
+PostgreSQL over TLS. Cloudflare supplies DNS; Vercel is retained as a patched rollback host. Both application services use `APP_MODE=public_demo`: synthetic data,
 read-only investigation, curated deterministic analyst questions, and ephemeral
 answers. The public analyst requires no OpenAI key and incurs no OpenAI spend.
 
@@ -10,9 +10,7 @@ The current source also supports bounded scenario replay, baseline rule comparis
 hypothesis inspection, the deterministic benchmark, and evidence bundle export and
 local verification. This runbook documents their rollout requirements; it does
 not establish that a particular commit has already reached the hosted services.
-See the [latest refinement review](FINAL_EXCELLENCE_REVIEW.md#final-audit-results)
-for its CI and rollout status, and the [V2 validation](V2_VALIDATION.md#hosted-verification)
-for the prior complete hosted smoke.
+The October 24 production cutover and database hardening are complete. The API uses the restricted `aegisgraph_app` SELECT-only account; actual production-backup recovery was verified in isolation. The [refinement review](FINAL_EXCELLENCE_REVIEW.md#final-audit-results) and [V2 validation](V2_VALIDATION.md#hosted-verification) retain their original dated evidence, not today's hosting status.
 
 This runbook describes the required configuration and operating procedures.
 Hosting-dashboard settings, backups, billing limits, and platform logs must be
@@ -24,9 +22,10 @@ status.
 
 ```mermaid
 flowchart LR
-  Visitor[Browser] -->|HTTPS, same origin| Web[Vercel: Next.js apps/web]
+  Visitor[Browser] -->|HTTPS, same origin| Web[Railway: Next.js apps/web]
   Web -->|HTTPS, server-only API_INTERNAL_URL| API[Railway: FastAPI]
-  API -->|Private DATABASE_URL| DB[Railway: PostgreSQL]
+  API -->|TLS and restricted SELECT role| DB[Railway: PostgreSQL]
+  DB --> Backup[Private pgBackRest backup storage]
 ```
 
 Only synthetic fintech telemetry belongs in this deployment. It is an engineering
@@ -89,53 +88,50 @@ configuration, not an export of verified dashboard settings. API-host placeholde
 below are not usable configuration and contain no secrets. Do not upload a
 workstation `.env`.
 
-| Service     | Variable              | Value or source                                                      |
-| ----------- | --------------------- | -------------------------------------------------------------------- |
-| Railway API | `APP_MODE`            | `public_demo`                                                        |
-| Railway API | `AEGISGRAPH_LOAD_ENV` | `false`                                                              |
-| Railway API | `DATABASE_URL`        | Reference the Railway PostgreSQL service's private `DATABASE_URL`    |
-| Railway API | `AI_PROVIDER`         | `deterministic` (also enforced by public mode)                       |
-| Railway API | `ALLOWED_ORIGINS`     | Exact hosted frontend origin: `https://aegisgraph.farhan-shafee.com` |
-| Railway API | `ALLOWED_HOSTS`       | Exact API hostname and `healthcheck.railway.app`, comma separated    |
-| Railway API | `PORT`                | Supplied by Railway; do not hard-code 8000                           |
-| Vercel web  | `APP_MODE`            | `public_demo`, at build and runtime                                  |
-| Vercel web  | `API_INTERNAL_URL`    | API HTTPS origin, e.g. `https://api.example.com`                     |
+| Service     | Variable              | Value or source                                                                  |
+| ----------- | --------------------- | -------------------------------------------------------------------------------- |
+| Railway API | `APP_MODE`            | `public_demo`                                                                    |
+| Railway API | `AEGISGRAPH_LOAD_ENV` | `false`                                                                          |
+| Railway API | `DATABASE_URL`        | Private TLS connection as restricted `aegisgraph_app`; not the administrator URL |
+| Railway API | `AI_PROVIDER`         | `deterministic` (also enforced by public mode)                                   |
+| Railway API | `ALLOWED_ORIGINS`     | Exact hosted frontend origin: `https://aegisgraph.farhan-shafee.com`             |
+| Railway API | `ALLOWED_HOSTS`       | Exact API hostname and `healthcheck.railway.app`, comma separated                |
+| Railway API | `PORT`                | Supplied by Railway; do not hard-code 8000                                       |
+| Railway web | `APP_MODE`            | `public_demo`, at build and runtime                                              |
+| Railway web | `API_INTERNAL_URL`    | API HTTPS origin, e.g. `https://api.example.com`                                 |
 
 The standard Railway `postgresql://` URL is normalized to the installed psycopg 3
-driver. Do not put database credentials in Vercel. Supply neither `OPENAI_API_KEY`
+driver. Require TLS and keep database credentials only in the API/operations context, never in the frontend. Supply neither `OPENAI_API_KEY`
 nor `OPENAI_MODEL` to either public service. No `NEXT_PUBLIC_*` variable is needed:
 the browser calls its own `/api` routes, and the API origin stays server-side.
 `ALLOW_REMOTE_DEMO` is a local-only escape hatch, not the public deployment mode.
 
 Origins must use HTTPS and contain no path, trailing slash, credentials, query,
 fragment, or wildcard. Hosts contain hostnames/IPs only, without schemes or ports.
-Use the single stable Vercel production/custom domain. Add another exact trusted
+Use the stable canonical frontend domain, `https://aegisgraph.farhan-shafee.com`. Add another exact trusted
 origin only when intentionally supporting it; wildcard preview origins are not
 supported. CORS does not provide authentication or prevent direct scripted reads.
 Explicit HTTPS loopback origins/ports are accepted for local rehearsal only.
 
-## Railway service
+## Railway API service
 
 Use the repository root as the Docker build context. The root [Dockerfile](../Dockerfile)
 contains the Python API, migrations, detection rules, and synthetic evaluation
 fixtures; an allowlist [.dockerignore](../.dockerignore) excludes configuration,
 databases, frontend artifacts, and local runtime files. It runs as a non-root user.
 
-Railway [detects the root Dockerfile](https://docs.railway.com/builds/dockerfiles).
-No new `railway.toml` is included because Railway's
-[Config as Code documentation](https://docs.railway.com/config-as-code/reference)
-now marks that mechanism deprecated. Configure these service settings directly:
+The repository includes the root Dockerfile; the existing service's observed build setting is Railpack. Inspect actual build/deployment metadata rather than assuming a file alone selects a builder. No root `railway.toml` change is needed for this documentation update. Preserve the known-good API build path and configure service settings explicitly:
 
-| Setting                                       | Value                                                 |
-| --------------------------------------------- | ----------------------------------------------------- |
-| Root directory / build context                | Repository root                                       |
-| Builder                                       | Dockerfile                                            |
-| Start command                                 | Image CMD, or `python -m aegisgraph.cli public-serve` |
-| Pre-deploy command, first initialization only | `python -m aegisgraph.cli public-init --seed`         |
-| Pre-deploy command, subsequent deployments    | `python -m aegisgraph.cli public-init`                |
-| Healthcheck path                              | `/ready`                                              |
-| Healthcheck timeout                           | 120 seconds                                           |
-| Replicas / regions                            | One replica in one region                             |
+| Setting                                              | Value                                                   |
+| ---------------------------------------------------- | ------------------------------------------------------- |
+| Root directory / build context                       | Repository root                                         |
+| Builder                                              | Existing Railpack setting; verify actual build metadata |
+| Start command                                        | Image CMD, or `python -m aegisgraph.cli public-serve`   |
+| Initialization, separate administrator context only  | `python -m aegisgraph.cli public-init --seed`           |
+| Normal API pre-deploy after administrative migration | `python -m aegisgraph.cli public-init`                  |
+| Healthcheck path                                     | `/ready`                                                |
+| Healthcheck timeout                                  | 120 seconds                                             |
+| Replicas / regions                                   | One replica in one region                               |
 
 `public-serve` requires Railway's `PORT`, binds `0.0.0.0`, and runs one worker.
 It disables Uvicorn access logs and forwarded-IP trust. Hosting terminates HTTPS.
@@ -156,7 +152,8 @@ import customer data or local live-provider artifacts. The existing hosted
 database does not need reseeding for ordinary application updates.
 
 ```sh
-# Run in the configured Railway API deployment/admin environment.
+# Run only in an isolated bootstrap/administrator environment for a NEW database.
+# Never run this seed command with the normal restricted API account.
 python -m aegisgraph.cli public-init --seed
 python -m aegisgraph.cli public-check
 ```
@@ -171,34 +168,30 @@ evaluation step was interrupted can finish that step. These checks establish
 fixture presence, not cryptographic evidence integrity.
 
 `public-init` without `--seed` migrates and checks readiness; an empty/incomplete
-database exits nonzero. This is the normal later pre-deploy command. `public-check`
+database exits nonzero. This is the normal later pre-deploy command only after the schema is already current. The restricted production API account cannot perform DDL: apply future migrations administratively first, explicitly grant SELECT on approved new tables, then verify restricted-account startup. `public-check`
 is read-only and exits nonzero when the dataset is not ready. CLI errors omit
 connection details. Local seed/reset/persisted-evaluation/serve commands are refused
 in public mode. The database-free `evaluate-benchmark` and local `verify-bundle`
 commands are separate deterministic operations. Destructive recovery belongs to a deliberate hosting/database-admin
 workflow with a backup or a fresh replacement database; there is no automatic reset.
 
-## Vercel project
+## Railway frontend
 
-The hosted frontend is a separate **Next.js** project. Use these settings when
-maintaining it or creating a replacement project:
+The canonical frontend is a separate Railway Next.js service rooted at `apps/web`, built with its own frozen npm lockfile on Node 24. It uses Railpack, `npm run build`, and `node node_modules/next/dist/bin/next start --hostname 0.0.0.0`, honoring Railway's port. Health path is `/`; one sfo replica has a 0.5 vCPU / 500 MB configured ceiling.
 
-| Setting          | Value                                                                |
-| ---------------- | -------------------------------------------------------------------- |
-| Root Directory   | `apps/web`                                                           |
-| Framework preset | Next.js                                                              |
-| Node.js          | 24.x                                                                 |
-| Install command  | `npm ci`                                                             |
-| Build command    | `npm run build`                                                      |
-| Output directory | Next.js default; do not set `out`                                    |
-| Environment      | `APP_MODE=public_demo`, `API_INTERNAL_URL=https://<actual-api-host>` |
+Set `APP_MODE=public_demo` and the server-only HTTPS `API_INTERNAL_URL`. Preserve the canonical domain, HSTS/security headers and exact API origin checks. Preview origins need deliberate separate approval/configuration. A successful local build alone does not establish the deployed SHA.
 
-The web package has its own lockfile and needs no Python backend or external
-workspace package in its Vercel build. FastAPI remains exclusively on Railway.
-Keep preview deployments protected unless their exact origins are deliberately
-allowed on a separate backend. Vercel
-[environment changes apply to new deployments](https://vercel.com/docs/environment-variables),
-so rebuild/redeploy after changing the mode or API origin.
+The retained Vercel project is a patched rollback host, not the canonical production frontend. Do not delete it or repoint DNS as part of an ordinary documentation or application release.
+
+## Database authority, backups and recovery
+
+Production runs PostgreSQL 18.6 on its compatible pinned image with the original 500 MB volume and no administrator credential in the API. `aegisgraph_app` has SELECT on the current 22 public tables and no superuser, role/database creation, replication, RLS bypass, ownership or role membership. Writes, DDL, temporary tables and administrator impersonation were denied in actual role checks. TLS is required and actual API connections were encrypted.
+
+pgBackRest uses private off-volume storage, weekly full backups, daily differential backups, continuous WAL archiving with a 60-second archive timeout, and retention of four full/fourteen differential backups. The October 24 production full was recovered into a fresh isolated volume: all 22 tables/32,696 rows, raw schema, migration and authorization state matched. The measured 48.83 seconds is an isolated drill result, not an RTO guarantee. A chosen-time PITR, replacement Railway promotion and every future retention cycle were not exercised.
+
+A 15-minute Railway Function checks public website/readiness and backup catalog integrity/freshness; it normally completes between executions. Review actual failed backup attempts, archive errors/gaps, capacity and missing/stale results. Catalog freshness is not full object-chain validation or guaranteed notification delivery.
+
+For a drill, use a fresh volume and the compatible pinned image; disable archiving and published SQL ports, wait for recovery completion, then validate data/schema/authorization and application startup. A replacement production cluster needs its own archive destination. Never run two writers against the same archive history.
 
 ## Limits and remaining risks
 
@@ -242,7 +235,7 @@ analyst path, but ordinary hosting/database costs still apply.
 
 ## Updating the existing deployment
 
-Keep the existing Vercel frontend, Railway API, and Railway PostgreSQL services.
+Keep the existing Railway frontend, API and PostgreSQL services, plus the retained Vercel rollback host.
 Before an update, review the commit, CI results, migrations, and compatibility with
 the currently hosted dataset. Retain the last known-good deployments and verify
 the operator's database recovery plan. Keep public mode and exact origins/hosts
@@ -254,8 +247,8 @@ update as complete. Check the actual platform deployment results separately from
 local and CI validation. Do not reset, reseed, or recreate the hosted database to
 work around a failed migration or readiness check.
 
-For the V2 update, apply additive migrations `004_rule_workflow` and
-`005_hypothesis_workflow` through that same pre-deploy command. They add empty local
+The current V2 schema already includes `004_rule_workflow` and
+`005_hypothesis_workflow`; do not rerun bootstrap or seed it. Future additive migrations run in the administrative context before restricted API deployment. They add empty local
 workflow tables and append-only guards without changing canonical fixture rows.
 Public readiness requires these local-work tables to stay empty. The existing
 4,026 events, ten alerts, incident ID, evidence associations, and saved legacy
@@ -286,14 +279,13 @@ not imply that the current hosted services still need to be created.
    and host billing/limits. No repository visibility change is required.
 2. Create Railway PostgreSQL and an API service from this repository. Configure
    the Dockerfile settings and variables above before enabling a deployment.
-   Reserve the API hostname and the intended stable Vercel frontend hostname.
-3. Set the first pre-deploy command to `public-init --seed` with the full Python
-   invocation above. Deploy the API manually. Require `/ready` to pass before
+   Reserve the API hostname and the intended stable Railway frontend hostname.
+3. Initialize the fresh database administratively with `public-init --seed` using the full Python invocation above. Provision the restricted SELECT-only API role and required TLS, then deploy the API. Require `/ready` to pass before
    continuing; run `public-check` in the service's admin execution environment if
    additional verification is needed. Do not publish an uninitialized service.
 4. Change the saved pre-deploy command to `python -m aegisgraph.cli public-init`
    for subsequent deployments. Do not put `--seed` or reset commands in startup.
-5. Create/configure the Vercel project with the exact settings above and deploy it
+5. Create/configure the Railway frontend with the exact settings above and deploy it
    manually. Confirm its final HTTPS origin exactly matches `ALLOWED_ORIGINS`;
    apply a backend configuration deployment if the chosen domain differs.
 6. On the hosted site, inspect every advertised route, the flagship's source evidence,
@@ -305,7 +297,7 @@ not imply that the current hosted services still need to be created.
 
 ## Rollback
 
-Keep the last known-good API image, Vercel deployment, and environment settings.
+Keep the last known-good Railway API/frontend deployments, retained patched Vercel fallback, and environment settings.
 Roll back both services to a version that supports `public_demo`; **never roll a
 public endpoint back to a writable local-only version**. Keep the same read-only
 mode and exact origin/host settings. Review schema compatibility for each release
@@ -331,7 +323,7 @@ loopback services and generates temporary HTTPS certificates under ignored
 `.runtime/public-tls`; OpenSSL is required. It trusts that test certificate only
 in the child Node process and browser test context. It never disables server TLS
 verification globally. This tests production Next.js behavior and the API over
-HTTPS locally, not Vercel/Railway infrastructure, certificates, or networking.
+HTTPS locally, not the Railway infrastructure, certificates, or networking.
 
 The backend CI job also creates a separate empty PostgreSQL database named
 `aegisgraph_upgrade_validation` and runs

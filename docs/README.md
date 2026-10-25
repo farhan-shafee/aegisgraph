@@ -39,7 +39,7 @@ produce an incident. Evaluation labels do not enter runtime analyst context.
 
 ## Running and inspecting the system
 
-The hosted path is browser → Vercel Next.js → Railway FastAPI → Railway PostgreSQL.
+The hosted path is browser → Railway Next.js → Railway FastAPI → Railway PostgreSQL.
 Public mode provides deterministic, read-only exploration; it does not save case
 edits, rule proposals, reviews, or analyst answers. Local mode separately supports
 those workflows and optional explicit OpenAI analysis. See the

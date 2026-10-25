@@ -1,5 +1,7 @@
 # AegisGraph API dependency remediation implementation plan
 
+> **Historical deployment context** - This record retains its original milestone, source revisions, measured results and approval boundaries. Earlier hosting/source-visibility/pending-release statements are dated history. Use [the current production documentation](../../DEPLOYMENT.md) for the October 24-25 Railway topology, release state and remaining closeout.
+
 > For agentic workers: execute inline with superpowers:executing-plans; one fresh whole-branch review at the end.
 
 Goal: resolve the four reported Python advisories with only two pin changes, verify compatibility, and deploy the API fix.

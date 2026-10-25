@@ -1,5 +1,7 @@
 # AegisGraph V2 validation
 
+> **Historical deployment context** - This record retains its original milestone, source revisions, measured results and approval boundaries. Earlier hosting/source-visibility/pending-release statements are dated history. Use [the current production documentation](DEPLOYMENT.md) for the October 24-25 Railway topology, release state and remaining closeout.
+
 Local validation completed **2026-09-23 UTC**, against application commit
 `5c21a05c42cf5746a0b1148ff06fe07c5eeddca2`. Phase 8 adds documentation,
 reviewed screenshots, their capture utility, and the populated-upgrade CI step.

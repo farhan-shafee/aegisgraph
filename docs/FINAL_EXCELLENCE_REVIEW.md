@@ -1,5 +1,7 @@
 # Final excellence review
 
+> **Historical deployment context** - This record retains its original milestone, source revisions, measured results and approval boundaries. Earlier hosting/source-visibility/pending-release statements are dated history. Use [the current production documentation](DEPLOYMENT.md) for the October 24-25 Railway topology, release state and remaining closeout.
+
 Decision memo recorded on 2026-09-27, before implementation, against
 `23edc8473242d46b740119c17d4357288e91bd69`. This is a bounded refinement of V2.
 

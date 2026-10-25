@@ -62,7 +62,7 @@ manifest. The manifest remains unsigned and replaceable, so this establishes has
 agreement rather than authenticity or source truth. Authenticated identities,
 tenant isolation, independent retention, and production ingestion remain future
 work. The implementation keeps one Next.js frontend, one FastAPI service, and
-PostgreSQL, hosted through Vercel and Railway.
+PostgreSQL, hosted on Railway with Cloudflare DNS.
 
 ## Five résumé bullets
 

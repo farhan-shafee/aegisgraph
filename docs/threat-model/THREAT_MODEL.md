@@ -12,11 +12,11 @@ API writes denied. Production
 data, shared authenticated writes, hostile administrators, and multi-tenant
 access remain outside this release's guarantees.
 
-The [hosted demo](https://aegisgraph.farhan-shafee.com) follows Browser → Vercel
+The [hosted demo](https://aegisgraph.farhan-shafee.com) follows Browser → Railway
 Next.js → Railway FastAPI → Railway PostgreSQL. Its public analyst is deterministic,
 requires no OpenAI key, and incurs no OpenAI spend. See the current
 [deployment guide](../DEPLOYMENT.md) for operating requirements; actual platform
-settings and recovery controls remain the operator's responsibility. The
+settings and recovery controls remain the operator's responsibility. Production additionally enforces TLS and a restricted SELECT-only `aegisgraph_app` database account; writes and DDL were independently denied. Recovery from the stored production full backup was tested on October 24, 2026. This does not establish tenant identity, future backup success, complete PITR coverage or guaranteed alert delivery. The
 [September 17 preparation record](../PUBLIC_DEMO_VALIDATION.md) documents earlier
 local validation, not the current deployment status.
 

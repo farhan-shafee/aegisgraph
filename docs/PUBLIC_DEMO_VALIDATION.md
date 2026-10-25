@@ -1,5 +1,7 @@
 # Public demo preparation validation
 
+> **Historical deployment context** - This record retains its original milestone, source revisions, measured results and approval boundaries. Earlier hosting/source-visibility/pending-release statements are dated history. Use [the current production documentation](DEPLOYMENT.md) for the October 24-25 Railway topology, release state and remaining closeout.
+
 Validated **2026-09-17 UTC**. This records preparation of the explicit
 `APP_MODE=public_demo` implementation. **No Vercel or Railway deployment was
 performed, and repository visibility/settings were not changed.** Follow the

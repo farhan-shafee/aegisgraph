@@ -1,5 +1,7 @@
 # AegisGraph Railway frontend pilot implementation plan
 
+> **Historical deployment context** - This record retains its original milestone, source revisions, measured results and approval boundaries. Earlier hosting/source-visibility/pending-release statements are dated history. Use [the current production documentation](../../DEPLOYMENT.md) for the October 24-25 Railway topology, release state and remaining closeout.
+
 > For agentic workers: execute the approved plan inline with superpowers:executing-plans. Keep a ledger in .runtime/railway-pilot/progress.md.
 
 Goal: patch the flagged frontend dependencies and prove an equivalent Railway frontend without switching the live domain.

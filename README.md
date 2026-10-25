@@ -69,7 +69,7 @@ flowchart LR
   Evidence --> Export[Bundle and SHA-256 manifest]
 ```
 
-The hosted path is **browser → Vercel Next.js → Railway FastAPI → Railway
+The hosted path is **browser → Railway Next.js → Railway FastAPI → Railway
 PostgreSQL**. One API and one relational database serve the application; entity
 relationships do not require a graph database. SQLite supports disposable local
 demos and tests. Public mode disables persistent analyst writes. The
@@ -161,7 +161,7 @@ and limitations. Public CI and the ordinary demo need no OpenAI credentials.
 | Persistence  | PostgreSQL, SQLAlchemy, Alembic; SQLite for local demos/tests       |
 | Analyst      | Deterministic provider; optional OpenAI Responses API               |
 | Verification | pytest, Ruff, Vitest, Testing Library, Playwright, ESLint, Prettier |
-| Delivery     | GitHub Actions, locked dependencies, Vercel, Railway                |
+| Delivery     | GitHub Actions, locked dependencies, Railway                        |
 
 ## Quick start
 

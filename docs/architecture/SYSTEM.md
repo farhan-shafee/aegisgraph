@@ -259,7 +259,7 @@ writable service requires identity, case entitlements, CSRF/session controls,
 restricted database roles, secret management, and independent audit retention.
 
 The [hosted public demo](https://aegisgraph.farhan-shafee.com) follows
-Browser → Vercel Next.js → Railway FastAPI → Railway PostgreSQL.
+Browser → Railway Next.js → Railway FastAPI → Railway PostgreSQL.
 Both application services explicitly select `APP_MODE=public_demo`;
 the frontend requires an HTTPS `API_INTERNAL_URL` and verifies that the backend
 advertises the same read-only, deterministic contract. No backend address or
@@ -272,7 +272,7 @@ available. Exact host/origin configuration, request limits, safe errors, and
 shared process budgets bound this intentionally small public surface. These are
 demo controls, not production authentication or an availability guarantee. The
 public analyst requires no OpenAI key and incurs no OpenAI spend.
-See the current [deployment runbook](../DEPLOYMENT.md) for operating requirements.
+The API's restricted `aegisgraph_app` role has SELECT-only access and requires TLS. pgBackRest archives WAL with weekly full/daily differential off-volume backups; actual production-backup recovery was verified on October 24, 2026. Vercel remains a patched rollback frontend. See the current [deployment runbook](../DEPLOYMENT.md) for operating requirements and recovery limits.
 The [September 17 preparation record](../PUBLIC_DEMO_VALIDATION.md) preserves the
 earlier local validation evidence; it is not a statement of current hosting status
 or independent verification of hosting-dashboard settings.
