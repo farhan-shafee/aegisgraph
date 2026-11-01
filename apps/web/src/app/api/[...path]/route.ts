@@ -1,14 +1,14 @@
 import { checkedFrontendConfig } from "@/lib/server-runtime";
+import { RuntimeUnavailableError } from "@/lib/runtime-unavailable";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const bodyLimit = 65536;
 
-function failure(detail: string, status: number) {
-  return Response.json(
-    { detail },
-    { status, headers: { "Cache-Control": "no-store" } },
-  );
+function failure(detail: string, status: number, retryAfter?: string) {
+  const headers = new Headers({ "Cache-Control": "no-store" });
+  if (retryAfter) headers.set("Retry-After", retryAfter);
+  return Response.json({ detail }, { status, headers });
 }
 
 async function proxy(
@@ -16,10 +16,10 @@ async function proxy(
   context: { params: Promise<{ path: string[] }> },
 ) {
   try {
-    const { publicDemo, apiOrigin } = await checkedFrontendConfig();
     const { path } = await context.params;
     if (!path.length || path.some((part) => !/^[A-Za-z0-9_-]+$/.test(part)))
       return failure("API route not found.", 404);
+    const { publicDemo, apiOrigin } = await checkedFrontendConfig();
     const pathname = `/${path.join("/")}`;
     const isRead = request.method === "GET" || request.method === "HEAD";
     if (
@@ -104,8 +104,12 @@ async function proxy(
       status: response.status,
       headers: responseHeaders,
     });
-  } catch {
-    return failure("The demo service is temporarily unavailable.", 503);
+  } catch (error) {
+    return failure(
+      "The demo service is temporarily unavailable.",
+      503,
+      error instanceof RuntimeUnavailableError ? error.retryAfter : undefined,
+    );
   }
 }
 

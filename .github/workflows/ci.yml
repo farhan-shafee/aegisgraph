@@ -100,6 +100,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Production routing stays independent of a throttled or unsafe backend
+        run: node ../../scripts/validate_web_routing.mjs
       - run: npm audit --audit-level=moderate
 
   # Local SQLite workflow plus read-only PostgreSQL public demo over local HTTPS.
