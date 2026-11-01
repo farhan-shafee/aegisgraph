@@ -16,6 +16,40 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetcher);
 });
 afterEach(() => vi.unstubAllGlobals());
+it.each(["2", "60", "999999"])(
+  "preserves bounded retry guidance %s when the public runtime is throttled",
+  async (retryAfter) => {
+    config.mockReturnValue({
+      publicDemo: true,
+      apiOrigin: "https://api.example.test",
+    });
+    fetcher.mockResolvedValue(
+      new Response("private upstream detail", {
+        status: 429,
+        headers: { "Retry-After": retryAfter },
+      }),
+    );
+    await expect(checkedFrontendConfig()).rejects.toMatchObject({ retryAfter });
+  },
+);
+it.each(["-1", "1.5", "1000000", "tomorrow"])(
+  "discards unsafe upstream retry guidance %s",
+  async (retryAfter) => {
+    config.mockReturnValue({
+      publicDemo: true,
+      apiOrigin: "https://api.example.test",
+    });
+    fetcher.mockResolvedValue(
+      new Response(null, {
+        status: 429,
+        headers: { "Retry-After": retryAfter },
+      }),
+    );
+    await expect(checkedFrontendConfig()).rejects.toMatchObject({
+      retryAfter: undefined,
+    });
+  },
+);
 it("accepts the old safe public contract and fails closed on an unsafe V2 contract", async () => {
   config.mockReturnValue({
     publicDemo: true,

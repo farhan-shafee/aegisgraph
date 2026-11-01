@@ -195,6 +195,24 @@ For a drill, use a fresh volume and the compatible pinned image; disable archivi
 
 ## Limits and remaining risks
 
+Unmatched web paths use a layout-free catch-all route handler: they return an
+uncached 404 without checking the API runtime contract. Malformed same-origin API
+path segments are likewise rejected before backend access. Real application pages
+still require the safe public runtime contract. If that check is throttled, the
+same-origin API proxy returns 503 with bounded numeric Retry-After guidance;
+real page-rendering failures retain the existing fail-closed error behavior.
+
+This prevents nonexistent-page probes from exhausting the API through the root
+layout. It does not add per-visitor budgets or prevent requests to real API/page
+routes from sharing the demo's capacity. Run `node scripts/validate_web_routing.mjs`
+after a web production build for a database-free local HTTPS regression.
+
+The November 1 read-only inspection found the canonical hostname still set to
+Cloudflare DNS only (`proxied=false`), with both Railway web and API origins
+publicly reachable. These code changes do not enable Cloudflare proxying or close
+direct-origin access. Do not describe a future DNS-only toggle as complete origin
+protection; review the edge and origin controls together before that rollout.
+
 The API uses fixed-size, process-wide token buckets; it does not trust spoofable
 forwarded IPs or allocate a limiter entry per visitor. Current budgets are:
 

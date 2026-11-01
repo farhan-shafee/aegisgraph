@@ -17,6 +17,17 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
+it("rejects malformed API paths before consulting an unavailable runtime", async () => {
+  check.mockRejectedValue(new Error("unavailable backend"));
+  const response = await GET(
+    new Request("https://demo.example.test/api/config.json"),
+    context(["config.json"]),
+  );
+  expect(response.status).toBe(404);
+  expect(check).not.toHaveBeenCalled();
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
 it("denies persistent writes and missing origins before forwarding a public request", async () => {
   const patch = await PATCH(
     new Request("https://demo.example.test/api/incidents/INC-1", {
