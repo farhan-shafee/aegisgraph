@@ -6,12 +6,13 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "lint": "eslint .",
+    "lint": "node --import ./scripts/lint-minimatch.mjs ./node_modules/eslint/bin/eslint.js .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:lint-deps": "node --import ./scripts/lint-minimatch.mjs --test scripts/lint-dependencies.test.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -38,5 +39,8 @@
   },
   "engines": {
     "node": "24.x"
+  },
+  "overrides": {
+    "minimatch": "11.0.1"
   }
 }
