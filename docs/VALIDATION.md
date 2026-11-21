@@ -2,12 +2,13 @@
 
 > **Historical deployment context** - This record retains its original milestone, source revisions, measured results and approval boundaries. Earlier hosting/source-visibility/pending-release statements are dated history. Use [the current production documentation](DEPLOYMENT.md) for the October 24-25 Railway topology, release state and remaining closeout.
 
-The latest bounded refinement and its exact checks are recorded in the
-[final excellence review](FINAL_EXCELLENCE_REVIEW.md#final-audit-results), including
-the pending hosted API rollout. The prior complete V2 release verification is
-recorded in [V2_VALIDATION.md](V2_VALIDATION.md).
-The dated V1 results below are retained as historical evidence; they are not
-current test counts or a statement about the hosted revision.
+The [final excellence review](FINAL_EXCELLENCE_REVIEW.md#final-audit-results)
+records the bounded refinement and the hosted API rollout that was still pending
+at that earlier milestone. Its release-gate language is historical. For the later
+Railway hosting state and retained rollback path, consult [DEPLOYMENT.md](DEPLOYMENT.md);
+for V2 test/CI evidence, consult [V2_VALIDATION.md](V2_VALIDATION.md).
+The dated V1 results below are retained as historical evidence, not the current
+test counts or a statement about the hosted revision.
 
 Local hardening validation date: 2026-09-17 UTC. Dataset date: 2026-09-15 UTC.
 Results here describe this implementation run, not continuous operational metrics.

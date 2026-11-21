@@ -149,8 +149,7 @@ for a malware premise, and exclusion of tested malicious telemetry. It preserves
 availability failures and does not establish general model safety. New
 deterministic benchmark results are not additional live-model trials.
 
-Consult [current validation](docs/VALIDATION.md) for executed counts, CI status,
-and limitations. Public CI and the ordinary demo need no OpenAI credentials.
+For executed V2 test counts and limitations, see [V2 validation](docs/V2_VALIDATION.md). For current hosting and source pins, consult the [deployment record](docs/DEPLOYMENT.md). The [September validation record](docs/VALIDATION.md) is retained as historical evidence. Public CI and the ordinary demo need no OpenAI credentials.
 
 ## Tech stack
 

@@ -2,7 +2,7 @@
 
 [Project overview](../README.md) · [Local setup](SETUP.md) ·
 [Live demo](https://aegisgraph.farhan-shafee.com) ·
-[Deployment record](DEPLOYMENT.md) · [Current validation](VALIDATION.md)
+[Deployment record](DEPLOYMENT.md) · [V2 validation evidence](V2_VALIDATION.md)
 
 ## Five-minute inspection
 
@@ -12,7 +12,7 @@
 | 01:00–02:00 | [Replay](REPLAY.md), [rules](../packages/detections/rules.json), [correlation](../apps/api/aegisgraph/correlation.py) | Causal event prefixes, source-cited signals, principal/time/rule-family grouping                 |
 | 02:00–03:00 | [Analyst boundary](../apps/api/aegisgraph/analyst.py), [hypotheses](HYPOTHESES.md)                                    | `build_context()`, `supported_claims()`, `validate_draft()`; machine support versus human review |
 | 03:00–04:00 | [Rule workbench](DETECTION_WORKBENCH.md), [analyst benchmark](evaluations/BENCHMARK.md)                               | Immutable proposals, measured gates, independent fixture labels, explicit denominators           |
-| 04:00–05:00 | [Evidence bundles](EVIDENCE_BUNDLES.md), [demo](DEMO.md), [validation](VALIDATION.md)                                 | Scoped committed exports, unsigned-manifest limits, reproducible workflow and executed results   |
+| 04:00–05:00 | [Evidence bundles](EVIDENCE_BUNDLES.md), [demo](DEMO.md), [V2 validation](V2_VALIDATION.md)                                 | Scoped committed exports, unsigned-manifest limits, reproducible workflow and executed results   |
 
 ## Core loop and code
 
@@ -60,8 +60,10 @@ benchmark, the preserved original deterministic suite, and separately credential
 historical OpenAI validation. Their totals should not be combined into a model
 accuracy figure.
 
-- [Current V2 validation](V2_VALIDATION.md): exact executed counts, CI, databases, browser
+- [V2 validation record](V2_VALIDATION.md): exact executed counts, CI, databases, browser
   verification, and material limitations.
+- [September 17 engineering validation](VALIDATION.md): preserved historical V1 results,
+  not the current hosted release or CI status.
 - [V2 release report](V2_RELEASE_REPORT.md): the 26-part engineering assessment,
   delivery status, and interview/site handoff.
 - [Evaluation methodology](evaluations/README.md): deterministic boundaries, optional
