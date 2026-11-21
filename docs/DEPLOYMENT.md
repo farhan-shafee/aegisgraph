@@ -6,6 +6,14 @@ PostgreSQL over TLS. Cloudflare supplies DNS; Vercel is retained as a patched ro
 read-only investigation, curated deterministic analyst questions, and ephemeral
 answers. The public analyst requires no OpenAI key and incurs no OpenAI spend.
 
+## November 21, 2026 — pinned frontend security rollout
+
+The public Railway `aegisgraph-web` service now runs exact commit `316b0182977127aa001d48618fcc8208bb218f03` from the retained branch `security/prod-nextjs-1646-20261121`. This is an isolated backport onto the previous deployed source `515110adc53c6eca0687ae975963c1492ded9e06`; it updates only Next.js and matching ESLint configuration to **16.4.6** in the package manifest/lockfile and the previously reviewed Playwright export-download verification test. It does not promote later repository `main` documentation or backend code as deployed.
+
+Exact-source [validation PR #4](https://github.com/farhan-shafee/aegisgraph/pull/4) passed **frontend, backend and browser GitHub CI** and was closed **without merging** its temporary validation base. The web-only Railway deployment `eff834f5-7ad5-48a0-9c7e-a3b4a7c2494a` reached **SUCCESS**; provider build/runtime logs identify Next.js 16.4.6, successful compilation, a passing healthcheck and server Ready. Production API, PostgreSQL and monitor retain their prior successful deployments. The previous web deployment remains an application rollback candidate requiring compatibility review. This is bounded source/build/deployment evidence, not an independent live intrusion-detection assessment or proof of sustained availability.
+
+The GitHub `main` source at `f8f144793f5ae92689daeb1056edeb9410f26387` remains separate from this exact pinned web release. Future source or dependency updates must not automatically unpin the production frontend.
+
 The current source also supports bounded scenario replay, baseline rule comparisons,
 hypothesis inspection, the deterministic benchmark, and evidence bundle export and
 local verification. This runbook documents their rollout requirements; it does
