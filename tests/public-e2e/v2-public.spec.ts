@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { test, expect } from "../../apps/web/node_modules/@playwright/test";
 import type { ReplayProjection } from "../../apps/web/src/lib/replay-types";
 import type { RegressionResult } from "../../apps/web/src/lib/detection-types";
@@ -315,10 +316,10 @@ test("public hypotheses and hash-verifiable export stay read-only and new write 
   await page.getByRole("button", { name: "Download evidence bundle" }).click();
   const exportResponse = await exported;
   expect(exportResponse.ok()).toBeTruthy();
-  const bundle = await exportResponse.json();
-  expect((await downloaded).suggestedFilename()).toBe(
-    `AegisGraph-${canonicalId}.json`,
-  );
+  const download = await downloaded;
+  expect(download.suggestedFilename()).toBe(`AegisGraph-${canonicalId}.json`);
+  // Parse the downloaded evidence, not a response body lost on navigation.
+  const bundle = JSON.parse(await readFile(await download.path(), "utf8"));
   const panel = page.getByRole("tabpanel");
   await expect(panel.getByRole("status")).toContainText("VALID");
   expect(bundle.manifest.projection).toBe("public_synthetic");
